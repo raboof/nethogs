@@ -42,7 +42,7 @@ connection.o: connection.cpp connection.h nethogs.h
 hashtbl.o: hashtbl.cpp hashtbl.h nethogs.h
 	$(GCC) $(CFLAGS) -c hashtbl.cpp
 decpcap.o: decpcap.c decpcap.h
-	gcc-3.3 $(CFLAGS) -c decpcap.c
+	gcc $(CFLAGS) -c decpcap.c
 cui.o: cui.cpp cui.h nethogs.h
 	$(GCC) $(CFLAGS) -c cui.cpp -DVERSION=\"$(VERSION)\" -DSUBVERSION=\"$(SUBVERSION)\" -DMINORVERSION=\"$(MINORVERSION)\"
 
