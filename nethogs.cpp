@@ -185,6 +185,13 @@ int main (int argc, char** argv)
 		pcap_t * newhandle = pcap_open_live(current_dev->name, BUFSIZ, 0, 100, errbuf); 
 		if (newhandle != NULL)
 		{
+			/* The following code solves sf.net bug 1019381, but is only available
+			 * in newer versions of libpcap */
+
+			/*if (pcap_setnonblock (newhandle, 1, errbuf) == -1)
+			{
+			  // ERROR
+			}*/
 			handles = new handle (newhandle, current_dev->name, handles);
 		}
 
@@ -194,6 +201,7 @@ int main (int argc, char** argv)
 	signal (SIGALRM, &alarm_cb);
 	signal (SIGINT, &quit_cb);
 	alarm (refreshdelay);
+	fprintf(stderr, "Waiting for first packet to arrive (see sourceforge.net bug 1019381)\n");
 	while (1)
 	{
 		handle * current_handle = handles;
