@@ -31,6 +31,7 @@ void PackList::add (Packet * p)
 		return;
 	}
 
+	/* store copy of packet, so that original may be freed */
 	content = new PackListNode(new Packet (*p), content);
 }
 
@@ -60,6 +61,7 @@ u_int32_t PackList::sumanddel (timeval t)
 	return retval;
 }
 
+/* packet may be deleted by caller */
 Connection::Connection (Packet * packet)
 {
 	if (ROBUST)

@@ -107,12 +107,12 @@ int process_tcp (u_char * userdata, const dp_header * header, const u_char * m_p
 	{
 		/* add packet to the connection */
 		connection->add(packet);
-		delete packet;
 	} else {
 		/* else: unknown connection, create new */
 		connection = new Connection (packet);
 		getProcess(connection, currentdevice);
 	}
+	delete packet;
 
 	if (needrefresh)
 	{

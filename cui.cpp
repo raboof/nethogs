@@ -17,8 +17,13 @@ extern Process * unknownproc;
 class Line 
 {
 public:
-	Line (const char * name, double n_sent_kbps, double n_recv_kbps, int pid, uid_t uid, const char * n_devicename)
+	Line (const char * name, double n_sent_kbps, double n_recv_kbps, pid_t pid, uid_t uid, const char * n_devicename)
 	{
+		if (ROBUST) 
+		{
+			assert (uid >= 0);
+			assert (pid >= 0);
+		}
 		m_name = name; 
 		sent_kbps = n_sent_kbps; 
 		recv_kbps = n_recv_kbps;
@@ -39,22 +44,23 @@ public:
 private:
 	const char * m_name;
 	const char * devicename;
-	int m_pid;
-	int m_uid;
+	pid_t m_pid;
+	uid_t m_uid;
 };
 
-char * uid2username (int uid)
+char * uid2username (uid_t uid)
 {
 	struct passwd * pwd = NULL; 
 	/* getpwuid() allocates space for this itself, 
 	 * which we shouldn't free */
 	pwd = getpwuid(uid);
 
-	if (ROBUST)
-		assert (pwd != NULL);
-
 	if (pwd == NULL)
 	{
+		if (ROBUST)
+		{
+			assert(false);
+		}
 		return strdup ("unlisted");
 	} else {
 		return strdup(pwd->pw_name);
@@ -169,7 +175,7 @@ void do_refresh()
 	double sent_global = 0;
 	double recv_global = 0;
 
-	if (DEBUG)
+	if (ROBUST)
 	{
 		// initialise to null pointers
 		for (int i = 0; i < nproc; i++)
@@ -185,6 +191,7 @@ void do_refresh()
 		{
 			assert (curproc != NULL);
 			assert (curproc->getVal() != NULL);
+			assert (nproc == processes->size());
 		}
 		/* do not remove the unknown process */
 		if ((curproc->getVal()->getLastPacket() + PROCESSTIMEOUT <= curtime.tv_sec) && (curproc->getVal() != unknownproc))
@@ -207,48 +214,62 @@ void do_refresh()
 			nproc--;
 			//continue;
 		}
-		else{
-
-		u_int32_t sum_sent = 0, 
-			  sum_recv = 0;
-
-		/* walk though all this process's connections, and sum them
-		 * up */
-		ConnList * curconn = curproc->getVal()->connections;
-		ConnList * previous = NULL;
-		while (curconn != NULL)
+		else
 		{
-			if (curconn->getVal()->getLastPacket() <= curtime.tv_sec - CONNTIMEOUT)
+
+			u_int32_t sum_sent = 0, 
+			  	sum_recv = 0;
+
+			/* walk though all this process's connections, and sum them
+			 * up */
+			ConnList * curconn = curproc->getVal()->connections;
+			ConnList * previous = NULL;
+			while (curconn != NULL)
 			{
-				/* stalled connection, remove. */
-				ConnList * todelete = curconn;
-				Connection * conn_todelete = curconn->getVal();
-				curconn = curconn->getNext();
-				if (todelete == curproc->getVal()->connections)
-					curproc->getVal()->connections = curconn;
-				if (previous != NULL)
-					previous->setNext(curconn);
-				delete (todelete);
-				delete (conn_todelete);
-			} 
-			else 
-			{
-				u_int32_t sent = 0, recv = 0;
-				curconn->getVal()->sumanddel(curtime, &sent, &recv);
-				sum_sent += sent;
-				sum_recv += recv;
-				previous = curconn;
-				curconn = curconn->getNext();
+				if (curconn->getVal()->getLastPacket() <= curtime.tv_sec - CONNTIMEOUT)
+				{
+					/* stalled connection, remove. */
+					ConnList * todelete = curconn;
+					Connection * conn_todelete = curconn->getVal();
+					curconn = curconn->getNext();
+					if (todelete == curproc->getVal()->connections)
+						curproc->getVal()->connections = curconn;
+					if (previous != NULL)
+						previous->setNext(curconn);
+					delete (todelete);
+					delete (conn_todelete);
+				} 
+				else 
+				{
+					u_int32_t sent = 0, recv = 0;
+					curconn->getVal()->sumanddel(curtime, &sent, &recv);
+					sum_sent += sent;
+					sum_recv += recv;
+					previous = curconn;
+					curconn = curconn->getNext();
+				}
 			}
-		}
-		uid_t uid = curproc->getVal()->getUid();
-		if (ROBUST)
-			assert (uid >= 0);
-		lines[n] = new Line (curproc->getVal()->name, tokbps(sum_sent), tokbps(sum_recv), 
-				curproc->getVal()->pid, uid, curproc->getVal()->devicename);
-		previousproc = curproc;
-		curproc = curproc->next;
-		n++;
+			uid_t uid = curproc->getVal()->getUid();
+			if (ROBUST)
+			{
+				assert (getpwuid(uid) != NULL);
+				assert (curproc->getVal()->pid >= 0);
+				assert (n < nproc);
+			}
+			lines[n] = new Line (curproc->getVal()->name, tokbps(sum_sent), tokbps(sum_recv), 
+					curproc->getVal()->pid, uid, curproc->getVal()->devicename);
+			previousproc = curproc;
+			curproc = curproc->next;
+			n++;
+			if (ROBUST)
+			{
+				assert (nproc == processes->size());
+				if (curproc == NULL)
+					assert (n-1 < nproc);
+				else
+					assert (n < nproc);
+
+			}
 		}
 	}
 

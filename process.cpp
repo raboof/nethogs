@@ -28,7 +28,7 @@ extern local_addr * local_addrs;
  * key contains source ip, source port, destination ip, destination 
  * port in format: '1.2.3.4:5-1.2.3.4:5'
  */
-std::map <std::string, unsigned long *> conninode;
+std::map <std::string, unsigned long> conninode;
 
 /*
  * Initialise the global process-list with `the' unknown process
@@ -82,18 +82,19 @@ void addtoconninode (char * buffer)
     	struct in6_addr in6_local;
     	struct in6_addr in6_remote;
 
-	// the following leaks some memory.
-	unsigned long * inode = (unsigned long *) malloc (sizeof(unsigned long));
+	// this leaked memory
+	//unsigned long * inode = (unsigned long *) malloc (sizeof(unsigned long));
+	unsigned long inode;
 
 	int matches = sscanf(buffer, "%*d: %64[0-9A-Fa-f]:%X %64[0-9A-Fa-f]:%X %*X %*X:%*X %*X:%*X %*X %*d %*d %ld %*512s\n",
-		local_addr, &local_port, rem_addr, &rem_port, inode);
+		local_addr, &local_port, rem_addr, &rem_port, &inode);
 
 	if (matches != 5) {
 		fprintf(stderr,"Unexpected buffer: '%s'\n",buffer);
 		exit(0);
 	}
 	
-	if (*inode == 0) {
+	if (inode == 0) {
 		/* connection is in TIME_WAIT state. We rely on 
 		 * the old data still in the table. */
 		return;
@@ -229,14 +230,14 @@ void reviewUnknown ()
 	ConnList * previous_conn = NULL;
 
 	while (curr_conn != NULL) {
-		unsigned long * inode = conninode[curr_conn->getVal()->refpacket->gethashstring()];
-		if (inode != NULL)
+		unsigned long inode = conninode[curr_conn->getVal()->refpacket->gethashstring()];
+		if (inode != 0)
 		{
-			Process * proc = findProcess (*inode);
+			Process * proc = findProcess (inode);
 			if (proc != unknownproc && proc != NULL)
 			{
 				if (DEBUG)
-					std::cout << "ITP: WARNING: Previously unknown inode " << *inode << " now got process...??\n";
+					std::cout << "ITP: WARNING: Previously unknown inode " << inode << " now got process...??\n";
 				/* Yay! - but how could this happen? */
 				//assert(false);
 				if (previous_conn != NULL)
@@ -315,7 +316,7 @@ Process * getProcess (unsigned long inode, char * devicename)
 	if (proc != NULL)
 		return proc;
 
-	Process * newproc = new Process (inode, strdup(devicename));
+	Process * newproc = new Process (inode, devicename);
 	newproc->name = strdup(node->name);
 	newproc->pid = node->pid;
 
@@ -325,6 +326,7 @@ Process * getProcess (unsigned long inode, char * devicename)
 	stat(procdir, &stats);
 	newproc->setUid(stats.st_uid);
 
+	assert (getpwuid(stats.st_uid) != NULL);
 	processes = new ProcList (newproc, processes);
 	return newproc;
 }
@@ -338,9 +340,9 @@ Process * getProcess (unsigned long inode, char * devicename)
  */
 Process * getProcess (Connection * connection, char * devicename)
 {
-	unsigned long * inode = conninode[connection->refpacket->gethashstring()];
+	unsigned long inode = conninode[connection->refpacket->gethashstring()];
 
-	if (inode == NULL)
+	if (inode == 0)
 	{
 		// no? refresh and check conn/inode table
 #if DEBUG
@@ -348,7 +350,7 @@ Process * getProcess (Connection * connection, char * devicename)
 #endif
 		refreshconninode();
 		inode = conninode[connection->refpacket->gethashstring()];
-		if (inode == NULL)
+		if (inode == 0)
 		{
 			/* HACK: the following is a hack for cases where the 
 			 * 'local' addresses aren't properly recognised, as is 
@@ -360,7 +362,7 @@ Process * getProcess (Connection * connection, char * devicename)
 			Packet * reversepacket = connection->refpacket->newInverted();
 			inode = conninode[reversepacket->gethashstring()];
 
-			if (inode == NULL)
+			if (inode == 0)
 			{
 				delete reversepacket;
 				if (DEBUG)
@@ -374,7 +376,7 @@ Process * getProcess (Connection * connection, char * devicename)
 		}
 	}
 
-	Process * proc = getProcess(*inode, devicename);
+	Process * proc = getProcess(inode, devicename);
 	proc->connections = new ConnList (connection, proc->connections);
 	return proc;
 }

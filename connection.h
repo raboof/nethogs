@@ -44,6 +44,7 @@ public:
 	/* sums up the total bytes used and removes 'old' packets */
 	u_int32_t sumanddel (timeval t);
 
+	/* calling code may delete packet */
 	void add (Packet * p);
 private:
 	PackListNode * content;
@@ -55,6 +56,7 @@ public:
 	/* constructs a connection, makes a copy of
 	 * the packet as 'refpacket', and adds the
 	 * packet to the packlist */
+        /* packet may be deleted by caller */
 	Connection (Packet * packet);
 
 	~Connection();
@@ -83,6 +85,7 @@ private:
 };
 
 /* Find the connection this packet belongs to */
+/* (the calling code may free the packet afterwards) */
 Connection * findConnection (Packet * packet);
 
 #endif

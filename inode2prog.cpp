@@ -55,6 +55,7 @@ char * getprogname (char * pid) {
 	int fd = open(filename, O_RDONLY);
 	if (fd < 0) {
 		fprintf (stderr, "Error opening %s: %s\n", filename, strerror(errno));
+		free (filename);
 		exit(3);
 		return NULL;
 	}
@@ -63,6 +64,7 @@ char * getprogname (char * pid) {
 		cout << "Error closing file: " << strerror(errno) << endl;
 		exit(34);
 	}
+	free (filename);
 	if (length < bufsize - 1)
 		buffer[length]='\0';
 
@@ -74,6 +76,13 @@ char * getprogname (char * pid) {
 		retval = buffer; 
 
 	return strdup(retval);
+}
+
+void setnode (unsigned long inode, prg_node * newnode)
+{
+	if (inodeproc[inode] != NULL)
+		free (inodeproc[inode]);
+	inodeproc[inode] = newnode;
 }
 
 void get_info_by_linkname (char * pid, char * linkname) {
@@ -90,7 +99,7 @@ void get_info_by_linkname (char * pid, char * linkname) {
 		// TODO progname could be more memory-efficient
 		strncpy (newnode->name, progname, PROGNAME_WIDTH);
 		free (progname);
-		inodeproc[inode] = newnode;
+		setnode (inode, newnode);
 	} else {
 		//std::cout << "Linkname looked like: " << linkname << endl;
 	}
@@ -128,6 +137,11 @@ void get_info_for_pid(char * pid) {
 		int linklen = 80;
 		char linkname [linklen];
 		int usedlen = readlink(fromname, linkname, linklen-1);
+		if (usedlen == -1)
+		{
+			free (fromname);
+			continue;
+		}
 		if (ROBUST)
 			assert (usedlen < linklen);
 		linkname[usedlen] = '\0';

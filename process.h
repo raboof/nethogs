@@ -66,16 +66,18 @@ public:
 			assert (uid >= 0);
 		}
 	}
-	/* TODO free m_name and m_devicename again in constructor */
+	
 	~Process ()
 	{
+		free (name);
+		free (devicename);
 		if (DEBUG)
 			std::cout << "PROC: Process deleted at " << this << std::endl;
 	}
 	int getLastPacket ();
 
-	const char * name;
-	const char * devicename;
+	char * name;
+	char * devicename;
 	int pid;
 
 	unsigned long inode;
