@@ -1,0 +1,7 @@
+make ; make install
+
+you need the 'libpcap-dev' and 'libpcap' packages.
+
+let me know if you have any other problems on nethogs@bzzt.net
+
+
