@@ -133,10 +133,16 @@ Packet::Packet (in_addr m_sip, unsigned short m_sport, in_addr m_dip, unsigned s
 	len = m_len; time = m_time;
 }
 
-Packet * Packet::newPacket ()
-{
-	return new Packet (sip, sport, dip, dport, len, time);
+Packet * Packet::newInverted () {
+	return new Packet (dip, dport, sip, sport, len, time);
 }
+
+/* constructs returns a new Packet() structure with the same contents as this one */
+/*Packet::Packet (const Packet &old_packet) {
+    sip = old_packet.sip; sport = old_packet.sport;
+    dip = old_packet.dip; dport = old_packet.dport;
+    len = old_packet.len; time = old_packet.time;
+}*/
 
 bool sameinaddr(in_addr one, in_addr other)
 {
@@ -167,8 +173,7 @@ char * Packet::gethashstring ()
 }
 
 /* 2 packets match if they have the same 
- * source and destination ports and IP's,
- * or inverted. */
+ * source and destination ports and IP's. */
 bool Packet::match (Packet * other)
 {
 	return (sport == other->sport) && (dport == other->dport) 

@@ -60,8 +60,9 @@ public:
 	~Connection();
 
 	/* add a packet to the packlist 
-	 * will delete the packet when it is
-	 * 'merged' with another packet
+	 * will delete the packet structure
+	 * when it is 'merged with' (added to) another 
+	 * packet
 	 */
 	void add (Packet * packet);
 
@@ -73,6 +74,7 @@ public:
 	void sumanddel(timeval curtime, bpf_u_int32 * sent, bpf_u_int32 * recv);
 
 	/* for checking if a packet is part of this connection */
+	/* the reference packet is always *outgoing*. */
 	Packet * refpacket;
 private:
 	PackList * sent_packets; 

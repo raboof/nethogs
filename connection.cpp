@@ -69,10 +69,11 @@ Connection::Connection (Packet * packet)
 	if (packet->Outgoing())
 	{
 		sent_packets->add(packet);
+		refpacket = new Packet (*packet);
 	} else {
 		recv_packets->add(packet);
+		refpacket = packet->newInverted();
 	}
-	refpacket = packet->newPacket ();
 	lastpacket = packet->time.tv_sec;
 	if (DEBUG)
 		std::cout << "New reference packet created at " << refpacket << std::endl;
@@ -103,14 +104,15 @@ void Connection::add (Packet * packet)
 /* finds connection to which this packet belongs.
  * a packet belongs to a connection if it matches
  * to its reference packet */
-/* the incoming and outgoing streams of a connection
- * are 2 sepetate 'connections' in nethogs. */
 Connection * findConnection (Packet * packet)
 {
 	ConnList * current = connections;
+	Packet * invertedPacket = packet->newInverted();
 	while (current != NULL)
 	{
-		if (packet->match(current->val->refpacket))
+		/* the reference packet is always *outgoing* */
+		if ((packet->match(current->val->refpacket))
+		  || (invertedPacket->match(current->val->refpacket)))
 			return current->val;
 
 		current = current->next;

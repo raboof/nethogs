@@ -28,11 +28,13 @@ public:
 	timeval time;
 
 	Packet (in_addr m_sip, unsigned short m_sport, in_addr m_dip, unsigned short m_dport, bpf_u_int32 m_len, timeval m_time);
-	/* copy constructor */
-	Packet * newPacket ();
+	/* using default copy constructor */
+	/* Packet (const Packet &old_packet); */
+	/* copy constructor that turns the packet around */
+	Packet * newInverted ();
 
 	bool isOlderThan(timeval t);
-	/* is this packet coming from here? */
+	/* is this packet coming from the local host? */
 	bool Outgoing ();
 
 	bool match (Packet * other);

@@ -37,13 +37,12 @@ public:
 		inode = m_inode;
 		name = m_name;
 		devicename = m_devicename;
-		incoming = NULL;
-		outgoing = NULL;
+		connections = NULL;
 	}
 	int getLastPacket ()
 	{
 		int lastpacket=0;
-		ConnList * curconn=incoming;
+		ConnList * curconn=connections;
 		while (curconn != NULL)
 		{
 			if (DEBUG)
@@ -64,8 +63,7 @@ public:
 	int uid;
 
 	unsigned long inode;
-	ConnList * incoming;
-	ConnList * outgoing;
+	ConnList * connections;
 };
 
 Process * getProcess (Connection * connection, char * devicename = NULL);

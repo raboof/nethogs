@@ -304,13 +304,15 @@ int GreatestFirst (const void * ma, const void * mb)
 	} 
 	return 1;
 }
+
 int count_processes()
 {
 	int i = 0;
 	ProcList * curproc = processes;
 	while (curproc != NULL)
 	{
-		i++; curproc = curproc->getNext();
+		i++; 
+		curproc = curproc->getNext();
 	}
 	return i;
 }
@@ -348,7 +350,7 @@ void do_refresh()
 			assert (curproc != NULL);
 			assert (curproc->getVal() != NULL);
 		}
-		if (curproc->getVal()->getLastPacket() + PROCESSTIMEOUT <= curtime.tv_sec)
+		if ((curproc->getVal()->getLastPacket() + PROCESSTIMEOUT <= curtime.tv_sec) && (curproc->getVal() != unknownproc))
 		{
 			if (lastproc)
 			{
@@ -370,7 +372,7 @@ void do_refresh()
 				    sum_local = 0,
 				    sum_conn = 0,
 				    sum_connLocal = 0;	
-			ConnList * curconn = curproc->getVal()->incoming;
+			ConnList * curconn = curproc->getVal()->connections;
 			while (curconn != NULL)
 			{
 				curconn->getVal()->sumanddel(curtime, &sum, &sum_local);
@@ -469,14 +471,15 @@ Process * getProcess (Connection * connection, char * devicename)
 		if (inode == NULL)
 		{
 #if DEBUG
-			std::cerr << connection->refpacket->gethashstring() << " STILL not in table - dropping\n";
+			std::cerr << connection->refpacket->gethashstring() << " STILL not in table - adding to the unknown process\n";
 #endif
-			return NULL;
+			unknownproc->connections = new ConnList (connection, unknownproc->connections);
+			return unknownproc;
 		}
 	}
 
 	Process * proc = getProcess(*inode, devicename);
-	proc->incoming = new ConnList (connection, proc->incoming);
+	proc->connections = new ConnList (connection, proc->connections);
 	return proc;
 }
 
