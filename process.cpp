@@ -315,6 +315,7 @@ int count_processes()
 	return i;
 }
 
+// Display all processes and relevant network traffic using show function
 void do_refresh()
 {
 	if (DEBUG || tracemode)
@@ -333,7 +334,10 @@ void do_refresh()
 	ProcList * lastproc = NULL;
 	int nproc = count_processes();
 	Line * lines [nproc];
-	int n = 0;
+	int n = 0, i = 0;
+	double sent_global = 0;
+	double recv_global = 0;
+
 	while (curproc != NULL)
 	{
 		// walk though its connections, summing up
@@ -381,13 +385,21 @@ void do_refresh()
 		}
 	}
 	qsort (lines, nproc, sizeof(Line *), GreatestFirst);
-	for (int i=0; i<nproc; i++)
+	for (i=0; i<nproc; i++)
 	{
 		lines[i]->show(i);
+		recv_global += lines[i]->recv_kbps;
+		sent_global += lines[i]->sent_kbps;
 		delete lines[i];
 	}
-	if ((!tracemode) && (!DEBUG))
+
+	if ((!tracemode) && (!DEBUG)){
+		attron(A_REVERSE);
+		mvprintw (3+1+i, 0, "  TOTAL                                           %10.3f  %10.3f KB/sec ", sent_global, recv_global);
+		attroff(A_REVERSE);
+		mvprintw (4+1+i, 0, "");
 		refresh();
+	}
 }
 
 /* returns the process from proclist with matching pid
