@@ -55,6 +55,6 @@ private:
 	short int sa_family;
 };
 
-Packet * getPacket (const struct pcap_pkthdr * header, const u_char * packet, packet_type packettype);
+//Packet * getPacket (const struct pcap_pkthdr * header, const u_char * packet, packet_type packettype);
 
 #endif

@@ -11,10 +11,14 @@
 #include <string>
 #include <string.h>
 
+#include <netinet/ip.h>
+#include <netinet/ip6.h>
+#include <netinet/tcp.h>
+
 #include <ncurses.h>
 
 extern "C" {
-	#include <pcap.h>
+	#include "decpcap.h"
 }
 
 #include "packet.h"
@@ -25,7 +29,8 @@ extern "C" {
 unsigned refreshdelay = 1;
 bool tracemode = false;
 bool needrefresh = true;
-packet_type packettype = packet_ethernet;
+//packet_type packettype = packet_ethernet;
+dp_link_type linktype = dp_link_ethernet;
 
 char * currentdevice = NULL;
 
@@ -69,7 +74,8 @@ bool local_addr::contains(const struct in6_addr & n_addr) {
 	return next->contains(n_addr);
 }
 
-void process (u_char * args, const struct pcap_pkthdr * header, const u_char * m_packet)
+/* deprecated by process_tcp
+ * void process (u_char * args, const struct pcap_pkthdr * header, const u_char * m_packet)
 {
 	curtime = header->ts;
 
@@ -81,11 +87,11 @@ void process (u_char * args, const struct pcap_pkthdr * header, const u_char * m
 
 	if (connection != NULL)
 	{
-		/* add packet to the connection */
 		connection->add(packet);
 	} else {
-		/* else: unknown connection, create new */
 		connection = new Connection (packet);
+		if (DEBUG)
+			std::cerr << "Getting process by connection\n";
 		Process * process = getProcess(connection, currentdevice);
 	}
 
@@ -94,6 +100,79 @@ void process (u_char * args, const struct pcap_pkthdr * header, const u_char * m
 		do_refresh();
 		needrefresh = false;
 	}
+}*/
+
+struct dpargs {
+	int sa_family;
+	in_addr ip_src;
+	in_addr ip_dst;
+	in6_addr ip6_src;
+	in6_addr ip6_dst;
+};
+
+int process_tcp (u_char * userdata, const dp_header * header, const u_char * m_packet) {
+	struct dpargs * args = (struct dpargs *) userdata;
+	struct tcphdr * tcp = (struct tcphdr *) m_packet;
+
+	curtime = header->ts;
+
+	/* TODO get info from userdata, then call getPacket */
+	Packet * packet; 
+	switch (args->sa_family)
+	{
+		case (AF_INET):
+			//packet = new Packet (args->ip_src, ntohs(tcp->th_sport), args->ip_dst, ntohs(tcp->th_dport), header->len, header->ts);
+			packet = new Packet (args->ip_src, ntohs(tcp->source), args->ip_dst, ntohs(tcp->dest), header->len, header->ts);
+			break;
+		case (AF_INET6):
+			packet = new Packet (args->ip6_src, ntohs(tcp->source), args->ip6_dst, ntohs(tcp->dest), header->len, header->ts);
+			break;
+	}
+
+	Connection * connection = findConnection(packet);
+
+	if (connection != NULL)
+	{
+		/* add packet to the connection */
+		connection->add(packet);
+	} else {
+		/* else: unknown connection, create new */
+		connection = new Connection (packet);
+		if (DEBUG)
+			std::cerr << "Getting process by connection\n";
+		Process * process = getProcess(connection, currentdevice);
+	}
+
+	if (needrefresh)
+	{
+		do_refresh();
+		needrefresh = false;
+	}
+
+	/* we're done now. */
+	return true;
+}
+
+int process_ip (u_char * userdata, const dp_header * header, const u_char * m_packet) {
+	struct dpargs * args = (struct dpargs *) userdata;
+	struct ip * ip = (struct ip *) m_packet;
+	args->sa_family = AF_INET;
+	args->ip_src = ip->ip_src;
+	args->ip_dst = ip->ip_dst;
+
+	/* we're not done yet - also parse tcp :) */
+	return false;
+}
+
+int process_ip6 (u_char * userdata, const dp_header * header, const u_char * m_packet) {
+	struct dpargs * args = (struct dpargs *) userdata;
+	const struct ip6_hdr * ip6 = (struct ip6_hdr *) m_packet;
+	args->sa_family = AF_INET6;
+	args->ip6_src = ip6->ip6_src;
+	args->ip6_dst = ip6->ip6_dst;
+
+	/* we're not done yet - also parse tcp :) */
+	return false;
 }
 
 void quit_cb (int i)
@@ -143,10 +222,10 @@ public:
 
 class handle {
 public:
-	handle (pcap_t * m_handle, char * m_devicename = NULL, handle * m_next = NULL) {
+	handle (dp_handle * m_handle, char * m_devicename = NULL, handle * m_next = NULL) {
 		content = m_handle; next = m_next; devicename = m_devicename;
 	}
-	pcap_t * content;
+	dp_handle * content;
 	char * devicename;
 	handle * next;
 };
@@ -154,6 +233,7 @@ public:
 int main (int argc, char** argv)
 {
 	device * devices = NULL;
+	//dp_link_type linktype = dp_link_ethernet;
 	int promisc = 0;
 
 	for (argv++; *argv; argv++)
@@ -181,9 +261,9 @@ int main (int argc, char** argv)
 					  {
 						argv++;
 						if (strcmp (*argv, "ppp") == 0)
-							packettype = packet_ppp;
+							linktype = dp_link_ppp;
 						else if (strcmp (*argv, "eth") == 0)
-							packettype = packet_ethernet;
+							linktype = dp_link_ethernet;
 					  }
 					  break;
 				default : help();
@@ -224,7 +304,10 @@ int main (int argc, char** argv)
 			caption->append(" ");
 		}
 
-		pcap_t * newhandle = pcap_open_live(current_dev->name, BUFSIZ, promisc, 100, errbuf); 
+		dp_handle * newhandle = dp_open_live(current_dev->name, linktype, BUFSIZ, promisc, 100, errbuf); 
+		dp_addcb (newhandle, dp_packet_ip, process_ip);
+		dp_addcb (newhandle, dp_packet_ip6, process_ip6);
+		dp_addcb (newhandle, dp_packet_tcp, process_tcp);
 		if (newhandle != NULL)
 		{
 			/* The following code solves sf.net bug 1019381, but is only available
@@ -249,8 +332,12 @@ int main (int argc, char** argv)
 		handle * current_handle = handles;
 		while (current_handle != NULL)
 		{
+			struct dpargs * userdata = (dpargs *) malloc (sizeof (struct dpargs));
+			userdata->sa_family = AF_UNSPEC;
 			currentdevice = current_handle->devicename;
-			pcap_dispatch (current_handle->content, -1, process, NULL);
+			/* TODO maybe userdata needs be reset every now and then? */
+			dp_dispatch (current_handle->content, -1, (u_char *)userdata, sizeof (struct dpargs));
+			/* dp_dispatch handles deletion of the userdata */
 			current_handle = current_handle->next;
 		}
 

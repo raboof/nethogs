@@ -8,7 +8,7 @@ man8 := $(DESTDIR)/usr/share/man/man8/
 all: nethogs
 
 CFLAGS=-g
-OBJS=structs.o packet.o connection.o process.o hashtbl.o refresh.o
+OBJS=structs.o packet.o connection.o process.o hashtbl.o refresh.o decpcap.o
 GCC=g++
 .PHONY: tgz
 
@@ -40,6 +40,8 @@ connection.o: connection.cpp connection.h nethogs.h
 	$(GCC) $(CFLAGS) -c connection.cpp
 hashtbl.o: hashtbl.cpp hashtbl.h nethogs.h
 	$(GCC) $(CFLAGS) -c hashtbl.cpp
+decpcap.o: decpcap.c decpcap.h
+	gcc $(CFLAGS) -c decpcap.c
 
 .PHONY: clean
 clean:

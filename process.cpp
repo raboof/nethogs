@@ -91,8 +91,19 @@ void addtoconninode (char * buffer)
 	unsigned long * inode = (unsigned long *) malloc (sizeof(unsigned long));
 
 	// TODO check it matched
-	sscanf(buffer, "%*d: %64[0-9A-Fa-f]:%X %64[0-9A-Fa-f]:%X %*X %*lX:%*lX %*X:%*lX %*lX %*d %*d %ld %*512s\n",
+	int matches = sscanf(buffer, "%*d: %64[0-9A-Fa-f]:%X %64[0-9A-Fa-f]:%X %*X %*lX:%*lX %*X:%*lX %*lX %*d %*d %ld %*512s\n",
 		local_addr, &local_port, rem_addr, &rem_port, inode);
+
+	if (matches != 5) {
+		fprintf(stderr,"Unexpected buffer: '%s'\n",buffer);
+		exit(0);
+	}
+	/*if (*inode == 0) {
+	 	// This sometimes happens due to what I think is a bug in the
+		// kernel. See http://lkml.org/lkml/2004/9/10/193.
+		fprintf(stderr,"Inode zero: '%s'\n",buffer);
+		exit(0);
+	}*/
 
 	if (strlen(local_addr) > 8)
 	{
@@ -396,7 +407,9 @@ void do_refresh()
 }
 
 /* returns the process from proclist with matching pid
- * if none, creates it */
+ * if the inode is not associated with any PID, return the unknown process
+ * if the process is not yet in the proclist, add it
+ */
 Process * getProcess (unsigned long inode, char * devicename)
 {
 	struct prg_node * node = prg_cache_get(inode);
@@ -409,7 +422,7 @@ Process * getProcess (unsigned long inode, char * devicename)
 		if (node == NULL)
 		{
 			if (DEBUG)
-				std::cerr << "Unknown inode " << inode << ", assuming unknown." << endl;
+				std::cerr << "inode " << inode << " STILL not in inode-to-program-mapping." << endl;
 			return unknownproc;
 		}
 	}
@@ -477,7 +490,7 @@ Process * getProcess (Connection * connection, char * devicename)
 			{
 				delete reversepacket;
 				if (DEBUG)
-					std::cerr << connection->refpacket->gethashstring() << " STILL not in table - adding to the unknown process\n";
+					std::cerr << connection->refpacket->gethashstring() << " STILL not in connection-to-inode table - adding to the unknown process\n";
 				unknownproc->connections = new ConnList (connection, unknownproc->connections);
 				return unknownproc;
 			}

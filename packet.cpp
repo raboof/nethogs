@@ -125,6 +125,7 @@ struct tcp_hdr {
        u_short th_urp; /* urgent pointer */                                                                 
 };                                                                                                       
 /* Packet 'Constructor' - but returns NULL on failure */
+/* deprecated by decpcap 
 Packet * getPacket (const struct pcap_pkthdr * header, const u_char * packet, packet_type headertype)
 {
 	int packettype;
@@ -135,8 +136,6 @@ Packet * getPacket (const struct pcap_pkthdr * header, const u_char * packet, pa
 	case (packet_ethernet):
 		{
 		const struct ether_header * ethernet = (struct ether_header *)packet;
-		/* this is the opposite endianness from http://www.iana.org/assignments/ethernet-numbers
-	 	 * TODO probably have to look at network/host byte order and endianness!! */
 		packettype = ethernet->ether_type;
 		headersize = sizeof (struct ether_header);
 		}; break;
@@ -180,6 +179,7 @@ Packet * getPacket (const struct pcap_pkthdr * header, const u_char * packet, pa
 #endif
 	return NULL;
 }
+*/
 
 Packet::Packet (in_addr m_sip, unsigned short m_sport, in_addr m_dip, unsigned short m_dport, bpf_u_int32 m_len, timeval m_time, direction m_dir)
 {
