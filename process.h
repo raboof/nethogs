@@ -7,6 +7,8 @@
 
 extern bool tracemode;
 
+void check_all_procs ();
+
 class ConnList
 {
 public:
@@ -58,6 +60,10 @@ public:
 		pid = 0;
 		uid = 0;
 	}
+	void check () {
+		assert (pid >= 0);
+		assert (uid >= 0);
+	}
 	/* TODO free m_name and m_devicename again in constructor */
 	~Process ()
 	{
@@ -86,8 +92,25 @@ private:
 	uid_t uid;
 };
 
+class ProcList
+{
+public:
+	ProcList (Process * m_val, ProcList * m_next)
+	{
+		if (DEBUG)
+			assert (m_val != NULL);
+		val = m_val; next = m_next;
+	}
+	int size (); 
+	Process * getVal () { return val; }
+	ProcList * getNext () { return next; }
+	ProcList * next;
+private:
+	Process * val;
+};
+
 Process * getProcess (Connection * connection, char * devicename = NULL);
-void do_refresh ();
+void refreshconninode ();
 
 void procclean ();
 

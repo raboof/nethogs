@@ -15,7 +15,7 @@
 #include <netinet/ip6.h>
 #include <netinet/tcp.h>
 
-#include <ncurses.h>
+#include "cui.h"
 
 extern "C" {
 	#include "decpcap.h"
@@ -31,13 +31,11 @@ bool tracemode = false;
 bool needrefresh = true;
 //packet_type packettype = packet_ethernet;
 //dp_link_type linktype = dp_link_ethernet;
+const char version[] = " version " VERSION "." SUBVERSION "." MINORVERSION;
 
 char * currentdevice = NULL;
 
-const char version[] = " version " VERSION "." SUBVERSION "." MINORVERSION;
-
 timeval curtime;
-std::string * caption;
 
 bool local_addr::contains (const in_addr_t & n_addr) {
 	if ((sa_family == AF_INET)
@@ -99,6 +97,7 @@ int process_tcp (u_char * userdata, const dp_header * header, const u_char * m_p
 			packet = new Packet (args->ip6_src, ntohs(tcp->source), args->ip6_dst, ntohs(tcp->dest), header->len, header->ts);
 			break;
 	}
+
 	//if (DEBUG)
 	//	std::cout << "Got packet from " << packet->gethashstring() << std::endl;
 
@@ -150,17 +149,15 @@ int process_ip6 (u_char * userdata, const dp_header * header, const u_char * m_p
 void quit_cb (int i)
 {
 	procclean();
-	clear();
-	endwin();
-	delete caption;
+	if ((!tracemode) && (!DEBUG))
+		exit_ui();
 	exit(0);
 }
 
 void forceExit(const char *msg)
 {
 	if ((!tracemode)&&(!DEBUG)){
-	        clear();
-	        endwin();
+		exit_ui();
 	}
 	std::cerr << msg << std::endl;
         exit(0);
@@ -168,7 +165,6 @@ void forceExit(const char *msg)
 
 static void versiondisplay(void)
 {
-
 	std::cerr << version << "\n";
 }
 
@@ -256,14 +252,7 @@ int main (int argc, char** argv)
 		devices = new device (strdup("eth0"));
 
 	if ((!tracemode) && (!DEBUG)){
-		WINDOW * screen = initscr();
-		raw();
-		noecho();
-		cbreak();
-		nodelay(screen, TRUE);
-		caption = new std::string ("NetHogs");
-		caption->append(version);
-		caption->append(", running at ");
+		init_ui();
 	}
 
 	if (NEEDROOT && (getuid() != 0))
@@ -276,8 +265,8 @@ int main (int argc, char** argv)
 	while (current_dev != NULL) {
 		getLocal(current_dev->name);
 		if ((!tracemode) && (!DEBUG)){
-			caption->append(current_dev->name);
-			caption->append(" ");
+			//caption->append(current_dev->name);
+			//caption->append(" ");
 		}
 
 		dp_handle * newhandle = dp_open_live(current_dev->name, BUFSIZ, promisc, 100, errbuf); 
@@ -317,18 +306,7 @@ int main (int argc, char** argv)
 		}
 
 		if ((!DEBUG)&&(!tracemode)) {
-			switch (getch()) {
-				case 'q':
-					/* quit */
-					quit_cb(0);
-					break;
-				case 's':
-					/* sort on 'sent' */
-					break;
-				case 'r':
-					/* sort on 'received' */
-					break;
-			}
+			ui_tick();
 		}
 		if (needrefresh)
 		{

@@ -30,7 +30,13 @@
 #define NEEDROOT 1
 #endif
 
-#define DEBUG 1
+#define DEBUG 0
+
+// if '0', do extra checks and
+// assertions. good for finding bugs
+// at an early stage of development.
+// for production, should be 1.
+#define ROBUST 1
 
 // 2 times: 32 characters, 7 ':''s, a ':12345'.
 // 1 '-'
@@ -102,5 +108,7 @@ private:
 	struct in6_addr addr6;
 	short int sa_family;
 };
+
+void quit_cb (int i);
 
 #endif

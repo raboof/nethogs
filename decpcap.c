@@ -44,8 +44,8 @@ void dp_addcb (struct dp_handle * handle, enum dp_packet_type type, dp_callback 
 
 void dp_parse_tcp (struct dp_handle * handle, const dp_header * header, const u_char * packet)
 {
-	const struct tcphdr * tcp = (struct tcphdr *) packet;
-	u_char * payload = (u_char *) packet + sizeof (struct tcphdr);
+	//const struct tcphdr * tcp = (struct tcphdr *) packet;
+	//u_char * payload = (u_char *) packet + sizeof (struct tcphdr);
 
 	if (handle->callback[dp_packet_tcp] != NULL)
 	{

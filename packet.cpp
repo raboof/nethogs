@@ -163,7 +163,7 @@ Packet::Packet (const Packet &old_packet) {
 		hashstring = NULL;
     	else
     		hashstring = strdup(old_packet.hashstring);
-
+	dir = old_packet.dir;
 }
 
 bool sameinaddr(in_addr one, in_addr other)

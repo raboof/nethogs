@@ -15,25 +15,9 @@
 #include "nethogs.h"
 #include "inodeproc.cpp"
 
-extern timeval curtime;
-extern std::string * caption;
 extern local_addr * local_addrs;
 
-class ProcList
-{
-public:
-	ProcList (Process * m_val, ProcList * m_next)
-	{
-		if (DEBUG)
-			assert (m_val != NULL);
-		val = m_val; next = m_next;
-	}
-	Process * getVal () { return val; }
-	ProcList * getNext () { return next; }
-	ProcList * next;
-private:
-	Process * val;
-};
+;
 
 /* 
  * connection-inode table. takes information from /proc/net/tcp.
@@ -232,12 +216,18 @@ struct prg_node * findPID (unsigned long inode)
 				std::cout << "ITP: inode " << inode << " STILL not in inode-to-pid-mapping." << endl;
 			return NULL;
 		}
-	} else if (DEBUG)
-		std::cout << "ITP: inode " << inode << " found in inode-to-pid-mapping." << endl;
+	} 
 
-	inodeproc[inode] = node;
-
-	return node;
+	/* make copy of returned node, add it to map, and return it */
+	if (node != NULL)
+	{
+		struct prg_node * tempnode = (struct prg_node *) malloc (sizeof (struct prg_node));
+		memcpy (tempnode, node, sizeof (struct prg_node));
+		inodeproc[inode] = tempnode;
+		return tempnode;
+	}
+	else
+		return NULL;
 }
 
 Process * findProcess (struct prg_node * node)
@@ -245,7 +235,10 @@ Process * findProcess (struct prg_node * node)
 	ProcList * current = processes;
 	while (current != NULL)
 	{
-		if (node->pid == current->getVal()->pid)
+		Process * currentproc = current->getVal();
+		assert (currentproc != NULL);
+		
+		if (node->pid == currentproc->pid)
 			return current->getVal();
 		current = current->next;
 	}
@@ -322,240 +315,23 @@ void refreshconninode ()
 
 }
 
-float tokbps (u_int32_t bytes)
+int ProcList::size ()
 {
-	return (((double)bytes) / PERIOD) / 1024;
-}
+	int i=1;
 
-char * uid2username (int uid)
-{
-	struct passwd * pwd; 
-	/* getpwuid() allocates space for this itself, 
-	 * which we shouldn't free */
-	pwd = getpwuid(uid);
-	if (pwd == NULL)
-	{
-		assert(false);
-		return strdup ("unlisted");
-	} else {
-		return strdup(pwd->pw_name);
-	}
-}
+	if (next != NULL)
+		i += next->size();
 
-class Line 
-{
-public:
-	Line (const char * name, double n_sent_kbps, double n_recv_kbps, int pid, uid_t uid, const char * n_devicename)
-	{
-		m_name = name; 
-		sent_kbps = n_sent_kbps; 
-		recv_kbps = n_recv_kbps;
-		devicename = n_devicename;
-		m_pid = pid; 
-		m_uid = uid;
-		assert (m_uid >= 0);
-		assert (m_pid >= 0);
-	}
-
-	void show (int row);
-	
-	double sent_kbps;
-	double recv_kbps; 
-private:
-	const char * m_name;
-	const char * devicename;
-	int m_pid;
-	int m_uid;
-};
-
-void Line::show (int row)
-{
-	if (DEBUG || tracemode)
-	{
-		assert (m_uid >= 0);
-		assert (m_pid >= 0);
-
-		std::cout << m_name << '/' << m_pid << '/' << m_uid << "\t" << sent_kbps << "\t" << recv_kbps << std::endl;
-		return;
-	}
-
-	mvprintw (3+row, 0, "%d", m_pid);
-	char * username = uid2username(m_uid);
-	mvprintw (3+row, 6, "%s", username);
-	free (username);
-	mvprintw (3+row, 6 + 9, "%s", m_name);
-	mvprintw (3+row, 6 + 9 + PROGNAME_WIDTH + 2, "%s", devicename);
-	mvprintw (3+row, 6 + 9 + PROGNAME_WIDTH + 2 + 6, "%10.3f", sent_kbps);
-	mvprintw (3+row, 6 + 9 + PROGNAME_WIDTH + 2 + 6 + 9 + 3, "%10.3f", recv_kbps);
-	mvprintw (3+row, 6 + 9 + PROGNAME_WIDTH + 2 + 6 + 9 + 3 + 11, "KB/sec", recv_kbps);
-}
-
-int GreatestFirst (const void * ma, const void * mb)
-{
-	Line ** pa = (Line **)ma;
-	Line ** pb = (Line **)mb;
-	Line * a = *pa;
-	Line * b = *pb;
-	if (a->recv_kbps > b->recv_kbps)
-	{
-		return -1;
-	}
-	if (a->recv_kbps == b->recv_kbps)
-	{
-		return 0;
-	} 
-	return 1;
-}
-
-int count_processes()
-{
-	int i = 0;
-	ProcList * curproc = processes;
-	while (curproc != NULL)
-	{
-		i++; 
-		curproc = curproc->getNext();
-	}
 	return i;
 }
 
-// Display all processes and relevant network traffic using show function
-void do_refresh()
+void check_all_procs ()
 {
-	refreshconninode();
-	if (DEBUG || tracemode)
-	{
-		std::cout << "\n\nRefreshing:\n";
-	}
-	else
-	{
-		clear();
-		mvprintw (0, 0, "%s", caption->c_str());
-		attron(A_REVERSE);
-		mvprintw (2, 0, "  PID USER     PROGRAM                      DEV        SENT      RECEIVED       ");
-		attroff(A_REVERSE);
-	}
 	ProcList * curproc = processes;
-	ProcList * previousproc = NULL;
-	int nproc = count_processes();
-	/* initialise to null pointers */
-	Line * lines [nproc];
-	int n = 0, i = 0;
-	double sent_global = 0;
-	double recv_global = 0;
-
-	if (DEBUG)
-	{
-		// initialise to null pointers
-		for (int i = 0; i < nproc; i++)
-			lines[i] = NULL;
-	}
-
 	while (curproc != NULL)
 	{
-		// walk though its connections, summing up their data, and 
-		// throwing away connections that haven't received a package 
-		// in the last PROCESSTIMEOUT seconds.
-		if (DEBUG)
-		{
-			assert (curproc != NULL);
-			assert (curproc->getVal() != NULL);
-		}
-		/* do not remove the unknown process */
-		if ((curproc->getVal()->getLastPacket() + PROCESSTIMEOUT <= curtime.tv_sec) && (curproc->getVal() != unknownproc))
-		{
-			/* remove process */
-			if (DEBUG)
-				std::cout << "PROC: Deleting process\n";
-			ProcList * todelete = curproc;
-			Process * p_todelete = curproc->getVal();
-			if (previousproc)
-			{
-				previousproc->next = curproc->next;
-				curproc = curproc->next;
-			} else {
-				processes = curproc->getNext();
-				curproc = processes;
-			}
-			delete todelete;
-			delete p_todelete;
-			nproc--;
-			//continue;
-		}
-		else{
-
-		u_int32_t sum_sent = 0, 
-			  sum_recv = 0;
-
-		/* walk though all this process's connections, and sum them
-		 * up */
-		ConnList * curconn = curproc->getVal()->connections;
-		ConnList * previous = NULL;
-		while (curconn != NULL)
-		{
-			if (curconn->getVal()->getLastPacket() <= curtime.tv_sec - CONNTIMEOUT)
-			{
-				/* stalled connection, remove. */
-				ConnList * todelete = curconn;
-				Connection * conn_todelete = curconn->getVal();
-				curconn = curconn->getNext();
-				if (todelete == curproc->getVal()->connections)
-					curproc->getVal()->connections = curconn;
-				if (previous != NULL)
-					previous->setNext(curconn);
-				delete (todelete);
-				delete (conn_todelete);
-			} 
-			else 
-			{
-				u_int32_t sent = 0, recv = 0;
-				curconn->getVal()->sumanddel(curtime, &sent, &recv);
-				sum_sent += sent;
-				sum_recv += recv;
-				previous = curconn;
-				curconn = curconn->getNext();
-			}
-		}
-		if (DEBUG) 
-		{
-			assert (curproc->getVal()->getUid() >= 0);
-		}
-		lines[n] = new Line (curproc->getVal()->name, tokbps(sum_sent), tokbps(sum_recv), 
-				curproc->getVal()->pid, curproc->getVal()->getUid(), curproc->getVal()->devicename);
-		previousproc = curproc;
-		curproc = curproc->next;
-		n++;
-		}
-	}
-
-	/* sort the accumulated lines */
-	qsort (lines, nproc, sizeof(Line *), GreatestFirst);
-
-	/* print them */
-	for (i=0; i<nproc; i++)
-	{
-		lines[i]->show(i);
-		recv_global += lines[i]->recv_kbps;
-		sent_global += lines[i]->sent_kbps;
-		delete lines[i];
-	}
-	if (tracemode || DEBUG) {
-		/* print the 'unknown' connections, for debugging */
-		ConnList * curr_unknownconn = unknownproc->connections;
-		while (curr_unknownconn != NULL) {
-			std::cout << "Unknown connection: " << 
-				curr_unknownconn->getVal()->refpacket->gethashstring() << std::endl;
-
-			curr_unknownconn = curr_unknownconn->getNext();
-		}
-	}
-
-	if ((!tracemode) && (!DEBUG)){
-		attron(A_REVERSE);
-		mvprintw (3+1+i, 0, "  TOTAL                                           %10.3f  %10.3f KB/sec ", sent_global, recv_global);
-		attroff(A_REVERSE);
-		mvprintw (4+1+i, 0, "");
-		refresh();
+		curproc->getVal()->check();
+		curproc = curproc->getNext();
 	}
 }
 
