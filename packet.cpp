@@ -80,6 +80,21 @@ void getLocal (const char *device)
 
 typedef u_int32_t tcp_seq;
 
+/* ppp header, i hope ;) */
+/* glanced from ethereal, it's 16 bytes, and the payload packet type is
+ * in the last 2 bytes... */
+struct ppp_header {
+	u_int16_t dummy1;
+	u_int16_t dummy2;
+	u_int16_t dummy3;
+	u_int16_t dummy4;
+	u_int16_t dummy5;
+	u_int16_t dummy6;
+	u_int16_t dummy7;
+
+	u_int16_t packettype;
+};
+
 /* TCP header */
 // TODO take from elsewhere.
 struct tcp_hdr {
@@ -109,17 +124,33 @@ struct tcp_hdr {
        u_short th_sum; /* checksum */                                                                       
        u_short th_urp; /* urgent pointer */                                                                 
 };                                                                                                       
-
 /* Packet 'Constructor' - but returns NULL on failure */
-Packet * getPacket (const struct pcap_pkthdr * header, const u_char * packet)
+Packet * getPacket (const struct pcap_pkthdr * header, const u_char * packet, packet_type headertype)
 {
-	// const struct ethernet_hdr * ethernet = (struct ethernet_hdr *)packet;
-	const struct ether_header * ethernet = (struct ether_header *)packet;
-	/* this is the opposite endianness from http://www.iana.org/assignments/ethernet-numbers
-	 * TODO probably have to look at network/host byte order and endianness!! */
-	if (ethernet->ether_type == 0x0008)
+	int packettype;
+	int headersize;
+
+	switch (headertype)
 	{
-		const struct ip * ip = (struct ip *)(packet + sizeof(ether_header));
+	case (packet_ethernet):
+		{
+		const struct ether_header * ethernet = (struct ether_header *)packet;
+		/* this is the opposite endianness from http://www.iana.org/assignments/ethernet-numbers
+	 	 * TODO probably have to look at network/host byte order and endianness!! */
+		packettype = ethernet->ether_type;
+		headersize = sizeof (struct ether_header);
+		}; break;
+	case (packet_ppp):
+		{
+		const struct ppp_header * ppp = (struct ppp_header *)packet;
+		packettype = ppp->packettype;
+		headersize = sizeof (struct ether_header);
+		break;
+		}; break;
+	}
+	if (packettype == 0x0008)
+	{
+		const struct ip * ip = (struct ip *)(packet + headersize);
 		if (ip->ip_p != 6)
 		{
 #if DEBUG
@@ -127,10 +158,10 @@ Packet * getPacket (const struct pcap_pkthdr * header, const u_char * packet)
 #endif
 			return NULL;
 		}
-		const struct tcp_hdr * tcp = (struct tcp_hdr *)(packet + sizeof(ether_header) + sizeof(struct ip));
+		const struct tcp_hdr * tcp = (struct tcp_hdr *)(packet + headersize + sizeof(struct ip));
 		return new Packet (ip->ip_src, ntohs(tcp->th_sport), ip->ip_dst, ntohs(tcp->th_dport), header->len, header->ts);
-	} else if (ethernet->ether_type == 0xDD86) {
-		const struct ip6_hdr * ip6 = (struct ip6_hdr *)(packet + sizeof(ether_header));
+	} else if (packettype == 0xDD86) {
+		const struct ip6_hdr * ip6 = (struct ip6_hdr *)(packet + headersize);
 		if ((ip6->ip6_ctlun).ip6_un1.ip6_un1_nxt != 0x06)
 		{
 			// TODO maybe we need to skip over some headers?
@@ -139,17 +170,14 @@ Packet * getPacket (const struct pcap_pkthdr * header, const u_char * packet)
 #endif
 			return NULL;
 		}
-		const struct tcp_hdr * tcp = (struct tcp_hdr *)(packet + sizeof(ether_header) + sizeof(ip6_hdr));
+		const struct tcp_hdr * tcp = (struct tcp_hdr *)(packet + headersize + sizeof(ip6_hdr));
 
-		// TODO make a Packet constructor that properly understands IPv6
-		//return new Packet (*((in_addr*)(&(ip6->ip6_src))), ntohs(tcp->th_sport), 
-		//    *((in_addr*)(&(ip6->ip6_dst))), ntohs(tcp->th_dport), header->len, header->ts);
 		return new Packet (ip6->ip6_src, ntohs(tcp->th_sport), 
 		    ip6->ip6_dst, ntohs(tcp->th_dport), header->len, header->ts);
 	}
 
 #if DEBUG
-	std::cerr << "Dropped non-ip packet of type " << ethernet->ether_type << std::endl;
+	std::cerr << "Dropped non-ip packet of type " << packettype << std::endl;
 #endif
 	return NULL;
 }
@@ -246,13 +274,9 @@ char * Packet::gethashstring ()
 	if (sa_family == AF_INET) {
 		inet_ntop(sa_family, &sip, local_string,  49);
 		inet_ntop(sa_family, &dip, remote_string, 49);
-		if (DEBUG)
-			fprintf(stderr, "Generating IPv4 string: ");
 	} else {
 		inet_ntop(sa_family, &sip6, local_string,  49);
 		inet_ntop(sa_family, &dip6, remote_string, 49);
-		if (DEBUG)
-			fprintf(stderr, "Generating IPv6 string: ");
 	}
 	if (Outgoing()) {
 		snprintf(retval, HASHKEYSIZE * sizeof(char), "%s:%d-%s:%d", local_string, sport, remote_string, dport);
@@ -261,8 +285,6 @@ char * Packet::gethashstring ()
 	}
 	free (local_string);
 	free (remote_string);
-	if (DEBUG)
-		std::cout << retval << std::endl;
 	return retval;
 }
 

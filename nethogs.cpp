@@ -25,6 +25,7 @@ extern "C" {
 unsigned refreshdelay = 1;
 bool tracemode = false;
 bool needrefresh = true;
+packet_type packettype = packet_ethernet;
 
 char * currentdevice = NULL;
 
@@ -72,7 +73,7 @@ void process (u_char * args, const struct pcap_pkthdr * header, const u_char * m
 {
 	curtime = header->ts;
 
-	Packet * packet = getPacket (header, m_packet);
+	Packet * packet = getPacket (header, m_packet, packettype);
 	if (packet == NULL)
 		return;
 
@@ -121,10 +122,11 @@ static void versiondisplay(void)
 
 static void help(void)
 {
-	std::cerr << "usage: nethogs [-V] [-d] [device [device [device ...]]]\n";
+	std::cerr << "usage: nethogs [-V] [-d seconds] [-t] [-p] [-f (eth|ppp))] [device [device [device ...]]]\n";
 	std::cerr << "		-V : prints version.\n";
 	std::cerr << "		-d : delay for update refresh rate in seconds. default is 1.\n";
 	std::cerr << "		-t : tracemode.\n";
+	std::cerr << "		-f : format of packets on interface, default is eth.\n";
 	std::cerr << "		-p : sniff in promiscious mode (not recommended).\n";
 	std::cerr << "		device : device(s) to monitor. default is eth0\n";
 }
@@ -175,6 +177,14 @@ int main (int argc, char** argv)
 						refreshdelay=atoi(*argv);
 					  }
 					  break;
+				case 'f': if (argv[1])
+					  {
+						argv++;
+						if (strcmp (*argv, "ppp") == 0)
+							packettype = packet_ppp;
+						else if (strcmp (*argv, "eth") == 0)
+							packettype = packet_ethernet;
+					  }
 				default : help();
 					  exit(0);
 			}

@@ -7,6 +7,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include "nethogs.h"
 
 extern "C"
 {
@@ -54,6 +55,6 @@ private:
 	short int sa_family;
 };
 
-Packet * getPacket (const struct pcap_pkthdr * header, const u_char * packet);
+Packet * getPacket (const struct pcap_pkthdr * header, const u_char * packet, packet_type packettype);
 
 #endif

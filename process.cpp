@@ -97,8 +97,6 @@ void addtoconninode (char * buffer)
 	if (strlen(local_addr) > 8)
 	{
 		/* this is an IPv6-style row */
-		if (DEBUG)
-			fprintf (stderr, "IPv6-style row\n");
 
 		/* Demangle what the kernel gives us */
 		sscanf(local_addr, "%08X%08X%08X%08X", 
@@ -112,15 +110,11 @@ void addtoconninode (char * buffer)
 		    && (in6_local.s6_addr32[2] == 0xFFFF0000))
 		{
 			/* IPv4-compatible address */
-			if (DEBUG)
-				fprintf (stderr, "IPv4-compatible address\n");
 			result_addr_local  = *((struct in6_addr*) &(in6_local.s6_addr32[3]));
 			result_addr_remote = *((struct in6_addr*) &(in6_remote.s6_addr32[3]));
 			sa_family = AF_INET;
 		} else {
 			/* real IPv6 address */
-			if (DEBUG)
-				fprintf (stderr, "IPv6 address\n");
 			inet_ntop(AF_INET6, &in6_local, addr6, sizeof(addr6));
 			INET6_getsock(addr6, (struct sockaddr *) &localaddr);
 			inet_ntop(AF_INET6, &in6_remote, addr6, sizeof(addr6));
@@ -150,8 +144,8 @@ void addtoconninode (char * buffer)
 	free (local_string);
 	free (remote_string);
 
-	if (DEBUG)
-		fprintf (stderr, "Hashkey: %s\n", hashkey);
+	//if (DEBUG)
+	//	fprintf (stderr, "Hashkey: %s\n", hashkey);
 
 	conninode->add(hashkey, (void *)inode);
 
@@ -403,7 +397,11 @@ Process * getProcess (unsigned long inode, char * devicename)
 		prg_cache_load();
 		node = prg_cache_get(inode);
 		if (node == NULL)
+		{
+			if (DEBUG)
+				std::cerr << "Unknown inode " << inode << ", assuming unknown." << endl;
 			return unknownproc;
+		}
 	}
 
 	ProcList * current = processes;
@@ -468,9 +466,8 @@ Process * getProcess (Connection * connection, char * devicename)
 			if (inode == NULL)
 			{
 				delete reversepacket;
-#if DEBUG
-				std::cerr << connection->refpacket->gethashstring() << " STILL not in table - adding to the unknown process\n";
-#endif
+				if (DEBUG)
+					std::cerr << connection->refpacket->gethashstring() << " STILL not in table - adding to the unknown process\n";
 				unknownproc->connections = new ConnList (connection, unknownproc->connections);
 				return unknownproc;
 			}

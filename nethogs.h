@@ -93,4 +93,9 @@ private:
 	short int sa_family;
 };
 
+enum packet_type {
+	packet_ethernet,
+	packet_ppp
+};
+
 #endif
