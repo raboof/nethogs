@@ -224,7 +224,7 @@ private:
 	Process * val;
 };
 
-Process * unknownproc = new Process (0, "unknown");
+Process * unknownproc = new Process (0, "", "unknown");
 ProcList * processes = new ProcList (unknownproc, NULL);
 
 float tokbps (bpf_u_int32 bytes)
@@ -250,11 +250,12 @@ char * uid2username (int uid)
 class Line 
 {
 public:
-	Line (const char * name, double n_sent_kbps, double n_recv_kbps, int pid, int uid)
+	Line (const char * name, double n_sent_kbps, double n_recv_kbps, int pid, int uid, const char * n_devicename)
 	{
 		m_name = name; 
 		sent_kbps = n_sent_kbps; 
 		recv_kbps = n_recv_kbps;
+		devicename = n_devicename;
 		m_pid = pid; 
 		m_uid = uid;
 	}
@@ -262,16 +263,17 @@ public:
 	void show (int row)
 	{
 #if DEBUG
-		std::cout << m_name << "\t" << m_sent_kbps << "\t" << recv_kbps << std::endl;
+		std::cout << m_name << "\t" << sent_kbps << "\t" << recv_kbps << std::endl;
 #else
 		mvprintw (3+row, 0, "%d", m_pid);
 		char * username = uid2username(m_uid);
 		mvprintw (3+row, 6, "%s", username);
 		free (username);
 		mvprintw (3+row, 6 + 9, "%s", m_name);
-		mvprintw (3+row, 6 + 9 + PROGNAME_WIDTH + 2, "%10.3f", sent_kbps);
-		mvprintw (3+row, 6 + 9 + PROGNAME_WIDTH + 2 + 9 + 3, "%10.3f", recv_kbps);
-		mvprintw (3+row, 6 + 9 + PROGNAME_WIDTH + 2 + 9 + 3 + 11, "KB/sec", recv_kbps);
+		mvprintw (3+row, 6 + 9 + PROGNAME_WIDTH + 2, "%s", devicename);
+		mvprintw (3+row, 6 + 9 + PROGNAME_WIDTH + 2 + 6, "%10.3f", sent_kbps);
+		mvprintw (3+row, 6 + 9 + PROGNAME_WIDTH + 2 + 6 + 9 + 3, "%10.3f", recv_kbps);
+		mvprintw (3+row, 6 + 9 + PROGNAME_WIDTH + 2 + 6 + 9 + 3 + 11, "KB/sec", recv_kbps);
 		// TODO fix
 		//if(m_kbps-upload_kbps>upload_kbps)
 		//          mvprintw (3+row, 6 + 20 + PROGNAME_WIDTH + 2, "<<<<");
@@ -284,6 +286,7 @@ public:
 	double recv_kbps; 
 private:
 	const char * m_name;
+	const char * devicename;
 	int m_pid;
 	int m_uid;
 };
@@ -322,7 +325,7 @@ void do_refresh()
 		clear();
 		mvprintw (0, 0, "%s", caption->c_str());
 		attron(A_REVERSE);
-		mvprintw (2, 0, "  PID USER     PROGRAM                            SENT         RECEIVED       ");
+		mvprintw (2, 0, "  PID USER     PROGRAM                      DEV        SENT      RECEIVED       ");
 		attroff(A_REVERSE);
 	}
 	else
@@ -372,7 +375,7 @@ void do_refresh()
 				sum_conn+=sum;
 				curconn = curconn->getNext();
 			}
-			lines[n] = new Line (curproc->getVal()->name, tokbps(sum_conn), tokbps(sum_connLocal), curproc->getVal()->pid, curproc->getVal()->uid);
+			lines[n] = new Line (curproc->getVal()->name, tokbps(sum_conn), tokbps(sum_connLocal), curproc->getVal()->pid, curproc->getVal()->uid, curproc->getVal()->devicename);
 			lastproc = curproc;
 			curproc = curproc->next;
 			n++;
@@ -390,7 +393,7 @@ void do_refresh()
 
 /* returns the process from proclist with matching pid
  * if none, creates it */
-Process * getProcess (unsigned long inode)
+Process * getProcess (unsigned long inode, char * devicename)
 {
 	struct prg_node * node = prg_cache_get(inode);
 
@@ -411,7 +414,7 @@ Process * getProcess (unsigned long inode)
 		current = current->next;
 	}
 
-	Process * newproc = new Process (inode);
+	Process * newproc = new Process (inode, strdup(devicename));
 	newproc->name = strdup(node->name);
 	newproc->pid = node->pid;
 
@@ -425,13 +428,17 @@ Process * getProcess (unsigned long inode)
 	return newproc;
 }
 
-Process * getProcess (Connection * connection)
+Process * getProcess (Connection * connection, char * devicename)
 {
 	ProcList * curproc = processes;
 
 	// see if we already know the inode for this connection
 	if (DEBUG)
-		std::cout << "Connection reference packet found at " << connection->refpacket << std::endl;
+	{
+		std::cout << "Connection reference packet found at ";
+		std::cout << connection->refpacket << std::endl;
+	}
+
 	unsigned long * inode = (unsigned long *) conninode->get(connection->refpacket->gethashstring());
 
 	if (inode == NULL)
@@ -451,7 +458,7 @@ Process * getProcess (Connection * connection)
 		}
 	}
 
-	Process * proc = getProcess(*inode);
+	Process * proc = getProcess(*inode, devicename);
 	proc->incoming = new ConnList (connection, proc->incoming);
 	return proc;
 }

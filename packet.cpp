@@ -9,27 +9,20 @@
 #include "nethogs.h"
 // #include "inet6.c"
 
-struct in_addr * local_addr = NULL;
+local_addr * local_addrs = NULL;
 
 /*
  * getLocal
  *	device: This should be device explicit (e.g. eth0:1)
  *
- * ioctl device for address 
+ * uses ioctl to get address of this device, and adds it to the
+ * local_addrs-list.
  */
 void getLocal (const char *device)
 {
 	int sock;
 	struct ifreq iFreq;
 	struct sockaddr_in *saddr;
-
-	if (local_addr != NULL)
-	{
-		std::cerr << "getLocal only needs to be called once in connection.cpp" << std::endl;
-		free (local_addr);
-	}
-
-	local_addr = (struct in_addr *) malloc (sizeof(struct in_addr));
 
 	if((sock=socket(AF_INET, SOCK_PACKET, htons(0x0806)))<0){
 		forceExit("creating socket failed while establishing local IP - are you root?");
@@ -39,7 +32,9 @@ void getLocal (const char *device)
 		forceExit("ioctl failed while establishing local IP");
 	}
 	saddr=(struct sockaddr_in*)&iFreq.ifr_addr;
-	(*local_addr)=saddr->sin_addr;	
+	local_addrs = new local_addr (saddr->sin_addr.s_addr, local_addrs);
+	//malloc
+	//(*local_addr)=saddr->sin_addr;	
 }
 
 typedef u_int32_t tcp_seq;
@@ -155,9 +150,9 @@ bool Packet::isOlderThan (timeval t) {
 bool Packet::Outgoing () {
 	/* must be initialised with getLocal("eth0:1");) */
 	if (DEBUG)
-		assert (local_addr != NULL);
+		assert (local_addrs != NULL);
 
-	return (sip.s_addr == local_addr->s_addr);
+	return (local_addrs->contains(sip.s_addr));
 }
 
 char * Packet::gethashstring ()

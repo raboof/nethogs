@@ -1,6 +1,4 @@
-/* nethogs.cpp
- *
- */
+/* nethogs.cpp */
 
 #include "nethogs.h"
 
@@ -27,12 +25,20 @@ extern "C" {
 bool needrefresh = true;
 unsigned refreshdelay = 1;
 
+char * currentdevice = NULL;
+
 const char version[] = " version " VERSION "." SUBVERSION "." MINORVERSION;
 
 timeval curtime;
 std::string * caption;
 
-
+bool local_addr::contains (const in_addr_t & n_addr) {
+	if (n_addr == addr)
+		return true;
+	if (next == NULL)
+		return false;
+	return next->contains(n_addr);
+}
 
 void process (u_char * args, const struct pcap_pkthdr * header, const u_char * m_packet)
 {
@@ -49,8 +55,7 @@ void process (u_char * args, const struct pcap_pkthdr * header, const u_char * m
 		return;
 	}
 	connection = new Connection (packet);
-	Process * process = getProcess(connection);
-	//process->addConnection (connection);
+	Process * process = getProcess(connection, currentdevice);
 	
 	if (needrefresh)
 	{
@@ -91,9 +96,29 @@ static void help(void)
 	std::cerr << "		device : device to monitor. default is eth0\n";
 }
 
+class device {
+public:
+	device (char * m_name, device * m_next = NULL)
+	{
+		name = m_name; next = m_next;
+	}
+	char * name;
+	device * next;
+};
+
+class handle {
+public:
+	handle (pcap_t * m_handle, char * m_devicename = NULL, handle * m_next = NULL) {
+		content = m_handle; next = m_next; devicename = m_devicename;
+	}
+	pcap_t * content;
+	char * devicename;
+	handle * next;
+};
+
 int main (int argc, char** argv)
 {
-	char* dev = strdup("eth0");
+	device * devices = NULL;
 
 	for (argv++; *argv; argv++)
 	{
@@ -118,9 +143,12 @@ int main (int argc, char** argv)
 		}
 		else
 		{
-			dev = strdup(*argv);
+			devices = new device (strdup(*argv), devices);
 		}
 	}
+
+	if (devices == NULL)
+		devices = new device (strdup("eth0"));
 #if DEBUG
 #else
 	WINDOW * screen = initscr();
@@ -129,34 +157,57 @@ int main (int argc, char** argv)
 	cbreak();
 	nodelay(screen, TRUE);
 #endif
-	getLocal(dev);
-
 	caption = new std::string ("NetHogs");
 	caption->append(version);
 	caption->append(", running at ");
-	caption->append(dev);
 
 	if (NEEDROOT && (getuid() != 0))
 		forceExit("You need to be root to run NetHogs !");
 
 	char errbuf[PCAP_ERRBUF_SIZE];
 
-	pcap_t * handle;
-	handle = pcap_open_live(dev, BUFSIZ, 0, 1000, errbuf);
+	handle * handles = NULL;
+	device * current_dev = devices;
+	while (current_dev != NULL) {
+		getLocal(current_dev->name);
+		caption->append(current_dev->name);
+		caption->append(" ");
 
-	if (!handle)
-		forceExit("Device is not active");
+		pcap_t * newhandle = pcap_open_live(current_dev->name, BUFSIZ, 0, 100, errbuf); 
+		if (newhandle != NULL)
+		{
+			handles = new handle (newhandle, current_dev->name, handles);
+		}
+
+		current_dev = current_dev->next;
+	}
 
 	signal (SIGALRM, &alarm_cb);
 	signal (SIGINT, &quit_cb);
 	alarm (refreshdelay);
+
 	while (1)
 	{
-		pcap_dispatch (handle, -1, process, NULL);
+		handle * current_handle = handles;
+		while (current_handle != NULL)
+		{
+			currentdevice = current_handle->devicename;
+			pcap_dispatch (current_handle->content, -1, process, NULL);
+			current_handle = current_handle->next;
+		}
+		if (!DEBUG) {
 		switch (getch()) {
 			case 'q':
+				/* quit */
 				quit_cb(0);
 				break;
+			case 's':
+				/* sort on 'sent' */
+				break;
+			case 'r':
+				/* sort on 'received' */
+				break;
+		}
 		}
 		if (needrefresh)
 		{

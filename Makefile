@@ -2,8 +2,8 @@ VERSION      := 0
 SUBVERSION   := 6
 MINORVERSION := pre
 
-bin  := /usr/local/bin
-man8 := /usr/local/man/man8/
+bin  := $(DESTDIR)/usr/bin
+man8 := $(DESTDIR)/usr/share/man/man8/
 
 all: nethogs
 

@@ -1,6 +1,7 @@
 #ifndef __NETHOGS_H
 #define __NETHOGS_H
 
+#include <netinet/in.h>
 
 #define _BSD_SOURCE 1
 
@@ -21,8 +22,20 @@
 #define DEBUG 0
 
 
-#define PROGNAME_WIDTH 30
+#define PROGNAME_WIDTH 27
 
 void forceExit(const char *msg);
+
+class local_addr {
+public:
+	local_addr (in_addr_t m_addr, local_addr * m_next = NULL)
+	{
+		addr = m_addr;
+		next = m_next;
+	}
+	bool contains (const in_addr_t & n_addr);
+	in_addr_t addr;
+	local_addr * next;
+};
 
 #endif

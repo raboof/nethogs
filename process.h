@@ -30,10 +30,11 @@ private:
 class Process
 {
 public:
-	Process (unsigned long m_inode, char* m_name = NULL)
+	Process (unsigned long m_inode, char * m_devicename, char * m_name = NULL)
 	{
 		inode = m_inode;
 		name = m_name;
+		devicename = m_devicename;
 		incoming = NULL;
 		outgoing = NULL;
 	}
@@ -56,6 +57,7 @@ public:
 	}
 
 	const char * name;
+	const char * devicename;
 	int pid;
 	int uid;
 
@@ -64,7 +66,7 @@ public:
 	ConnList * outgoing;
 };
 
-Process * getProcess (Connection * connection);
+Process * getProcess (Connection * connection, char * devicename = NULL);
 void do_refresh ();
 
 void procclean ();
