@@ -185,6 +185,7 @@ int main (int argc, char** argv)
 						else if (strcmp (*argv, "eth") == 0)
 							packettype = packet_ethernet;
 					  }
+					  break;
 				default : help();
 					  exit(0);
 			}
