@@ -1,0 +1,29 @@
+Changelog
+
+29/06/04 (Fabian)  <-> 0.5.1
+-Adding forceExit when device is ifdown
+(handle was null => segfault)
+-Changelog activated
+
+-------------------------------------------------
+
+10/05/04 (Arnout)
+-cleanups
+-splitting out incoming and outgoing traffic 
+(based on 'I/O by balance' by Fabian)
+
+-------------------------------------------------
+
+06/04/04 (Fabian)
+-getLocal
+-I/O by balance	
+-forceExit
+
+-------------------------------------------------
+
+14/02/04 (Fabian) 
+-Refresh delay
+-Help
+-Handling command-line options
+
+-------------------------------------------------
