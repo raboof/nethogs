@@ -33,7 +33,7 @@ refresh.o: refresh.cpp refresh.h nethogs.h
 	$(GCC) $(CFLAGS) -c refresh.cpp
 structs.o: structs.cpp structs.h nethogs.h
 	$(GCC) $(CFLAGS) -c structs.cpp
-process.o: process.cpp process.h inodeproc.cpp nethogs.h
+process.o: process.cpp process.h nethogs.h
 	$(GCC) $(CFLAGS) -c process.cpp
 packet.o: packet.cpp packet.h nethogs.h
 	$(GCC) $(CFLAGS) -c packet.cpp
