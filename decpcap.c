@@ -3,6 +3,7 @@
 #include <netinet/ip.h>
 #include <netinet/ip6.h>
 #include <netinet/tcp.h>
+#include <string.h> // for memcpy
 #include <pcap.h>
 #include "decpcap.h"
 
@@ -221,4 +222,8 @@ int dp_dispatch (struct dp_handle * handle, int count, u_char *user, int size) {
 	handle->userdata = user;
 	handle->userdata_size = size;
 	return pcap_dispatch (handle->pcap_handle, count, dp_pcap_callback, (u_char *)handle);
+}
+
+int dp_setnonblock (struct dp_handle * handle, int i, char * errbuf) {
+	return pcap_setnonblock (handle->pcap_handle, i, errbuf);
 }

@@ -49,7 +49,7 @@ int Process::getLastPacket()
 	ConnList * curconn=connections;
 	while (curconn != NULL)
 	{
-		if (ROBUST)
+		if (!ROBUST)
 		{
 			assert (curconn != NULL);
 			assert (curconn->getVal() != NULL);
@@ -199,7 +199,7 @@ Process * findProcess (struct prg_node * node)
 	while (current != NULL)
 	{
 		Process * currentproc = current->getVal();
-		if (ROBUST)
+		if (!ROBUST)
 			assert (currentproc != NULL);
 		
 		if (node->pid == currentproc->pid)
@@ -323,10 +323,30 @@ Process * getProcess (unsigned long inode, char * devicename)
 	char procdir [100];
 	sprintf(procdir , "/proc/%d", node->pid);
 	struct stat stats;
-	stat(procdir, &stats);
-	newproc->setUid(stats.st_uid);
+	int retval = stat(procdir, &stats);
 
-	assert (getpwuid(stats.st_uid) != NULL);
+	/* 0 seems a proper default. 
+	 * used in case the PID disappeared while nethogs was running
+	 * TODO we can store node->uid this while info on the inodes,
+	 * right? */
+	/*
+	if (!ROBUST && (retval != 0))
+	{
+		std::cerr << "Couldn't stat " << procdir << std::endl;
+		assert (false);
+	}
+	*/
+
+	if (retval != 0)
+		newproc->setUid(0);
+	else
+		newproc->setUid(stats.st_uid);
+
+	/*if (getpwuid(stats.st_uid) == NULL) {
+		std::stderr << "uid for inode 
+		if (!ROBUST)
+			assert(false);
+	}*/
 	processes = new ProcList (newproc, processes);
 	return newproc;
 }

@@ -14,7 +14,7 @@ class ConnList
 public:
 	ConnList (Connection * m_val, ConnList * m_next)
 	{
-		if (ROBUST)
+		if (!ROBUST)
 			assert (m_val != NULL);
 		val = m_val; next = m_next;
 	}
@@ -61,7 +61,7 @@ public:
 		uid = 0;
 	}
 	void check () {
-		if (ROBUST) {
+		if (!ROBUST) {
 			assert (pid >= 0);
 			assert (uid >= 0);
 		}
@@ -101,7 +101,7 @@ class ProcList
 public:
 	ProcList (Process * m_val, ProcList * m_next)
 	{
-		if (ROBUST)
+		if (!ROBUST)
 			assert (m_val != NULL);
 		val = m_val; next = m_next;
 	}

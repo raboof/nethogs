@@ -279,11 +279,12 @@ int main (int argc, char** argv)
 		{
 			/* The following code solves sf.net bug 1019381, but is only available
 			 * in newer versions of libpcap */
+			// TODO ARN
 
-			/*if (pcap_setnonblock (newhandle, 1, errbuf) == -1)
+			if (dp_setnonblock (newhandle, 1, errbuf) == -1)
 			{
 			  // ERROR
-			}*/
+			}
 			handles = new handle (newhandle, current_dev->name, handles);
 		}
 

@@ -19,7 +19,7 @@ class Line
 public:
 	Line (const char * name, double n_sent_kbps, double n_recv_kbps, pid_t pid, uid_t uid, const char * n_devicename)
 	{
-		if (ROBUST) 
+		if (!ROBUST) 
 		{
 			assert (uid >= 0);
 			assert (pid >= 0);
@@ -30,7 +30,7 @@ public:
 		devicename = n_devicename;
 		m_pid = pid; 
 		m_uid = uid;
-		if (ROBUST) 
+		if (!ROBUST) 
 		{
 			assert (m_uid >= 0);
 			assert (m_pid >= 0);
@@ -57,7 +57,7 @@ char * uid2username (uid_t uid)
 
 	if (pwd == NULL)
 	{
-		if (ROBUST)
+		if (!ROBUST)
 		{
 			assert(false);
 		}
@@ -70,7 +70,7 @@ char * uid2username (uid_t uid)
 
 void Line::show (int row)
 {
-	if (ROBUST)
+	if (!ROBUST)
 	{
 		assert (m_uid >= 0);
 		assert (m_pid >= 0);
@@ -175,7 +175,7 @@ void do_refresh()
 	double sent_global = 0;
 	double recv_global = 0;
 
-	if (ROBUST)
+	if (!ROBUST)
 	{
 		// initialise to null pointers
 		for (int i = 0; i < nproc; i++)
@@ -187,7 +187,7 @@ void do_refresh()
 		// walk though its connections, summing up their data, and 
 		// throwing away connections that haven't received a package 
 		// in the last PROCESSTIMEOUT seconds.
-		if (ROBUST)
+		if (!ROBUST)
 		{
 			assert (curproc != NULL);
 			assert (curproc->getVal() != NULL);
@@ -250,7 +250,7 @@ void do_refresh()
 				}
 			}
 			uid_t uid = curproc->getVal()->getUid();
-			if (ROBUST)
+			if (!ROBUST)
 			{
 				assert (getpwuid(uid) != NULL);
 				assert (curproc->getVal()->pid >= 0);
@@ -261,7 +261,7 @@ void do_refresh()
 			previousproc = curproc;
 			curproc = curproc->next;
 			n++;
-			if (ROBUST)
+			if (!ROBUST)
 			{
 				assert (nproc == processes->size());
 				if (curproc == NULL)

@@ -3,7 +3,7 @@
 #include <string.h>
 #include <dirent.h>
 #include <ctype.h>
-#include <iostream.h>
+#include <iostream>
 #include <stdio.h>
 #include <unistd.h>
 #include <string>
@@ -61,7 +61,7 @@ char * getprogname (char * pid) {
 	}
 	int length = read (fd, buffer, bufsize);
 	if (close (fd)) {
-		cout << "Error closing file: " << strerror(errno) << endl;
+		std::cout << "Error closing file: " << strerror(errno) << std::endl;
 		exit(34);
 	}
 	free (filename);
@@ -142,7 +142,7 @@ void get_info_for_pid(char * pid) {
 			free (fromname);
 			continue;
 		}
-		if (ROBUST)
+		if (!ROBUST)
 			assert (usedlen < linklen);
 		linkname[usedlen] = '\0';
 		//std::cout << "Linking to: " << linkname << std::endl;
