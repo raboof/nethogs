@@ -13,7 +13,7 @@ GCC=g++
 .PHONY: tgz
 
 tgz: clean
-	cd .. ; tar czvf nethogs-$(VERSION).$(SUBVERSION).$(MINORVERSION).tar.gz nethogs-$(VERSION).$(SUBVERSION)/*
+	cd .. ; tar czvf nethogs-$(VERSION).$(SUBVERSION).$(MINORVERSION).tar.gz nethogs/*
 
 .PHONY: check
 check:
@@ -24,7 +24,7 @@ install: nethogs nethogs.8
 	cp nethogs.8 $(man8)
 
 nethogs: nethogs.cpp $(OBJS)
-	$(GCC) $(CFLAGS) nethogs.cpp $(OBJS) -o nethogs -lpcap -lncurses -DVERSION=\"$(VERSION)\" -DSUBVERSION=\"$(SUBVERSION)\" -DMINORVERSION=\"$(MINORVERSION)\"
+	$(GCC) $(CFLAGS) nethogs.cpp $(OBJS) -o nethogs -lpcap -lm -lncurses -DVERSION=\"$(VERSION)\" -DSUBVERSION=\"$(SUBVERSION)\" -DMINORVERSION=\"$(MINORVERSION)\"
 
 #-lefence
 

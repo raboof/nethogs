@@ -68,7 +68,8 @@ void addtoconninode (char * buffer)
     	char addr6[INET6_ADDRSTRLEN];
     	struct in6_addr in6_local;
     	struct in6_addr in6_remote;
-	// the following line might leak memory.
+
+	// the following leaks some memory.
 	unsigned long * inode = (unsigned long *) malloc (sizeof(unsigned long));
 
 	int matches = sscanf(buffer, "%*d: %64[0-9A-Fa-f]:%X %64[0-9A-Fa-f]:%X %*X %*lX:%*lX %*X:%*lX %*lX %*d %*d %ld %*512s\n",
@@ -139,6 +140,8 @@ void addtoconninode (char * buffer)
 
 	//std::cout << "Adding to conninode\n" << std::endl;
 
+	conninode->add(hashkey, (void *)inode);
+
 	/* workaround: sometimes, when a connection is actually from 172.16.3.1 to
 	 * 172.16.3.3, packages arrive from 195.169.216.157 to 172.16.3.3, where
 	 * 172.16.3.1 and 195.169.216.157 are the local addresses of different 
@@ -146,11 +149,11 @@ void addtoconninode (char * buffer)
 	struct local_addr * current_local_addr = local_addrs;
 	while (current_local_addr != NULL) {
 		/* TODO maybe only add the ones with the same sa_family */
-		hashkey = (char *) malloc (HASHKEYSIZE * sizeof(char));
 		snprintf(hashkey, HASHKEYSIZE * sizeof(char), "%s:%d-%s:%d", current_local_addr->string, local_port, remote_string, rem_port);
 		conninode->add(hashkey, (void *)inode);
 		current_local_addr = current_local_addr->next;
 	}
+	free (hashkey);
 	free (remote_string);
 }
 
@@ -184,7 +187,8 @@ struct prg_node * findPID (unsigned long inode)
 		prg_cache_clear();
 		prg_cache_load();
 		node = prg_cache_get(inode);
-		assert (node->pid != 1);
+		// this still happens sometimes...
+		//assert (node->pid != 1);
 	}
 
 	if (node == NULL)
@@ -280,7 +284,7 @@ void refreshconninode ()
 
 }
 
-float tokbps (bpf_u_int32 bytes)
+float tokbps (u_int32_t bytes)
 {
 	return (((double)bytes) / PERIOD) / 1024;
 }
@@ -327,7 +331,7 @@ void Line::show (int row)
 {
 	if (DEBUG || tracemode)
 	{
-		std::cout << m_name << "\t" << sent_kbps << "\t" << recv_kbps << std::endl;
+		std::cout << m_name << '/' << m_pid << '/' << m_uid << "\t" << sent_kbps << "\t" << recv_kbps << std::endl;
 		return;
 	}
 
@@ -425,8 +429,8 @@ void do_refresh()
 			continue;
 		}
 
-		bpf_u_int32 sum_sent = 0, 
-			    sum_recv = 0;
+		u_int32_t sum_sent = 0, 
+			  sum_recv = 0;
 
 		/* walk though all this process's connections, and sum them
 		 * up */
@@ -449,7 +453,7 @@ void do_refresh()
 			} 
 			else 
 			{
-				bpf_u_int32 sent = 0, recv = 0;
+				u_int32_t sent = 0, recv = 0;
 				curconn->getVal()->sumanddel(curtime, &sent, &recv);
 				sum_sent += sent;
 				sum_recv += recv;

@@ -10,6 +10,7 @@
 #include <netinet/ip.h>
 #include <netinet/ip6.h>
 #include <sys/ioctl.h>
+#include <stdio.h>
 // #include "inet6.c"
 
 local_addr * local_addrs = NULL;
@@ -124,77 +125,22 @@ struct tcp_hdr {
        u_short th_sum; /* checksum */                                                                       
        u_short th_urp; /* urgent pointer */                                                                 
 };                                                                                                       
-/* Packet 'Constructor' - but returns NULL on failure */
-/* deprecated by decpcap 
-Packet * getPacket (const struct pcap_pkthdr * header, const u_char * packet, packet_type headertype)
-{
-	int packettype;
-	int headersize;
-
-	switch (headertype)
-	{
-	case (packet_ethernet):
-		{
-		const struct ether_header * ethernet = (struct ether_header *)packet;
-		packettype = ethernet->ether_type;
-		headersize = sizeof (struct ether_header);
-		}; break;
-	case (packet_ppp):
-		{
-		const struct ppp_header * ppp = (struct ppp_header *)packet;
-		packettype = ppp->packettype;
-		headersize = sizeof (struct ppp_header);
-		}; break;
-	}
-	if (packettype == 0x0008)
-	{
-		const struct ip * ip = (struct ip *)(packet + headersize);
-		if (ip->ip_p != 6)
-		{
-#if DEBUG
-			std::cerr << "Dropped non-tcp IPv4 packet of type " << (int)(ip->ip_p) << std::endl;
-#endif
-			return NULL;
-		}
-		const struct tcp_hdr * tcp = (struct tcp_hdr *)(packet + headersize + sizeof(struct ip));
-		return new Packet (ip->ip_src, ntohs(tcp->th_sport), ip->ip_dst, ntohs(tcp->th_dport), header->len, header->ts);
-	} else if (packettype == 0xDD86) {
-		const struct ip6_hdr * ip6 = (struct ip6_hdr *)(packet + headersize);
-		if ((ip6->ip6_ctlun).ip6_un1.ip6_un1_nxt != 0x06)
-		{
-			// TODO maybe we need to skip over some headers?
-#if DEBUG
-			std::cerr << "Dropped non-tcp IPv6 header of type " << (int)((ip6->ip6_ctlun).ip6_un1.ip6_un1_nxt) << std::endl;
-#endif
-			return NULL;
-		}
-		const struct tcp_hdr * tcp = (struct tcp_hdr *)(packet + headersize + sizeof(ip6_hdr));
-
-		return new Packet (ip6->ip6_src, ntohs(tcp->th_sport), 
-		    ip6->ip6_dst, ntohs(tcp->th_dport), header->len, header->ts);
-	}
-
-#if DEBUG
-	std::cerr << "Dropped non-ip packet of type " << packettype << std::endl;
-#endif
-	return NULL;
-}
-*/
-
-Packet::Packet (in_addr m_sip, unsigned short m_sport, in_addr m_dip, unsigned short m_dport, bpf_u_int32 m_len, timeval m_time, direction m_dir)
+Packet::Packet (in_addr m_sip, unsigned short m_sport, in_addr m_dip, unsigned short m_dport, u_int32_t m_len, timeval m_time, direction m_dir)
 {
 	sip = m_sip; sport = m_sport;
 	dip = m_dip; dport = m_dport;
 	len = m_len; time = m_time;
 	dir = m_dir; sa_family = AF_INET;
+	hashstring = NULL;
 }
 
-Packet::Packet (in6_addr m_sip, unsigned short m_sport, in6_addr m_dip, unsigned short m_dport, bpf_u_int32 m_len, timeval m_time, direction m_dir)
+Packet::Packet (in6_addr m_sip, unsigned short m_sport, in6_addr m_dip, unsigned short m_dport, u_int32_t m_len, timeval m_time, direction m_dir)
 {
 	sip6 = m_sip; sport = m_sport;
 	dip6 = m_dip; dport = m_dport;
 	len = m_len; time = m_time;
 	dir = m_dir; sa_family = AF_INET6;
+	hashstring = NULL;
 }
 
 Packet * Packet::newInverted () {
@@ -206,11 +152,19 @@ Packet * Packet::newInverted () {
 }
 
 /* constructs returns a new Packet() structure with the same contents as this one */
-/*Packet::Packet (const Packet &old_packet) {
-    sip = old_packet.sip; sport = old_packet.sport;
-    dip = old_packet.dip; dport = old_packet.dport;
-    len = old_packet.len; time = old_packet.time;
-}*/
+Packet::Packet (const Packet &old_packet) {
+    	sip = old_packet.sip; sport = old_packet.sport;
+    	sip6 = old_packet.sip6; 
+    	dip6 = old_packet.dip6; 
+    	dip = old_packet.dip; dport = old_packet.dport;
+    	len = old_packet.len; time = old_packet.time;
+	sa_family = old_packet.sa_family;
+    	if (old_packet.hashstring == NULL)
+		hashstring = NULL;
+    	else
+    		hashstring = strdup(old_packet.hashstring);
+
+}
 
 bool sameinaddr(in_addr one, in_addr other)
 {
@@ -266,11 +220,20 @@ bool Packet::Outgoing () {
 
 /* returns the packet in '1.2.3.4:5-1.2.3.4:5'-form, for use in the 'conninode' table */
 /* '1.2.3.4' should be the local address. */
+/* the calling code should take care of deletion of the hash string */
 char * Packet::gethashstring ()
 {
-	char * retval = (char *) malloc (HASHKEYSIZE * sizeof(char));
-	char * local_string  = (char*) malloc (50);
-	char * remote_string = (char*) malloc (50);
+	if (hashstring != NULL)
+	{
+		if (DEBUG)
+			std::cout << "Returning cached hash string: " << hashstring << std::endl;
+		return hashstring;
+	}
+
+	hashstring = (char *) malloc (HASHKEYSIZE * sizeof(char));
+
+	char * local_string  = (char *) malloc (50);
+	char * remote_string = (char *) malloc (50);
 	if (sa_family == AF_INET) {
 		inet_ntop(sa_family, &sip, local_string,  49);
 		inet_ntop(sa_family, &dip, remote_string, 49);
@@ -279,13 +242,15 @@ char * Packet::gethashstring ()
 		inet_ntop(sa_family, &dip6, remote_string, 49);
 	}
 	if (Outgoing()) {
-		snprintf(retval, HASHKEYSIZE * sizeof(char), "%s:%d-%s:%d", local_string, sport, remote_string, dport);
+		snprintf(hashstring, HASHKEYSIZE * sizeof(char), "%s:%d-%s:%d", local_string, sport, remote_string, dport);
 	} else {
-		snprintf(retval, HASHKEYSIZE * sizeof(char), "%s:%d-%s:%d", remote_string, dport, local_string, sport);
+		snprintf(hashstring, HASHKEYSIZE * sizeof(char), "%s:%d-%s:%d", remote_string, dport, local_string, sport);
 	}
 	free (local_string);
 	free (remote_string);
-	return retval;
+	if (DEBUG)
+		std::cout << "Returning newly created hash string: " << hashstring << std::endl;
+	return hashstring;
 }
 
 /* 2 packets match if they have the same 

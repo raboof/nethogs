@@ -16,6 +16,9 @@ class HashTable
 public:
 	HashTable(int n_size);
 	~HashTable();
+
+	/* after calling 'add', the calling application
+	 * must free the string */
 	void add(char * key, void * content);
 	void * get(char * key);
 

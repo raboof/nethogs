@@ -47,6 +47,8 @@ public:
 		name = m_name;
 		devicename = m_devicename;
 		connections = NULL;
+		pid = 0;
+		uid = 0;
 	}
 	int getLastPacket ()
 	{

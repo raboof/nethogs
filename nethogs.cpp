@@ -93,13 +93,14 @@ int process_tcp (u_char * userdata, const dp_header * header, const u_char * m_p
 	switch (args->sa_family)
 	{
 		case (AF_INET):
-			//packet = new Packet (args->ip_src, ntohs(tcp->th_sport), args->ip_dst, ntohs(tcp->th_dport), header->len, header->ts);
 			packet = new Packet (args->ip_src, ntohs(tcp->source), args->ip_dst, ntohs(tcp->dest), header->len, header->ts);
 			break;
 		case (AF_INET6):
 			packet = new Packet (args->ip6_src, ntohs(tcp->source), args->ip6_dst, ntohs(tcp->dest), header->len, header->ts);
 			break;
 	}
+	//if (DEBUG)
+	//	std::cout << "Got packet from " << packet->gethashstring() << std::endl;
 
 	Connection * connection = findConnection(packet);
 
@@ -107,11 +108,10 @@ int process_tcp (u_char * userdata, const dp_header * header, const u_char * m_p
 	{
 		/* add packet to the connection */
 		connection->add(packet);
+		delete packet;
 	} else {
 		/* else: unknown connection, create new */
 		connection = new Connection (packet);
-		//if (DEBUG)
-		//	std::cerr << "Getting process by connection\n";
 		Process * process = getProcess(connection, currentdevice);
 	}
 
@@ -152,6 +152,7 @@ void quit_cb (int i)
 	procclean();
 	clear();
 	endwin();
+	delete caption;
 	exit(0);
 }
 
@@ -310,9 +311,8 @@ int main (int argc, char** argv)
 			struct dpargs * userdata = (dpargs *) malloc (sizeof (struct dpargs));
 			userdata->sa_family = AF_UNSPEC;
 			currentdevice = current_handle->devicename;
-			/* TODO maybe userdata needs be reset every now and then? */
 			dp_dispatch (current_handle->content, -1, (u_char *)userdata, sizeof (struct dpargs));
-			/* dp_dispatch handles deletion of the userdata */
+			free (userdata);
 			current_handle = current_handle->next;
 		}
 

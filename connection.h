@@ -42,7 +42,7 @@ public:
 	}
 
 	/* sums up the total bytes used and removes 'old' packets */
-	bpf_u_int32 sumanddel (timeval t);
+	u_int32_t sumanddel (timeval t);
 
 	void add (Packet * p);
 private:
@@ -71,7 +71,7 @@ public:
 
 	/* sums up the total bytes used
 	 * and removes 'old' packets. */
-	void sumanddel(timeval curtime, bpf_u_int32 * sent, bpf_u_int32 * recv);
+	void sumanddel(timeval curtime, u_int32_t * sent, u_int32_t * recv);
 
 	/* for checking if a packet is part of this connection */
 	/* the reference packet is always *outgoing*. */

@@ -21,7 +21,7 @@ void PackList::add (Packet * p)
 {
 	if (content == NULL)
 	{
-		content = new PackListNode (p);
+		content = new PackListNode (new Packet (*p));
 		return;
 	}
 
@@ -31,13 +31,13 @@ void PackList::add (Packet * p)
 		return;
 	}
 
-	content = new PackListNode(p, content);
+	content = new PackListNode(new Packet (*p), content);
 }
 
 /* sums up the total bytes used and removes 'old' packets */
-bpf_u_int32 PackList::sumanddel (timeval t)
+u_int32_t PackList::sumanddel (timeval t)
 {
-	bpf_u_int32 retval = 0;
+	u_int32_t retval = 0;
 	PackListNode * current = content;
 	PackListNode * previous = NULL;
 
@@ -84,9 +84,9 @@ Connection::~Connection ()
 {
 	if (DEBUG)
 		std::cout << "Deleting connection" << std::endl;
-	/* refpacket is a pointer to one of the packets in the lists,
-	 * so not deleted */
-	//delete refpacket;
+	/* refpacket is not a pointer to one of the packets in the lists
+	 * so deleted */
+	delete (refpacket);
     	if (sent_packets != NULL)
 		delete sent_packets;
     	if (recv_packets != NULL)
@@ -116,6 +116,7 @@ Connection::~Connection ()
 	}
 }
 
+/* the packet will be freed by the calling code */
 void Connection::add (Packet * packet)
 {
 	lastpacket = packet->time.tv_sec;
@@ -139,10 +140,14 @@ Connection * findConnection (Packet * packet)
 		/* the reference packet is always *outgoing* */
 		if ((packet->match(current->val->refpacket))
 		  || (invertedPacket->match(current->val->refpacket)))
+		{
+			delete invertedPacket;
 			return current->val;
+		}
 
 		current = current->next;
 	}
+	delete invertedPacket;
 	return NULL;
 }
 
@@ -155,7 +160,7 @@ Connection * findConnection (Packet * packet)
  * Returns sum of sent packages (by address)
  *	   sum of recieved packages (by address)
  */
-void Connection::sumanddel (timeval t, bpf_u_int32 * sent, bpf_u_int32 * recv)
+void Connection::sumanddel (timeval t, u_int32_t * sent, u_int32_t * recv)
 {
     (*sent)=(*recv)=0;
 
