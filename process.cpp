@@ -168,11 +168,10 @@ void addtoconninode (char * buffer)
  *     sl  local_address                         remote_address                        st tx_queue rx_queue tr tm->when retrnsmt   uid  timeout inode
  *      2: 0000000000000000FFFF0000020310AC:0016 0000000000000000FFFF00009DD8A9C3:A526 01 00000000:00000000 02:000A7214 00000000     0        0 2525 2 c732eca0 201 40 1 2 -1
  *
+ * For now, we only support 0000000000000000FFFF0000-addresses.
  */
 void addtoconninodev6 (char * buffer)
 {
-	/* TODO implement */
-
 	char rem_addr[128], local_addr[128];
 	int local_port, rem_port;
     	struct sockaddr_in6 localaddr, remaddr;
@@ -182,12 +181,60 @@ void addtoconninodev6 (char * buffer)
 	// the following line leaks memory.
 	unsigned long * inode = (unsigned long *) malloc (sizeof(unsigned long));
 	// TODO check it matched
-	sscanf(buffer, "%*d: %64[0-9A-Fa-f]:%X %64[0-9A-Fa-f]:%X %*X %*lX:%*lX %*X:%*lX %*lX %*d %*d %ld %*512s\n",
+	sscanf(buffer, "%*d: 0000000000000000FFFF0000%64[0-9A-Fa-f]:%X 0000000000000000FFFF0000%64[0-9A-Fa-f]:%X %*X %*lX:%*lX %*X:%*lX %*lX %*d %*d %ld %*512s\n",
 		local_addr, &local_port, rem_addr, &rem_port, inode);
 
 	if (strlen(local_addr) > 8)
 	{
 		/* Demangle what the kernel gives us */
+		sscanf(local_addr, "%08X%08X%08X%08X", 
+			&in6.s6_addr32[0], &in6.s6_addr32[1],
+			&in6.s6_addr32[2], &in6.s6_addr32[3]);
+		inet_ntop(AF_INET6, &in6, addr6, sizeof(addr6));
+		INET6_getsock(addr6, (struct sockaddr *) &localaddr);
+		sscanf(rem_addr, "%08X%08X%08X%08X",
+		       &in6.s6_addr32[0], &in6.s6_addr32[1],
+		       &in6.s6_addr32[2], &in6.s6_addr32[3]);
+		inet_ntop(AF_INET6, &in6, addr6, sizeof(addr6));
+		INET6_getsock(addr6, (struct sockaddr *) &remaddr);
+		localaddr.sin6_family = AF_INET6;
+		remaddr.sin6_family = AF_INET6;
+	}
+	else
+	{
+		sscanf(local_addr, "%X", &((struct sockaddr_in *)&localaddr)->sin_addr.s_addr);
+		sscanf(rem_addr, "%X", &((struct sockaddr_in *)&remaddr)->sin_addr.s_addr);
+		((struct sockaddr *) &localaddr)->sa_family = AF_INET;
+		((struct sockaddr *) &remaddr)->sa_family = AF_INET;
+	}
+
+	/* Construct hash key and add inode to conninode table */
+	char * hashkey = (char *) malloc (92 * sizeof(char));
+	snprintf(hashkey, 92 * sizeof(char), "%s:%d-", inet_ntoa(((struct sockaddr_in *)&localaddr)->sin_addr), local_port);
+	snprintf(hashkey, 92 * sizeof(char), "%s%s:%d", hashkey, inet_ntoa(((struct sockaddr_in *)&remaddr)->sin_addr), rem_port);
+	conninode->add(hashkey, (void *)inode);
+
+	// TODO maybe also add this inode for our other local addresses with that destination
+}
+
+/*
+void addtoconninodev6 (char * buffer)
+{
+	char rem_addr[128], local_addr[128];
+	int local_port, rem_port;
+    	struct sockaddr_in6 localaddr, remaddr;
+    	char addr6[INET6_ADDRSTRLEN];
+    	struct in6_addr in6;
+    	extern struct aftype inet6_aftype;
+	// the following line leaks memory.
+	unsigned long * inode = (unsigned long *) malloc (sizeof(unsigned long));
+	// TODO check it matched
+	sscanf(buffer, "%*d: 0000000000000000FFFF0000%64[0-9A-Fa-f]:%X 0000000000000000FFFF0000%64[0-9A-Fa-f]:%X %*X %*lX:%*lX %*X:%*lX %*lX %*d %*d %ld %*512s\n",
+		local_addr, &local_port, rem_addr, &rem_port, inode);
+
+	if (strlen(local_addr) > 8)
+	{
+		// Demangle what the kernel gives us 
 		sscanf(local_addr, "%08X%08X%08X%08X", 
 			&in6.s6_addr32[0], &in6.s6_addr32[1],
 			&in6.s6_addr32[2], &in6.s6_addr32[3]);
@@ -270,6 +317,7 @@ void addtoconninodev6 (char * buffer)
 		conninode->add(hashkey, (void *)inode);
 	}
 }
+*/
 
 void refreshconninode ()
 {
