@@ -107,7 +107,7 @@ Packet * getPacket (const struct pcap_pkthdr * header, const u_char * packet)
 	if (ethernet->ether_type != 8)
 	{
 #if DEBUG
-		cerr << "Dropped non-ip packet of type " << ethernet->ether_type << endl;
+		std::cerr << "Dropped non-ip packet of type " << ethernet->ether_type << std::endl;
 #endif
 		return NULL;
 	}
@@ -116,7 +116,7 @@ Packet * getPacket (const struct pcap_pkthdr * header, const u_char * packet)
 	if (ip->ip_p != 6)
 	{
 #if DEBUG
-		cerr << "Dropped non-tcp packet of type " << (int)(ip->ip_p) << endl;
+		std::cerr << "Dropped non-tcp packet of type " << (int)(ip->ip_p) << std::endl;
 #endif
 		return NULL;
 	}
@@ -166,8 +166,11 @@ char * Packet::gethashstring ()
 	return retval;
 }
 
+/* 2 packets match if they have the same 
+ * source and destination ports and IP's,
+ * or inverted. */
 bool Packet::match (Packet * other)
 {
-	return ((sport == other->sport) && (dport == other->dport) 
-			&& (sameinaddr(sip, other->sip)) && (sameinaddr(dip, other->dip)));
+	return (sport == other->sport) && (dport == other->dport) 
+		&& (sameinaddr(sip, other->sip)) && (sameinaddr(dip, other->dip));
 }

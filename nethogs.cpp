@@ -50,20 +50,22 @@ void process (u_char * args, const struct pcap_pkthdr * header, const u_char * m
 		return;
 
 	Connection * connection = findConnection(packet);
+
 	if (connection != NULL)
 	{
+		/* add packet to the connection */
 		connection->add(packet);
-		return;
+	} else {
+		/* else: unknown connection, create new */
+		connection = new Connection (packet);
+		Process * process = getProcess(connection, currentdevice);
 	}
-	connection = new Connection (packet);
-	Process * process = getProcess(connection, currentdevice);
+
 	if (needrefresh)
 	{
 		do_refresh();
 		needrefresh = false;
 	}
-
-	return;
 }
 
 void quit_cb (int i)

@@ -100,6 +100,11 @@ void Connection::add (Packet * packet)
 	}
 }
 
+/* finds connection to which this packet belongs.
+ * a packet belongs to a connection if it matches
+ * to its reference packet */
+/* the incoming and outgoing streams of a connection
+ * are 2 sepetate 'connections' in nethogs. */
 Connection * findConnection (Packet * packet)
 {
 	ConnList * current = connections;

@@ -439,6 +439,12 @@ Process * getProcess (unsigned long inode, char * devicename)
 	return newproc;
 }
 
+/* Used when a new connection is encountered. Finds corresponding
+ * process and adds the connection. If the connection  doesn't belong
+ * to any known process, the process list is updated and a new process
+ * is made. If no process can be found even then, it's added to the 
+ * 'unknown' process.
+ */
 Process * getProcess (Connection * connection, char * devicename)
 {
 	ProcList * curproc = processes;
@@ -446,7 +452,7 @@ Process * getProcess (Connection * connection, char * devicename)
 	// see if we already know the inode for this connection
 	if (DEBUG)
 	{
-		std::cout << "Connection reference packet found at ";
+		std::cout << "New connection reference packet.. ";
 		std::cout << connection->refpacket << std::endl;
 	}
 
@@ -456,14 +462,14 @@ Process * getProcess (Connection * connection, char * devicename)
 	{
 		// no? refresh and check conn/inode table
 #if DEBUG
-		cerr << "Not in table, refreshing it.\n"; 
+		std::cerr << "Not in table, refreshing table from /proc/net/tcp.\n"; 
 #endif
 		refreshconninode();
 		inode = (unsigned long *) conninode->get(connection->refpacket->gethashstring());
 		if (inode == NULL)
 		{
 #if DEBUG
-			//cerr << connection->refpacket->gethashstring() << " STILL not in table - dropping\n";
+			std::cerr << connection->refpacket->gethashstring() << " STILL not in table - dropping\n";
 #endif
 			return NULL;
 		}
