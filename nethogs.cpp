@@ -124,6 +124,7 @@ public:
 int main (int argc, char** argv)
 {
 	device * devices = NULL;
+	int promisc = 0;
 
 	for (argv++; *argv; argv++)
 	{
@@ -137,6 +138,8 @@ int main (int argc, char** argv)
 				case 'h': help();
 					  exit(0);
 				case 't': tracemode = true;
+					  break;
+				case 'p': promisc = 1;
 					  break;
 				case 'd': if (argv[1])
 					  {
@@ -182,7 +185,7 @@ int main (int argc, char** argv)
 			caption->append(" ");
 		}
 
-		pcap_t * newhandle = pcap_open_live(current_dev->name, BUFSIZ, 0, 100, errbuf); 
+		pcap_t * newhandle = pcap_open_live(current_dev->name, BUFSIZ, promisc, 100, errbuf); 
 		if (newhandle != NULL)
 		{
 			/* The following code solves sf.net bug 1019381, but is only available
