@@ -1,5 +1,15 @@
 Changelog
 
+17/09/04 (Arnou)
+-Wrapped pcap stuff in nicer 'decpcap' module
+-Support for IPv6 and PPP
+-using standard C++ maps instead of custom structures
+-many more code cleanups
+-documentation
+-split up ui code in seperate module
+
+-------------------------------------------------
+
 15/08/04 (Fabian)
 -Totals (in curses mode)
 
