@@ -30,6 +30,19 @@ struct dp_handle * dp_open_live(char * device, int snaplen, int promisc, int to_
 
 	retval->linktype = pcap_datalink(retval->pcap_handle);
 
+	switch (retval->linktype) {
+		case (DLT_EN10MB):
+			std::cout << 'Ethernet link detected\n";
+			break;
+		case (DLT_PPP):
+			std::cout << 'PPP link detected\n";
+			break;
+		default:
+			std::cout << 'No PPP or Ethernet link: " << retval->linktype << std::endl;
+			// TODO maybe error? or 'other' callback?
+			break;
+	}
+
 	return retval;
 }
 
@@ -76,6 +89,7 @@ void dp_parse_ip (struct dp_handle * handle, const dp_header * header, const u_c
 			break;
 		default:
 			// TODO
+			break;
 	}
 }
 
@@ -98,6 +112,7 @@ void dp_parse_ip6 (struct dp_handle * handle, const dp_header * header, const u_
 			break;
 		default:
 			// TODO
+			break;
 	}
 }
 
@@ -128,6 +143,7 @@ void dp_parse_ethernet (struct dp_handle * handle, const dp_header * header, con
 			break;
 		default:
 			// TODO
+			break;
 	}
 }
 
@@ -173,6 +189,7 @@ void dp_parse_ppp (struct dp_handle * handle, const dp_header * header, const u_
 			break;
 		default:
 			// TODO
+			break;
 	}
 }
 
