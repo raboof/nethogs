@@ -144,8 +144,7 @@ Packet * getPacket (const struct pcap_pkthdr * header, const u_char * packet, pa
 		{
 		const struct ppp_header * ppp = (struct ppp_header *)packet;
 		packettype = ppp->packettype;
-		headersize = sizeof (struct ether_header);
-		break;
+		headersize = sizeof (struct ppp_header);
 		}; break;
 	}
 	if (packettype == 0x0008)
