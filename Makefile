@@ -1,6 +1,6 @@
 VERSION      := 0
 SUBVERSION   := 6
-MINORVERSION := pre
+MINORVERSION := 1pre2
 
 bin  := $(DESTDIR)/usr/bin
 man8 := $(DESTDIR)/usr/share/man/man8/

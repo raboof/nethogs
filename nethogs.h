@@ -30,7 +30,7 @@
 #define NEEDROOT 1
 #endif
 
-#define DEBUG 1
+#define DEBUG 0
 
 // if '0', do extra checks and
 // assertions. good for finding bugs

@@ -1,6 +1,11 @@
 Changelog
 
-17/09/04 (Arnou)
+18/09/04 (Arnout)
+- also compile with gcc-3.4
+
+-------------------------------------------------
+
+17/09/04 (Arnout)
 -Wrapped pcap stuff in nicer 'decpcap' module
 -Support for IPv6 and PPP
 -using standard C++ maps instead of custom structures

@@ -32,13 +32,13 @@ struct dp_handle * dp_open_live(char * device, int snaplen, int promisc, int to_
 
 	switch (retval->linktype) {
 		case (DLT_EN10MB):
-			std::cout << 'Ethernet link detected\n";
+			fprintf(stdout, "Ethernet link detected\n");
 			break;
 		case (DLT_PPP):
-			std::cout << 'PPP link detected\n";
+			fprintf(stdout, "PPP link detected\n");
 			break;
 		default:
-			std::cout << 'No PPP or Ethernet link: " << retval->linktype << std::endl;
+			fprintf(stdout, "No PPP or Ethernet link: %d\n", retval->linktype);
 			// TODO maybe error? or 'other' callback?
 			break;
 	}
