@@ -43,7 +43,8 @@ bpf_u_int32 PackList::sumanddel (timeval t)
 
 	while (current != NULL) 
 	{
-		if (current->val->isOlderThan(t))
+		//std::cout << "Comparing " << current->val->time.tv_sec << " <= " << t.tv_sec - PERIOD << endl;
+		if (current->val->time.tv_sec <= t.tv_sec - PERIOD)
 		{
 			if (current == content)
 				content = NULL;
@@ -83,11 +84,36 @@ Connection::~Connection ()
 {
 	if (DEBUG)
 		std::cout << "Deleting connection" << std::endl;
-	delete refpacket;
+	/* refpacket is a pointer to one of the packets in the lists,
+	 * so not deleted */
+	//delete refpacket;
     	if (sent_packets != NULL)
 		delete sent_packets;
     	if (recv_packets != NULL)
 		delete recv_packets;
+
+	ConnList * curr_conn = connections;
+	ConnList * prev_conn = NULL;
+	while (curr_conn != NULL)
+	{
+		if (curr_conn->val == this)
+		{
+			ConnList * todelete = curr_conn;
+			curr_conn = curr_conn->next;
+			if (prev_conn == NULL)
+			{
+				connections = curr_conn;
+			} else {
+				prev_conn->next = curr_conn;
+			}
+			delete (todelete);
+		}
+		else
+		{
+			prev_conn = curr_conn;
+			curr_conn = curr_conn->next;
+		}
+	}
 }
 
 void Connection::add (Packet * packet)

@@ -5,6 +5,7 @@
 #include <ctype.h>
 #include <unistd.h>
 #include <malloc.h>
+#include <assert.h>
 
 #include <sys/types.h>
 #include <sys/stat.h>

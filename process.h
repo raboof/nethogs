@@ -16,6 +16,11 @@ public:
 			assert (m_val != NULL);
 		val = m_val; next = m_next;
 	}
+	~ConnList ()
+	{
+		/* does not delete its value, to allow a connection to
+		 * remove itself from the global connlist in its destructor */
+	}
 	Connection * getVal ()
 	{
 		return val;

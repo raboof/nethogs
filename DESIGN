@@ -21,3 +21,10 @@ the unknownproc's connections whenever the connection-to-inode table is
 refreshed.
 And maybe, while there are still unknown connections, the connection-to-inode 
 table should be updated regularly.
+
+
+There are some global data structures:
+connection.cpp:
+  connections. 'ConnList' list containting all currently known connections.
+  A connection removes itself from the global 'connections' list in its 
+  destructor.

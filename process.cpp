@@ -19,22 +19,6 @@ extern timeval curtime;
 extern std::string * caption;
 extern local_addr * local_addrs;
 
-/* takes the text in bufp, and uses it to fill the sockaddr *sap. */
-/*static int INET6_getsock(char *bufp, struct sockaddr *sap)
-{
-    struct sockaddr_in6 *sin6;
-
-    sin6 = (struct sockaddr_in6 *) sap;
-    sin6->sin6_family = AF_INET6;
-    sin6->sin6_port = 0;
-
-    if (inet_pton(AF_INET6, bufp, sin6->sin6_addr.s6_addr) <= 0)
-	return (-1);
-
-    return 16;			
-}
-*/
-
 class ProcList
 {
 public:
@@ -51,25 +35,6 @@ private:
 	Process * val;
 };
 
-
-struct aftype {
-    char *name;
-    char *title;
-    int af;
-    int alen;
-    char *(*print) (unsigned char *);
-    char *(*sprint) (struct sockaddr *, int numeric);
-    int (*input) (int type, char *bufp, struct sockaddr *);
-    void (*herror) (char *text);
-    int (*rprint) (int options);
-    int (*rinput) (int typ, int ext, char **argv);
-
-    /* may modify src */
-    int (*getmask) (char *src, struct sockaddr * mask, char *name);
-
-    int fd;
-    char *flag_file;
-};
 /* 
  * connection-inode table. takes information from /proc/net/tcp.
  * key contains source ip, source port, destination ip, destination 
@@ -103,11 +68,9 @@ void addtoconninode (char * buffer)
     	char addr6[INET6_ADDRSTRLEN];
     	struct in6_addr in6_local;
     	struct in6_addr in6_remote;
-    	extern struct aftype inet6_aftype;
-	// the following line leaks memory.
+	// the following line might leak memory.
 	unsigned long * inode = (unsigned long *) malloc (sizeof(unsigned long));
 
-	// TODO check it matched
 	int matches = sscanf(buffer, "%*d: %64[0-9A-Fa-f]:%X %64[0-9A-Fa-f]:%X %*X %*lX:%*lX %*X:%*lX %*lX %*d %*d %ld %*512s\n",
 		local_addr, &local_port, rem_addr, &rem_port, inode);
 
@@ -216,6 +179,13 @@ struct prg_node * findPID (unsigned long inode)
 {
 	/* find PID */
 	struct prg_node * node = prg_cache_get(inode);
+	if (node != NULL && node->pid == 1)
+	{
+		prg_cache_clear();
+		prg_cache_load();
+		node = prg_cache_get(inode);
+		assert (node->pid != 1);
+	}
 
 	if (node == NULL)
 	{
@@ -329,7 +299,6 @@ char * uid2username (int uid)
 	}
 }
 
-
 class Line 
 {
 public:
@@ -436,6 +405,7 @@ void do_refresh()
 			assert (curproc != NULL);
 			assert (curproc->getVal() != NULL);
 		}
+		/* do not remove the unknown process */
 		if ((curproc->getVal()->getLastPacket() + PROCESSTIMEOUT <= curtime.tv_sec) && (curproc->getVal() != unknownproc))
 		{
 			/* remove connection */
@@ -455,22 +425,39 @@ void do_refresh()
 			continue;
 		}
 
-		bpf_u_int32 sum = 0, 
-			    sum_local = 0,
-			    sum_conn = 0,
-			    sum_connLocal = 0;	
+		bpf_u_int32 sum_sent = 0, 
+			    sum_recv = 0;
 
 		/* walk though all this process's connections, and sum them
 		 * up */
 		ConnList * curconn = curproc->getVal()->connections;
+		ConnList * previous = NULL;
 		while (curconn != NULL)
 		{
-			curconn->getVal()->sumanddel(curtime, &sum, &sum_local);
-			sum_connLocal += sum_local;
-			sum_conn      += sum;
-			curconn = curconn->getNext();
+			if (curconn->getVal()->getLastPacket() <= curtime.tv_sec - CONNTIMEOUT)
+			{
+				/* stalled connection, remove. */
+				ConnList * todelete = curconn;
+				Connection * conn_todelete = curconn->getVal();
+				curconn = curconn->getNext();
+				if (todelete == curproc->getVal()->connections)
+					curproc->getVal()->connections = curconn;
+				if (previous != NULL)
+					previous->setNext(curconn);
+				delete (todelete);
+				delete (conn_todelete);
+			} 
+			else 
+			{
+				bpf_u_int32 sent = 0, recv = 0;
+				curconn->getVal()->sumanddel(curtime, &sent, &recv);
+				sum_sent += sent;
+				sum_recv += recv;
+				previous = curconn;
+				curconn = curconn->getNext();
+			}
 		}
-		lines[n] = new Line (curproc->getVal()->name, tokbps(sum_conn), tokbps(sum_connLocal), curproc->getVal()->pid, curproc->getVal()->uid, curproc->getVal()->devicename);
+		lines[n] = new Line (curproc->getVal()->name, tokbps(sum_sent), tokbps(sum_recv), curproc->getVal()->pid, curproc->getVal()->uid, curproc->getVal()->devicename);
 		previousproc = curproc;
 		curproc = curproc->next;
 		n++;
