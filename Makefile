@@ -10,13 +10,12 @@ all: nethogs
 CFLAGS=-g
 OBJS=structs.o packet.o connection.o process.o hashtbl.o refresh.o
 GCC=g++
-
-.PHONY tgz
+.PHONY: tgz
 
 tgz: clean
 	cd .. ; tar czvf nethogs-$(VERSION).$(SUBVERSION).$(MINORVERSION).tar.gz nethogs-$(VERSION).$(SUBVERSION)/*
 
-.PHONY check
+.PHONY: check
 check:
 	echo "Not implemented"
 
@@ -42,7 +41,7 @@ connection.o: connection.cpp connection.h nethogs.h
 hashtbl.o: hashtbl.cpp hashtbl.h nethogs.h
 	$(GCC) $(CFLAGS) -c hashtbl.cpp
 
-.PHONY clean
+.PHONY: clean
 clean:
 	rm -f $(OBJS)
 	rm -f nethogs
