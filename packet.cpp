@@ -7,6 +7,8 @@
 #include <assert.h>
 #include <net/if.h>
 #include <net/ethernet.h>
+#include <netinet/ip.h>
+#include <netinet/ip6.h>
 #include <sys/ioctl.h>
 // #include "inet6.c"
 
@@ -38,12 +40,12 @@ void getLocal (const char *device)
 
 typedef u_int32_t tcp_seq;
 
-/* ethernet header */
-struct ethernet_hdr {
+/* ethernet header (now unused) */
+/*struct ethernet_hdr {
 	u_char ether_dhost[ETHER_ADDR_LEN];
 	u_char ether_shost[ETHER_ADDR_LEN];
-	u_short ether_type; /* IP? */
-};
+	u_short ether_type; 
+};*/
 
 /* IP header */
 struct ip_hdr
@@ -104,26 +106,42 @@ Packet * getPacket (const struct pcap_pkthdr * header, const u_char * packet)
 {
 	//const struct ethernet_hdr * ethernet = (struct ethernet_hdr *)packet;
 	const struct ether_header * ethernet = (struct ether_header *)packet;
-	if (ethernet->ether_type != 8)
+	/* this is the opposite endianness from http://www.iana.org/assignments/ethernet-numbers
+	 * TODO probably have to look at network/host byte order and endianness!! */
+	if (ethernet->ether_type == 0x0008)
 	{
+		//const struct ip_hdr * ip = (struct ip_hdr *)(packet + sizeof(ether_header));
+		const struct ip * ip = (struct ip *)(packet + sizeof(ether_header));
+		if (ip->ip_p != 6)
+		{
 #if DEBUG
-		std::cerr << "Dropped non-ip packet of type " << ethernet->ether_type << std::endl;
+			std::cerr << "Dropped non-tcp IPv4 packet of type " << (int)(ip->ip_p) << std::endl;
 #endif
-		return NULL;
+			return NULL;
+		}
+		const struct tcp_hdr * tcp = (struct tcp_hdr *)(packet + sizeof(ether_header) + sizeof(ip_hdr));
+		return new Packet (ip->ip_src, ntohs(tcp->th_sport), ip->ip_dst, ntohs(tcp->th_dport), header->len, header->ts);
+	} else if (ethernet->ether_type == 0xDD86) {
+		const struct ip6_hdr * ip6 = (struct ip6_hdr *)(packet + sizeof(ether_header));
+		if ((ip6->ip6_ctlun).ip6_un1.ip6_un1_nxt != 0x06)
+		{
+			// TODO maybe we need to skip over some headers?
+#if DEBUG
+			std::cerr << "Dropped non-tcp IPv6 header of type " << (int)((ip6->ip6_ctlun).ip6_un1.ip6_un1_nxt) << std::endl;
+#endif
+			return NULL;
+		}
+		const struct tcp_hdr * tcp = (struct tcp_hdr *)(packet + sizeof(ether_header) + sizeof(ip6_hdr));
+
+		// TODO make a Packet constructor that properly understands IPv6
+		return new Packet (*((in_addr*)(&(ip6->ip6_src))), ntohs(tcp->th_sport), 
+		    *((in_addr*)(&(ip6->ip6_dst))), ntohs(tcp->th_dport), header->len, header->ts);
 	}
 
-	const struct ip_hdr * ip = (struct ip_hdr *)(packet + sizeof(ethernet_hdr));
-	if (ip->ip_p != 6)
-	{
 #if DEBUG
-		std::cerr << "Dropped non-tcp packet of type " << (int)(ip->ip_p) << std::endl;
+	std::cerr << "Dropped non-ip packet of type " << ethernet->ether_type << std::endl;
 #endif
-		return NULL;
-	}
-
-	const struct tcp_hdr * tcp = (struct tcp_hdr *)(packet + sizeof(ethernet_hdr) + sizeof(ip_hdr));
-
-	return new Packet (ip->ip_src, ntohs(tcp->th_sport), ip->ip_dst, ntohs(tcp->th_dport), header->len, header->ts);
+	return NULL;
 }
 
 Packet::Packet (in_addr m_sip, unsigned short m_sport, in_addr m_dip, unsigned short m_dport, bpf_u_int32 m_len, timeval m_time, direction m_dir)
@@ -181,16 +199,18 @@ bool Packet::Outgoing () {
 char * Packet::gethashstring ()
 {
 	// TODO this needs to be bigger to support ipv6?!
+	char * tempretval = (char *) malloc (92 * sizeof(char));
 	char * retval = (char *) malloc (92 * sizeof(char));
 	if (Outgoing()) {
-		snprintf(retval, 92 * sizeof(char), "%s:%d-", inet_ntoa(sip), sport);
-		snprintf(retval, 92 * sizeof(char), "%s%s:%d", retval, inet_ntoa(dip), dport);
+		snprintf(tempretval, 92 * sizeof(char), "%s:%d-", inet_ntoa(sip), sport);
+		snprintf(retval, 92 * sizeof(char), "%s%s:%d", tempretval, inet_ntoa(dip), dport);
 	} else {
-		snprintf(retval, 92 * sizeof(char), "%s:%d-", inet_ntoa(dip), dport);
-		snprintf(retval, 92 * sizeof(char), "%s%s:%d", retval, inet_ntoa(sip), sport);
+		snprintf(tempretval, 92 * sizeof(char), "%s:%d-", inet_ntoa(dip), dport);
+		snprintf(retval, 92 * sizeof(char), "%s%s:%d", tempretval, inet_ntoa(sip), sport);
 	}
 	//if (DEBUG)
 		//cout << "hasshtring: " << retval << endl;
+	free (tempretval);
 	return retval;
 }
 
