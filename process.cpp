@@ -262,9 +262,12 @@ public:
 
 	void show (int row)
 	{
-#if DEBUG
-		std::cout << m_name << "\t" << sent_kbps << "\t" << recv_kbps << std::endl;
-#else
+		if (DEBUG || tracemode)
+		{
+			std::cout << m_name << "\t" << sent_kbps << "\t" << recv_kbps << std::endl;
+			return;
+		}
+
 		mvprintw (3+row, 0, "%d", m_pid);
 		char * username = uid2username(m_uid);
 		mvprintw (3+row, 6, "%s", username);
@@ -274,12 +277,6 @@ public:
 		mvprintw (3+row, 6 + 9 + PROGNAME_WIDTH + 2 + 6, "%10.3f", sent_kbps);
 		mvprintw (3+row, 6 + 9 + PROGNAME_WIDTH + 2 + 6 + 9 + 3, "%10.3f", recv_kbps);
 		mvprintw (3+row, 6 + 9 + PROGNAME_WIDTH + 2 + 6 + 9 + 3 + 11, "KB/sec", recv_kbps);
-		// TODO fix
-		//if(m_kbps-upload_kbps>upload_kbps)
-		//          mvprintw (3+row, 6 + 20 + PROGNAME_WIDTH + 2, "<<<<");
-		//   else   mvprintw (3+row, 6 + 20 + PROGNAME_WIDTH + 2, ">>>>");
-
-#endif
 	}
 
 	double sent_kbps;
@@ -320,7 +317,11 @@ int count_processes()
 
 void do_refresh()
 {
-	if (!DEBUG)
+	if (DEBUG || tracemode)
+	{
+		std::cout << "Refreshing:\n";
+	}
+	else
 	{
 		clear();
 		mvprintw (0, 0, "%s", caption->c_str());
@@ -328,8 +329,6 @@ void do_refresh()
 		mvprintw (2, 0, "  PID USER     PROGRAM                      DEV        SENT      RECEIVED       ");
 		attroff(A_REVERSE);
 	}
-	else
-		std::cout << "Refreshing:\n";
 	ProcList * curproc = processes;
 	ProcList * lastproc = NULL;
 	int nproc = count_processes();
@@ -387,7 +386,7 @@ void do_refresh()
 		lines[i]->show(i);
 		delete lines[i];
 	}
-	if (!DEBUG)
+	if ((!tracemode) && (!DEBUG))
 		refresh();
 }
 

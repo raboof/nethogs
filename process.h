@@ -5,6 +5,8 @@
 #include "nethogs.h"
 #include "connection.h"
 
+extern bool tracemode;
+
 class ConnList
 {
 public:

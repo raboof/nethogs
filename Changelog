@@ -1,5 +1,10 @@
 Changelog
 
+29/07/04 (Fabian)
+-tracemode (-t)
+
+-------------------------------------------------
+
 06/07/04 (Arnout)
 -added support for monitoring multiple interfaces 
  at once

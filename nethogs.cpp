@@ -22,8 +22,9 @@ extern "C" {
 #include "process.h"
 #include "refresh.h"
 
-bool needrefresh = true;
 unsigned refreshdelay = 1;
+bool tracemode = false;
+bool needrefresh = true;
 
 char * currentdevice = NULL;
 
@@ -56,7 +57,6 @@ void process (u_char * args, const struct pcap_pkthdr * header, const u_char * m
 	}
 	connection = new Connection (packet);
 	Process * process = getProcess(connection, currentdevice);
-	
 	if (needrefresh)
 	{
 		do_refresh();
@@ -76,9 +76,11 @@ void quit_cb (int i)
 
 void forceExit(const char *msg)
 {
-        clear();
-        endwin();
-        std::cerr << msg << std::endl;
+	if ((!tracemode)&&(!DEBUG)){
+	        clear();
+	        endwin();
+	}
+	std::cerr << msg << std::endl;
         exit(0);
 }
 
@@ -93,6 +95,7 @@ static void help(void)
 	std::cerr << "usage: nethogs [-V] [-d] [device]\n";
 	std::cerr << "		-V : prints version.\n";
 	std::cerr << "		-d : delay for update refresh rate in seconds. default is 1.\n";
+	std::cerr << "		-t : tracemode.\n";
 	std::cerr << "		device : device to monitor. default is eth0\n";
 }
 
@@ -131,6 +134,8 @@ int main (int argc, char** argv)
 					  exit(0);
 				case 'h': help();
 					  exit(0);
+				case 't': tracemode = true;
+					  break;
 				case 'd': if (argv[1])
 					  {
 						argv++;
@@ -149,17 +154,17 @@ int main (int argc, char** argv)
 
 	if (devices == NULL)
 		devices = new device (strdup("eth0"));
-#if DEBUG
-#else
-	WINDOW * screen = initscr();
-	raw();
-	noecho();
-	cbreak();
-	nodelay(screen, TRUE);
-#endif
-	caption = new std::string ("NetHogs");
-	caption->append(version);
-	caption->append(", running at ");
+
+	if ((!tracemode) && (!DEBUG)){
+		WINDOW * screen = initscr();
+		raw();
+		noecho();
+		cbreak();
+		nodelay(screen, TRUE);
+		caption = new std::string ("NetHogs");
+		caption->append(version);
+		caption->append(", running at ");
+	}
 
 	if (NEEDROOT && (getuid() != 0))
 		forceExit("You need to be root to run NetHogs !");
@@ -170,8 +175,10 @@ int main (int argc, char** argv)
 	device * current_dev = devices;
 	while (current_dev != NULL) {
 		getLocal(current_dev->name);
-		caption->append(current_dev->name);
-		caption->append(" ");
+		if ((!tracemode) && (!DEBUG)){
+			caption->append(current_dev->name);
+			caption->append(" ");
+		}
 
 		pcap_t * newhandle = pcap_open_live(current_dev->name, BUFSIZ, 0, 100, errbuf); 
 		if (newhandle != NULL)
@@ -185,7 +192,6 @@ int main (int argc, char** argv)
 	signal (SIGALRM, &alarm_cb);
 	signal (SIGINT, &quit_cb);
 	alarm (refreshdelay);
-
 	while (1)
 	{
 		handle * current_handle = handles;
@@ -195,19 +201,20 @@ int main (int argc, char** argv)
 			pcap_dispatch (current_handle->content, -1, process, NULL);
 			current_handle = current_handle->next;
 		}
-		if (!DEBUG) {
-		switch (getch()) {
-			case 'q':
-				/* quit */
-				quit_cb(0);
-				break;
-			case 's':
-				/* sort on 'sent' */
-				break;
-			case 'r':
-				/* sort on 'received' */
-				break;
-		}
+
+		if ((!DEBUG)&&(!tracemode)) {
+			switch (getch()) {
+				case 'q':
+					/* quit */
+					quit_cb(0);
+					break;
+				case 's':
+					/* sort on 'sent' */
+					break;
+				case 'r':
+					/* sort on 'received' */
+					break;
+			}
 		}
 		if (needrefresh)
 		{
