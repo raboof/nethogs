@@ -24,7 +24,7 @@ extern "C" {
 #include "process.h"
 #include "refresh.h"
 
-bool needrefresh = false;
+bool needrefresh = true;
 unsigned refreshdelay = 1;
 
 const char version[] = " version " VERSION "." SUBVERSION "." MINORVERSION;
@@ -123,10 +123,11 @@ int main (int argc, char** argv)
 	}
 #if DEBUG
 #else
-	initscr();
+	WINDOW * screen = initscr();
 	raw();
 	noecho();
 	cbreak();
+	nodelay(screen, TRUE);
 #endif
 	getLocal(dev);
 
@@ -152,6 +153,11 @@ int main (int argc, char** argv)
 	while (1)
 	{
 		pcap_dispatch (handle, -1, process, NULL);
+		switch (getch()) {
+			case 'q':
+				quit_cb(0);
+				break;
+		}
 		if (needrefresh)
 		{
 			do_refresh(); 
