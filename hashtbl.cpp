@@ -68,7 +68,7 @@ void HashTable::add(char * key, void * content)
 {
 	char * localkey = strdup(key);
 	unsigned int hkey = HashString (localkey);
-	//std::cout << "(STILL)Adding node: " << localkey << " key " << hkey << endl;
+	//std::cout << "LOC: Adding node: " << localkey << " key " << hkey << endl;
 	table[hkey] = newHashNode(localkey, content, table[hkey]);
 }
 

@@ -28,3 +28,5 @@ connection.cpp:
   connections. 'ConnList' list containting all currently known connections.
   A connection removes itself from the global 'connections' list in its 
   destructor.
+
+  processes. 'ProcList *' containing all processes.

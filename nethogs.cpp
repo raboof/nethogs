@@ -112,7 +112,7 @@ int process_tcp (u_char * userdata, const dp_header * header, const u_char * m_p
 	} else {
 		/* else: unknown connection, create new */
 		connection = new Connection (packet);
-		Process * process = getProcess(connection, currentdevice);
+		getProcess(connection, currentdevice);
 	}
 
 	if (needrefresh)

@@ -25,7 +25,7 @@ public:
 	{
 		return val;
 	}
-	ConnList * setNext (ConnList * m_next)
+	void setNext (ConnList * m_next)
 	{
 		next = m_next;
 	}
@@ -41,40 +41,49 @@ private:
 class Process
 {
 public:
+	/* the process makes a copy of the device name and name. */
 	Process (unsigned long m_inode, char * m_devicename, char * m_name = NULL)
 	{
+		if (DEBUG)
+			std::cout << "PROC: Process created at " << this << std::endl;
 		inode = m_inode;
-		name = m_name;
-		devicename = m_devicename;
+
+		if (m_name == NULL)
+			name = NULL;
+		else
+			name = strdup(m_name);
+
+		devicename = strdup(m_devicename);
 		connections = NULL;
 		pid = 0;
 		uid = 0;
 	}
-	int getLastPacket ()
+	/* TODO free m_name and m_devicename again in constructor */
+	~Process ()
 	{
-		int lastpacket=0;
-		ConnList * curconn=connections;
-		while (curconn != NULL)
-		{
-			if (DEBUG)
-			{
-				assert (curconn != NULL);
-				assert (curconn->getVal() != NULL);
-			}
-			if (curconn->getVal()->getLastPacket() > lastpacket)
-				lastpacket = curconn->getVal()->getLastPacket();
-			curconn = curconn->getNext();
-		}
-		return lastpacket;
+		if (DEBUG)
+			std::cout << "PROC: Process deleted at " << this << std::endl;
 	}
+	int getLastPacket ();
 
 	const char * name;
 	const char * devicename;
 	int pid;
-	int uid;
 
 	unsigned long inode;
 	ConnList * connections;
+	uid_t getUid()
+	{
+		return uid;
+	}
+
+	void setUid(uid_t m_uid)
+	{
+		assert (m_uid >= 0);
+		uid = m_uid;
+	}
+private:
+	uid_t uid;
 };
 
 Process * getProcess (Connection * connection, char * devicename = NULL);

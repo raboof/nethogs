@@ -216,6 +216,7 @@ bool Packet::Outgoing () {
 		  	return false;
 		}
 	}
+	return false;
 }
 
 /* returns the packet in '1.2.3.4:5-1.2.3.4:5'-form, for use in the 'conninode' table */
@@ -225,8 +226,6 @@ char * Packet::gethashstring ()
 {
 	if (hashstring != NULL)
 	{
-		if (DEBUG)
-			std::cout << "Returning cached hash string: " << hashstring << std::endl;
 		return hashstring;
 	}
 
@@ -248,8 +247,8 @@ char * Packet::gethashstring ()
 	}
 	free (local_string);
 	free (remote_string);
-	if (DEBUG)
-		std::cout << "Returning newly created hash string: " << hashstring << std::endl;
+	//if (DEBUG)
+	//	std::cout << "Returning newly created hash string: " << hashstring << std::endl;
 	return hashstring;
 }
 

@@ -7,7 +7,7 @@ man8 := $(DESTDIR)/usr/share/man/man8/
 
 all: nethogs
 
-CFLAGS=-g
+CFLAGS=-g -Wall
 OBJS=structs.o packet.o connection.o process.o hashtbl.o refresh.o decpcap.o
 GCC=g++
 .PHONY: tgz

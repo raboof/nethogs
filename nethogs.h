@@ -30,7 +30,7 @@
 #define NEEDROOT 1
 #endif
 
-#define DEBUG 0
+#define DEBUG 1
 
 // 2 times: 32 characters, 7 ':''s, a ':12345'.
 // 1 '-'
