@@ -172,7 +172,7 @@ bool sameinaddr(in_addr one, in_addr other)
 }
 
 bool Packet::isOlderThan (timeval t) {
-	std::cout << "Comparing " << time.tv_sec << " <= " << t.tv_sec << endl;
+	std::cout << "Comparing " << time.tv_sec << " <= " << t.tv_sec << std::endl;
 	return (time.tv_sec <= t.tv_sec);
 }
 

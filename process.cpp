@@ -11,7 +11,6 @@
 #include <map>
 
 #include "process.h"
-#include "hashtbl.h"
 #include "nethogs.h"
 #include "inodeproc.cpp"
 
@@ -206,14 +205,14 @@ struct prg_node * findPID (unsigned long inode)
 	if (node == NULL)
 	{
 		if (DEBUG)
-			std::cout << "ITP: inode " << inode << " not in inode-to-pid-mapping - reloading." << endl;
+			std::cout << "ITP: inode " << inode << " not in inode-to-pid-mapping - reloading." << std::endl;
 		prg_cache_clear();
 		prg_cache_load();
 		node = prg_cache_get(inode);
 		if (node == NULL)
 		{
 			if (DEBUG)
-				std::cout << "ITP: inode " << inode << " STILL not in inode-to-pid-mapping." << endl;
+				std::cout << "ITP: inode " << inode << " STILL not in inode-to-pid-mapping." << std::endl;
 			return NULL;
 		}
 	} 
