@@ -17,6 +17,7 @@
 
 extern timeval curtime;
 extern std::string * caption;
+extern local_addr * local_addrs;
 
 static int INET6_getsock(char *bufp, struct sockaddr *sap)
 {
@@ -89,7 +90,6 @@ void addtoconninode (char * buffer)
 	// the following line leaks memory.
 	unsigned long * inode = (unsigned long *) malloc (sizeof(unsigned long));
 
-
 	// TODO check it matched
 	sscanf(buffer, "%*d: %64[0-9A-Fa-f]:%X %64[0-9A-Fa-f]:%X %*X %*lX:%*lX %*X:%*lX %*lX %*d %*d %ld %*512s\n",
 		local_addr, &local_port, rem_addr, &rem_port, inode);
@@ -142,14 +142,24 @@ void addtoconninode (char * buffer)
 
 	snprintf(hashkey, HASHKEYSIZE * sizeof(char), "%s:%d-%s:%d", local_string, local_port, remote_string, rem_port);
 	free (local_string);
-	free (remote_string);
 
 	//if (DEBUG)
 	//	fprintf (stderr, "Hashkey: %s\n", hashkey);
 
 	conninode->add(hashkey, (void *)inode);
 
-	// TODO maybe also add this inode for our other local addresses with that destination
+	/* workaround: sometimes, when a connection is actually from 172.16.3.1 to
+	 * 172.16.3.3, packages arrive from 195.169.216.157 to 172.16.3.3, where
+	 * 172.16.3.1 and 195.169.216.157 are the local addresses of different 
+	 * interfaces */
+	struct local_addr * current_local_addr = local_addrs;
+	while (current_local_addr != NULL) {
+		hashkey = (char *) malloc (HASHKEYSIZE * sizeof(char));
+		snprintf(hashkey, HASHKEYSIZE * sizeof(char), "%s:%d-%s:%d", current_local_addr->string, local_port, remote_string, rem_port);
+		conninode->add(hashkey, (void *)inode);
+		current_local_addr = current_local_addr->next;
+	}
+	free (remote_string);
 }
 
 void refreshconninode ()

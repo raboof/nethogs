@@ -6,6 +6,8 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <assert.h>
+#include <string.h>
+#include <malloc.h>
 #include <iostream>
 
 #define _BSD_SOURCE 1
@@ -43,6 +45,8 @@ public:
 		addr = m_addr;
 		next = m_next;
 		sa_family = AF_INET;
+		string = (char*) malloc (16);
+		inet_ntop (AF_INET, &m_addr, string, 15);
 	}
 	/* this constructor takes an char address[33] */
 	local_addr (char m_address [33], local_addr * m_next = NULL)
@@ -73,6 +77,7 @@ public:
 		address[35] = m_address[28]; address[36] = m_address[29];
 		address[37] = m_address[30]; address[38] = m_address[31];
 		address[39] = 0;
+		string = strdup(address);
 		if (DEBUG)
 			std::cout << "Converting address " << address << std::endl;
 
@@ -85,11 +90,12 @@ public:
 
 	bool contains (const in_addr_t & n_addr);
 	bool contains (const struct in6_addr & n_addr);
+	char * string;
+	local_addr * next;
 private:
 
 	in_addr_t addr;
 	struct in6_addr addr6;
-	local_addr * next;
 	short int sa_family;
 };
 
