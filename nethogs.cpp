@@ -1,21 +1,5 @@
 /* nethogs.cpp
  *
- * Updates:
- *
- *     14/02/04 (Fabian) 
- *               -Refresh delay
- *               -Help
- *               -Handling command-line options
- *
- *     06/04/04 (Fabian)
- *		 -getLocal
- *		 -I/O by balance	
- *		 -forceExit
- *     
- *     10/05/04 (Arnout)
- *               -cleanups
- *               -splitting out incoming and outgoing traffic 
- *                (based on 'I/O by balance' by Fabian)
  */
 
 #include "nethogs.h"
@@ -158,6 +142,9 @@ int main (int argc, char** argv)
 
 	pcap_t * handle;
 	handle = pcap_open_live(dev, BUFSIZ, 0, 1000, errbuf);
+
+	if (!handle)
+		forceExit("Device is not active");
 
 	signal (SIGALRM, &alarm_cb);
 	signal (SIGINT, &quit_cb);
