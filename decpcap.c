@@ -10,7 +10,7 @@
 
 /* functions to set up a handle (which is basically just a pcap handle) */
 
-struct dp_handle * dp_open_live(char * device, enum dp_link_type link, int snaplen, int promisc, int to_ms, char * ebuf)
+struct dp_handle * dp_open_live(char * device, int snaplen, int promisc, int to_ms, char * ebuf)
 {
 	struct dp_handle * retval = (struct dp_handle *) malloc (sizeof (struct dp_handle));
 	pcap_t * temp = pcap_open_live(device, snaplen, promisc, to_ms, ebuf); 
@@ -27,7 +27,8 @@ struct dp_handle * dp_open_live(char * device, enum dp_link_type link, int snapl
 	{
 		retval->callback[i] = NULL;
 	}
-	retval->linktype = link;
+
+	retval->linktype = pcap_datalink(retval->pcap_handle);
 
 	return retval;
 }
@@ -186,11 +187,11 @@ void dp_pcap_callback (u_char * u_handle, const struct pcap_pkthdr * header, con
 	memcpy (userdata_copy, handle->userdata, handle->userdata_size);
 
 	switch (handle->linktype) {
-		case (dp_link_ethernet):
+		case (DLT_EN10MB):
 			dp_parse_ethernet (handle, header, packet);
 			break;
-		case (dp_link_ppp):
-			// TODO
+		case (DLT_PPP):
+			dp_parse_ppp (handle, header, packet);
 			break;
 		default:
 			// TODO maybe error? or 'other' callback?

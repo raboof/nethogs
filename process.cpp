@@ -19,7 +19,8 @@ extern timeval curtime;
 extern std::string * caption;
 extern local_addr * local_addrs;
 
-static int INET6_getsock(char *bufp, struct sockaddr *sap)
+/* takes the text in bufp, and uses it to fill the sockaddr *sap. */
+/*static int INET6_getsock(char *bufp, struct sockaddr *sap)
 {
     struct sockaddr_in6 *sin6;
 
@@ -30,13 +31,26 @@ static int INET6_getsock(char *bufp, struct sockaddr *sap)
     if (inet_pton(AF_INET6, bufp, sin6->sin6_addr.s6_addr) <= 0)
 	return (-1);
 
-    return 16;			/* ?;) */
+    return 16;			
 }
+*/
 
-static int INET6_input(int type, char *bufp, struct sockaddr *sap)
+class ProcList
 {
-	return (INET6_getsock(bufp, sap));
-}
+public:
+	ProcList (Process * m_val, ProcList * m_next)
+	{
+		if (DEBUG)
+			assert (m_val != NULL);
+		val = m_val; next = m_next;
+	}
+	Process * getVal () { return val; }
+	ProcList * getNext () { return next; }
+	ProcList * next;
+private:
+	Process * val;
+};
+
 
 struct aftype {
     char *name;
@@ -62,6 +76,9 @@ struct aftype {
  * port in format: '1.2.3.4:5-1.2.3.4:5'
  */
 HashTable * conninode = new HashTable (256);
+
+Process * unknownproc = new Process (0, "", "unknown");
+ProcList * processes = new ProcList (unknownproc, NULL);
 
 /*
  * parses a /proc/net/tcp-line of the form:
@@ -98,12 +115,12 @@ void addtoconninode (char * buffer)
 		fprintf(stderr,"Unexpected buffer: '%s'\n",buffer);
 		exit(0);
 	}
-	/*if (*inode == 0) {
-	 	// This sometimes happens due to what I think is a bug in the
-		// kernel. See http://lkml.org/lkml/2004/9/10/193.
-		fprintf(stderr,"Inode zero: '%s'\n",buffer);
-		exit(0);
-	}*/
+	
+	if (*inode == 0) {
+		/* connection is in TIME_WAIT state. We rely on 
+		 * the old data still in the table. */
+		return;
+	}
 
 	if (strlen(local_addr) > 8)
 	{
@@ -126,12 +143,12 @@ void addtoconninode (char * buffer)
 			sa_family = AF_INET;
 		} else {
 			/* real IPv6 address */
-			inet_ntop(AF_INET6, &in6_local, addr6, sizeof(addr6));
-			INET6_getsock(addr6, (struct sockaddr *) &localaddr);
-			inet_ntop(AF_INET6, &in6_remote, addr6, sizeof(addr6));
-			INET6_getsock(addr6, (struct sockaddr *) &remaddr);
-			localaddr.sin6_family = AF_INET6;
-			remaddr.sin6_family = AF_INET6;
+			//inet_ntop(AF_INET6, &in6_local, addr6, sizeof(addr6));
+			//INET6_getsock(addr6, (struct sockaddr *) &localaddr);
+			//inet_ntop(AF_INET6, &in6_remote, addr6, sizeof(addr6));
+			//INET6_getsock(addr6, (struct sockaddr *) &remaddr);
+			//localaddr.sin6_family = AF_INET6;
+			//remaddr.sin6_family = AF_INET6;
 			result_addr_local  = in6_local;
 			result_addr_remote = in6_remote;
 			sa_family = AF_INET6;
@@ -157,7 +174,7 @@ void addtoconninode (char * buffer)
 	//if (DEBUG)
 	//	fprintf (stderr, "Hashkey: %s\n", hashkey);
 
-	conninode->add(hashkey, (void *)inode);
+	//std::cout << "Adding to conninode\n" << std::endl;
 
 	/* workaround: sometimes, when a connection is actually from 172.16.3.1 to
 	 * 172.16.3.3, packages arrive from 195.169.216.157 to 172.16.3.3, where
@@ -165,6 +182,7 @@ void addtoconninode (char * buffer)
 	 * interfaces */
 	struct local_addr * current_local_addr = local_addrs;
 	while (current_local_addr != NULL) {
+		/* TODO maybe only add the ones with the same sa_family */
 		hashkey = (char *) malloc (HASHKEYSIZE * sizeof(char));
 		snprintf(hashkey, HASHKEYSIZE * sizeof(char), "%s:%d-%s:%d", current_local_addr->string, local_port, remote_string, rem_port);
 		conninode->add(hashkey, (void *)inode);
@@ -173,61 +191,124 @@ void addtoconninode (char * buffer)
 	free (remote_string);
 }
 
-void refreshconninode ()
-{
-	delete conninode;
-	conninode = new HashTable (256);
+int addprocinfo (const char * filename) {
+	FILE * procinfo = fopen (filename, "r");
 
 	char buffer[8192];
-	FILE * procinfo = fopen ("/proc/net/tcp", "r");
 
+	if (procinfo == NULL)
+		return 0;
+	
+	fgets(buffer, sizeof(buffer), procinfo);
 
-	// TODO use helper function
-	if (procinfo)
+	do
 	{
-		fgets(buffer, sizeof(buffer), procinfo);
-		do
+		if (fgets(buffer, sizeof(buffer), procinfo))
+			addtoconninode(buffer);
+	} while (!feof(procinfo));
+
+	fclose(procinfo);
+
+	return 1;
+}
+
+struct prg_node * findPID (unsigned long inode)
+{
+	/* find PID */
+	struct prg_node * node = prg_cache_get(inode);
+
+	if (node == NULL)
+	{
+		prg_cache_clear();
+		prg_cache_load();
+		node = prg_cache_get(inode);
+		if (node == NULL)
 		{
-			if (fgets(buffer, sizeof(buffer), procinfo))
-				addtoconninode(buffer); 
-		} while (!feof(procinfo));
-		fclose(procinfo);
+			if (DEBUG)
+				std::cout << "inode " << inode << " STILL not in inode-to-pid-mapping." << endl;
+			return NULL;
+		}
+	}	
+	return node;
+}
+
+Process * findProcess (struct prg_node * node)
+{
+	ProcList * current = processes;
+	while (current != NULL)
+	{
+		if (node->pid == current->getVal()->pid)
+			return current->getVal();
+		current = current->next;
 	}
-	else
+	return NULL;
+}
+
+/* finds process based on inode, if any */
+Process * findProcess (unsigned long inode)
+{
+	struct prg_node * node = findPID(inode);
+
+	if (node == NULL)
+		return NULL;
+
+	return findProcess (node);
+}
+
+/* check if we have identified any previously unknown
+ * connections are now known */
+void reviewUnknown ()
+{
+	ConnList * curr_conn = unknownproc->connections;
+	ConnList * previous_conn = NULL;
+
+	while (curr_conn != NULL) {
+		unsigned long * inode = (unsigned long *)
+			conninode->get(curr_conn->getVal()->refpacket->gethashstring());
+		if (inode != NULL)
+		{
+			Process * proc = findProcess (*inode);
+			if (proc != unknownproc && proc != NULL)
+			{
+				/* Yay! - but how could this happen? */
+				if (previous_conn != NULL)
+				{
+					previous_conn->setNext (curr_conn->getNext());
+					proc->connections = new ConnList (curr_conn->getVal(), proc->connections);
+					delete curr_conn;
+					curr_conn = previous_conn;
+				}
+				else
+				{
+					unknownproc->connections = curr_conn->getNext();
+					proc->connections = new ConnList (curr_conn->getVal(), proc->connections);
+					delete curr_conn;
+					curr_conn = unknownproc->connections;
+				}
+			}
+		}
+		previous_conn = curr_conn;
+		if (curr_conn != NULL)
+			curr_conn = curr_conn->getNext();
+	}
+}
+
+void refreshconninode ()
+{
+	/* we don't forget old mappings, just overwrite */
+	//delete conninode;
+	//conninode = new HashTable (256);
+
+	if (! addprocinfo ("/proc/net/tcp"))
 	{
 		std::cout << "Error: couldn't open /proc/net/tcp\n";
 		exit(0);
 	}
+	addprocinfo ("/proc/net/tcp6");
 
-	procinfo = fopen ("/proc/net/tcp6", "r");
-	if (procinfo != NULL) {
-		fgets(buffer, sizeof(buffer), procinfo);
-		do {
-			if (fgets(buffer, sizeof(buffer), procinfo))
-				addtoconninode(buffer);
-		} while (!feof(procinfo));
-		fclose (procinfo);
-	}
+	reviewUnknown();
+
 }
-
-class ProcList
-{
-public:
-	ProcList (Process * m_val, ProcList * m_next)
-	{
-		if (DEBUG)
-			assert (m_val != NULL);
-		val = m_val; next = m_next;
-	}
-	Process * getVal () { return val; }
-	ProcList * getNext () { return next; }
-	ProcList * next;
-private:
-	Process * val;
-};
-
-Process * unknownproc = new Process (0, "", "unknown");
-ProcList * processes = new ProcList (unknownproc, NULL);
 
 float tokbps (bpf_u_int32 bytes)
 {
@@ -262,25 +343,8 @@ public:
 		m_uid = uid;
 	}
 
-	void show (int row)
-	{
-		if (DEBUG || tracemode)
-		{
-			std::cout << m_name << "\t" << sent_kbps << "\t" << recv_kbps << std::endl;
-			return;
-		}
-
-		mvprintw (3+row, 0, "%d", m_pid);
-		char * username = uid2username(m_uid);
-		mvprintw (3+row, 6, "%s", username);
-		free (username);
-		mvprintw (3+row, 6 + 9, "%s", m_name);
-		mvprintw (3+row, 6 + 9 + PROGNAME_WIDTH + 2, "%s", devicename);
-		mvprintw (3+row, 6 + 9 + PROGNAME_WIDTH + 2 + 6, "%10.3f", sent_kbps);
-		mvprintw (3+row, 6 + 9 + PROGNAME_WIDTH + 2 + 6 + 9 + 3, "%10.3f", recv_kbps);
-		mvprintw (3+row, 6 + 9 + PROGNAME_WIDTH + 2 + 6 + 9 + 3 + 11, "KB/sec", recv_kbps);
-	}
-
+	void show (int row);
+	
 	double sent_kbps;
 	double recv_kbps; 
 private:
@@ -289,6 +353,25 @@ private:
 	int m_pid;
 	int m_uid;
 };
+
+void Line::show (int row)
+{
+	if (DEBUG || tracemode)
+	{
+		std::cout << m_name << "\t" << sent_kbps << "\t" << recv_kbps << std::endl;
+		return;
+	}
+
+	mvprintw (3+row, 0, "%d", m_pid);
+	char * username = uid2username(m_uid);
+	mvprintw (3+row, 6, "%s", username);
+	free (username);
+	mvprintw (3+row, 6 + 9, "%s", m_name);
+	mvprintw (3+row, 6 + 9 + PROGNAME_WIDTH + 2, "%s", devicename);
+	mvprintw (3+row, 6 + 9 + PROGNAME_WIDTH + 2 + 6, "%10.3f", sent_kbps);
+	mvprintw (3+row, 6 + 9 + PROGNAME_WIDTH + 2 + 6 + 9 + 3, "%10.3f", recv_kbps);
+	mvprintw (3+row, 6 + 9 + PROGNAME_WIDTH + 2 + 6 + 9 + 3 + 11, "KB/sec", recv_kbps);
+}
 
 int GreatestFirst (const void * ma, const void * mb)
 {
@@ -322,9 +405,10 @@ int count_processes()
 // Display all processes and relevant network traffic using show function
 void do_refresh()
 {
+	refreshconninode();
 	if (DEBUG || tracemode)
 	{
-		std::cout << "Refreshing:\n";
+		std::cout << "\n\nRefreshing:\n";
 	}
 	else
 	{
@@ -335,7 +419,7 @@ void do_refresh()
 		attroff(A_REVERSE);
 	}
 	ProcList * curproc = processes;
-	ProcList * lastproc = NULL;
+	ProcList * previousproc = NULL;
 	int nproc = count_processes();
 	Line * lines [nproc];
 	int n = 0, i = 0;
@@ -344,9 +428,9 @@ void do_refresh()
 
 	while (curproc != NULL)
 	{
-		// walk though its connections, summing up
-		// their data, and throwing away old stuff.
-		// if the last packet is older than PROCESSTIMEOUT seconds, discard.
+		// walk though its connections, summing up their data, and 
+		// throwing away connections that haven't received a package 
+		// in the last PROCESSTIMEOUT seconds.
 		if (DEBUG)
 		{
 			assert (curproc != NULL);
@@ -354,9 +438,10 @@ void do_refresh()
 		}
 		if ((curproc->getVal()->getLastPacket() + PROCESSTIMEOUT <= curtime.tv_sec) && (curproc->getVal() != unknownproc))
 		{
-			if (lastproc)
+			/* remove connection */
+			if (previousproc)
 			{
-				lastproc->next = curproc->next;
+				previousproc->next = curproc->next;
 				ProcList * newcur = curproc->next;
 				delete curproc;
 				curproc = newcur;
@@ -367,34 +452,50 @@ void do_refresh()
 				curproc = processes;
 				nproc--;
 			}
+			continue;
 		}
-		else
+
+		bpf_u_int32 sum = 0, 
+			    sum_local = 0,
+			    sum_conn = 0,
+			    sum_connLocal = 0;	
+
+		/* walk though all this process's connections, and sum them
+		 * up */
+		ConnList * curconn = curproc->getVal()->connections;
+		while (curconn != NULL)
 		{
-			bpf_u_int32 sum = 0, 
-				    sum_local = 0,
-				    sum_conn = 0,
-				    sum_connLocal = 0;	
-			ConnList * curconn = curproc->getVal()->connections;
-			while (curconn != NULL)
-			{
-				curconn->getVal()->sumanddel(curtime, &sum, &sum_local);
-				sum_connLocal+=sum_local;
-				sum_conn+=sum;
-				curconn = curconn->getNext();
-			}
-			lines[n] = new Line (curproc->getVal()->name, tokbps(sum_conn), tokbps(sum_connLocal), curproc->getVal()->pid, curproc->getVal()->uid, curproc->getVal()->devicename);
-			lastproc = curproc;
-			curproc = curproc->next;
-			n++;
+			curconn->getVal()->sumanddel(curtime, &sum, &sum_local);
+			sum_connLocal += sum_local;
+			sum_conn      += sum;
+			curconn = curconn->getNext();
 		}
+		lines[n] = new Line (curproc->getVal()->name, tokbps(sum_conn), tokbps(sum_connLocal), curproc->getVal()->pid, curproc->getVal()->uid, curproc->getVal()->devicename);
+		previousproc = curproc;
+		curproc = curproc->next;
+		n++;
 	}
+
+	/* sort the accumulated lines */
 	qsort (lines, nproc, sizeof(Line *), GreatestFirst);
+
+	/* print them */
 	for (i=0; i<nproc; i++)
 	{
 		lines[i]->show(i);
 		recv_global += lines[i]->recv_kbps;
 		sent_global += lines[i]->sent_kbps;
 		delete lines[i];
+	}
+	if (tracemode || DEBUG) {
+		/* print the 'unknown' connections, for debugging */
+		ConnList * curr_unknownconn = unknownproc->connections;
+		while (curr_unknownconn != NULL) {
+			std::cout << "Unknown connection: " << 
+				curr_unknownconn->getVal()->refpacket->gethashstring() << std::endl;
+
+			curr_unknownconn = curr_unknownconn->getNext();
+		}
 	}
 
 	if ((!tracemode) && (!DEBUG)){
@@ -406,34 +507,22 @@ void do_refresh()
 	}
 }
 
-/* returns the process from proclist with matching pid
+/* 
+ * returns the process from proclist with matching pid
  * if the inode is not associated with any PID, return the unknown process
  * if the process is not yet in the proclist, add it
  */
 Process * getProcess (unsigned long inode, char * devicename)
 {
-	struct prg_node * node = prg_cache_get(inode);
-
+	struct prg_node * node = findPID(inode);
+	
 	if (node == NULL)
-	{
-		prg_cache_clear();
-		prg_cache_load();
-		node = prg_cache_get(inode);
-		if (node == NULL)
-		{
-			if (DEBUG)
-				std::cerr << "inode " << inode << " STILL not in inode-to-program-mapping." << endl;
-			return unknownproc;
-		}
-	}
+		return unknownproc;
 
-	ProcList * current = processes;
-	while (current != NULL)
-	{
-		if (node->pid == current->getVal()->pid)
-			return current->getVal();
-		current = current->next;
-	}
+	Process * proc = findProcess (node);
+
+	if (proc != NULL)
+		return proc;
 
 	Process * newproc = new Process (inode, strdup(devicename));
 	newproc->name = strdup(node->name);
@@ -459,38 +548,36 @@ Process * getProcess (Connection * connection, char * devicename)
 {
 	ProcList * curproc = processes;
 
-	// see if we already know the inode for this connection
-	if (DEBUG)
-	{
-		std::cout << "New connection reference packet.. ";
-		std::cout << connection->refpacket << std::endl;
-	}
-
-	unsigned long * inode = (unsigned long *) conninode->get(connection->refpacket->gethashstring());
+	unsigned long * inode = (unsigned long *) 
+		conninode->get(connection->refpacket->gethashstring());
 
 	if (inode == NULL)
 	{
 		// no? refresh and check conn/inode table
 #if DEBUG
-		std::cerr << "Not in table, refreshing table from /proc/net/tcp.\n"; 
+		std::cerr << "new connection not in connection-to-inode table.\n"; 
 #endif
 		refreshconninode();
-		inode = (unsigned long *) conninode->get(connection->refpacket->gethashstring());
+		inode = (unsigned long *) 
+			conninode->get(connection->refpacket->gethashstring());
 		if (inode == NULL)
 		{
-			/* HACK: the following is a hack for cases where the 'local' addresses
-			 * aren't properly recognised, as is currently the case for IPv6 */
+			/* HACK: the following is a hack for cases where the 
+			 * 'local' addresses aren't properly recognised, as is 
+			 * currently the case for IPv6 */
 
-		 	/* we reverse the direction of the stream if successful. */
+		 	/* we reverse the direction of the stream if 
+			 * successful. */
 
 			Packet * reversepacket = connection->refpacket->newInverted();
-			//inode = (unsigned long *) conninode->get(reversepacket->gethashstring());
+			inode = (unsigned long *) 
+				conninode->get(reversepacket->gethashstring());
 
 			if (inode == NULL)
 			{
 				delete reversepacket;
 				if (DEBUG)
-					std::cerr << connection->refpacket->gethashstring() << " STILL not in connection-to-inode table - adding to the unknown process\n";
+					std::cout << connection->refpacket->gethashstring() << " STILL not in connection-to-inode table - adding to the unknown process\n";
 				unknownproc->connections = new ConnList (connection, unknownproc->connections);
 				return unknownproc;
 			}

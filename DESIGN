@@ -1,0 +1,23 @@
+Rough design notitions:
+
+decpcap handles pcap. nethogs.cpp asks to be notified of all IPv4 or IPv6
+TCP packets.
+
+the IP callbacks store the source and destination addresses into the user
+data. The TCP callback makes a Packet out of it, finds the Connection 
+corresponding to that packet, and adds the packet to the connection.
+
+If no connection is found, a new one is constructed, and the process
+related to that connection is found though getProcess.
+
+If needed, the screen is refreshed.
+
+If, in getProcess, no corresponding process is found, the connection is
+added to the 'unknown' process.
+
+To prevent connections from accidentally ending up in the 'unknown' process,
+and then staying there indefinitely, we should maybe walk though
+the unknownproc's connections whenever the connection-to-inode table is
+refreshed.
+And maybe, while there are still unknown connections, the connection-to-inode 
+table should be updated regularly.

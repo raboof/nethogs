@@ -20,6 +20,10 @@ public:
 	{
 		return val;
 	}
+	ConnList * setNext (ConnList * m_next)
+	{
+		next = m_next;
+	}
 	ConnList * getNext ()
 	{
 		return next;

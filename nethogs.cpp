@@ -30,7 +30,7 @@ unsigned refreshdelay = 1;
 bool tracemode = false;
 bool needrefresh = true;
 //packet_type packettype = packet_ethernet;
-dp_link_type linktype = dp_link_ethernet;
+//dp_link_type linktype = dp_link_ethernet;
 
 char * currentdevice = NULL;
 
@@ -74,34 +74,6 @@ bool local_addr::contains(const struct in6_addr & n_addr) {
 	return next->contains(n_addr);
 }
 
-/* deprecated by process_tcp
- * void process (u_char * args, const struct pcap_pkthdr * header, const u_char * m_packet)
-{
-	curtime = header->ts;
-
-	Packet * packet = getPacket (header, m_packet, packettype);
-	if (packet == NULL)
-		return;
-
-	Connection * connection = findConnection(packet);
-
-	if (connection != NULL)
-	{
-		connection->add(packet);
-	} else {
-		connection = new Connection (packet);
-		if (DEBUG)
-			std::cerr << "Getting process by connection\n";
-		Process * process = getProcess(connection, currentdevice);
-	}
-
-	if (needrefresh)
-	{
-		do_refresh();
-		needrefresh = false;
-	}
-}*/
-
 struct dpargs {
 	int sa_family;
 	in_addr ip_src;
@@ -138,8 +110,8 @@ int process_tcp (u_char * userdata, const dp_header * header, const u_char * m_p
 	} else {
 		/* else: unknown connection, create new */
 		connection = new Connection (packet);
-		if (DEBUG)
-			std::cerr << "Getting process by connection\n";
+		//if (DEBUG)
+		//	std::cerr << "Getting process by connection\n";
 		Process * process = getProcess(connection, currentdevice);
 	}
 
@@ -201,11 +173,12 @@ static void versiondisplay(void)
 
 static void help(void)
 {
-	std::cerr << "usage: nethogs [-V] [-d seconds] [-t] [-p] [-f (eth|ppp))] [device [device [device ...]]]\n";
+	//std::cerr << "usage: nethogs [-V] [-d seconds] [-t] [-p] [-f (eth|ppp))] [device [device [device ...]]]\n";
+	std::cerr << "usage: nethogs [-V] [-d seconds] [-t] [-p] [device [device [device ...]]]\n";
 	std::cerr << "		-V : prints version.\n";
 	std::cerr << "		-d : delay for update refresh rate in seconds. default is 1.\n";
 	std::cerr << "		-t : tracemode.\n";
-	std::cerr << "		-f : format of packets on interface, default is eth.\n";
+	//std::cerr << "		-f : format of packets on interface, default is eth.\n";
 	std::cerr << "		-p : sniff in promiscious mode (not recommended).\n";
 	std::cerr << "		device : device(s) to monitor. default is eth0\n";
 }
@@ -222,7 +195,8 @@ public:
 
 class handle {
 public:
-	handle (dp_handle * m_handle, char * m_devicename = NULL, handle * m_next = NULL) {
+	handle (dp_handle * m_handle, char * m_devicename = NULL, 
+			handle * m_next = NULL) {
 		content = m_handle; next = m_next; devicename = m_devicename;
 	}
 	dp_handle * content;
@@ -257,7 +231,7 @@ int main (int argc, char** argv)
 						refreshdelay=atoi(*argv);
 					  }
 					  break;
-				case 'f': if (argv[1])
+				/*case 'f': if (argv[1])
 					  {
 						argv++;
 						if (strcmp (*argv, "ppp") == 0)
@@ -266,6 +240,7 @@ int main (int argc, char** argv)
 							linktype = dp_link_ethernet;
 					  }
 					  break;
+					  */
 				default : help();
 					  exit(0);
 			}
@@ -304,7 +279,7 @@ int main (int argc, char** argv)
 			caption->append(" ");
 		}
 
-		dp_handle * newhandle = dp_open_live(current_dev->name, linktype, BUFSIZ, promisc, 100, errbuf); 
+		dp_handle * newhandle = dp_open_live(current_dev->name, BUFSIZ, promisc, 100, errbuf); 
 		dp_addcb (newhandle, dp_packet_ip, process_ip);
 		dp_addcb (newhandle, dp_packet_ip6, process_ip6);
 		dp_addcb (newhandle, dp_packet_tcp, process_tcp);

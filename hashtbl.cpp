@@ -67,7 +67,7 @@ HashNode * HashTable::newHashNode(char * key, void * content, HashNode * next)
 void HashTable::add(char * key, void * content)
 {
 	unsigned int hkey = HashString (key);
-	//cout << "Adding node: " << key << " key " << hkey << endl;
+	//std::cout << "(STILL)Adding node: " << key << " key " << hkey << endl;
 	table[hkey] = newHashNode(key, content, table[hkey]);
 }
 
