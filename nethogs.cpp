@@ -278,9 +278,7 @@ int main (int argc, char** argv)
 		if (newhandle != NULL)
 		{
 			/* The following code solves sf.net bug 1019381, but is only available
-			 * in newer versions of libpcap */
-			// TODO ARN
-
+			 * in newer versions (from 0.8 it seems) of libpcap */
 			if (dp_setnonblock (newhandle, 1, errbuf) == -1)
 			{
 			  // ERROR

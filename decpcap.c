@@ -7,8 +7,6 @@
 #include <pcap.h>
 #include "decpcap.h"
 
-/* data container for callback-references */
-
 /* functions to set up a handle (which is basically just a pcap handle) */
 
 struct dp_handle * dp_open_live(char * device, int snaplen, int promisc, int to_ms, char * ebuf)
@@ -68,7 +66,7 @@ void dp_parse_tcp (struct dp_handle * handle, const dp_header * header, const u_
 		if (done)
 			return;
 	}
-	// TODO
+	// TODO: maybe `pass on' payload to lower-level protocol parsing 
 }
 
 void dp_parse_ip (struct dp_handle * handle, const dp_header * header, const u_char * packet)
@@ -89,7 +87,7 @@ void dp_parse_ip (struct dp_handle * handle, const dp_header * header, const u_c
 			dp_parse_tcp (handle, header, payload);
 			break;
 		default:
-			// TODO
+			// TODO: maybe support for non-tcp IP packets
 			break;
 	}
 }
@@ -112,7 +110,7 @@ void dp_parse_ip6 (struct dp_handle * handle, const dp_header * header, const u_
 			dp_parse_tcp (handle, header, payload);
 			break;
 		default:
-			// TODO
+			// TODO: maybe support for non-tcp ipv6 packets
 			break;
 	}
 }
@@ -143,7 +141,7 @@ void dp_parse_ethernet (struct dp_handle * handle, const dp_header * header, con
 			dp_parse_ip6 (handle, header, payload);
 			break;
 		default:
-			// TODO
+			// TODO: maybe support for other protocols apart from IPv4 and IPv6 
 			break;
 	}
 }
@@ -189,7 +187,7 @@ void dp_parse_ppp (struct dp_handle * handle, const dp_header * header, const u_
 			dp_parse_ip6 (handle, header, payload);
 			break;
 		default:
-			// TODO
+			// TODO: support for other than IPv4 and IPv6
 			break;
 	}
 }
