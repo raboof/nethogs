@@ -32,10 +32,10 @@
 
 #define DEBUG 0
 
-// if '0', do extra checks and
+// if '1', do extra checks and
 // assertions. good for finding bugs
 // at an early stage of development.
-// for production, should be 1.
+// for production, should be 0.
 #define ROBUST 1
 
 // 2 times: 32 characters, 7 ':''s, a ':12345'.
@@ -93,7 +93,7 @@ public:
 
 		int result = inet_pton (AF_INET6, address, &addr6);
 
-		if (DEBUG)
+		if (ROBUST)
 			assert (result > 0);
 		sa_family = AF_INET6;
 	}

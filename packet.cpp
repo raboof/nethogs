@@ -60,8 +60,8 @@ void getLocal (const char *device)
 				char address [33];
 				char ifname [9];
 				int n_results = sscanf (buffer, "%32[0-9a-f] %*d %*d %*d %*d %8[0-9a-zA-Z]", address, ifname);
-				if (DEBUG)
-				  assert (n_results = 2);
+				if (ROBUST)
+					assert (n_results = 2);
 
 				if (strcmp (stripspaces(ifname), device) == 0) 
 				{
@@ -178,7 +178,7 @@ bool Packet::isOlderThan (timeval t) {
 
 bool Packet::Outgoing () {
 	/* must be initialised with getLocal("eth0:1");) */
-	if (DEBUG)
+	if (ROBUST)
 		assert (local_addrs != NULL);
 
 	switch (dir) {

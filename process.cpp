@@ -4,30 +4,44 @@
 #include <ncurses.h>
 #include <asm/types.h>
 #include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
 #include <sys/socket.h>
 #include <stdlib.h>
 #include <pwd.h>
-#include <sys/types.h>
 #include <map>
 
 #include "process.h"
 #include "nethogs.h"
-#include "inodeproc.cpp"
+/* #include "inodeproc.cpp" */
+#include "inode2prog.h" 
 
 extern local_addr * local_addrs;
 
-;
+/* this file includes:
+ * - code to convert from connection to inode
+ * - calls to inodeproc to get the pid that belongs to that inode
+ */
 
 /* 
  * connection-inode table. takes information from /proc/net/tcp.
  * key contains source ip, source port, destination ip, destination 
  * port in format: '1.2.3.4:5-1.2.3.4:5'
  */
-//HashTable * conninode = new HashTable (256);
 std::map <std::string, unsigned long *> conninode;
 
-Process * unknownproc = new Process (0, "", "unknown");
-ProcList * processes = new ProcList (unknownproc, NULL);
+/*
+ * Initialise the global process-list with `the' unknown process
+ * We must take care this one never gets removed from the list.
+ */
+Process * unknownproc; 
+ProcList * processes;
+
+void process_init () 
+{
+	unknownproc = new Process (0, "", "unknown");
+	processes = new ProcList (unknownproc, NULL);
+}
 
 int Process::getLastPacket()
 {
@@ -35,7 +49,7 @@ int Process::getLastPacket()
 	ConnList * curconn=connections;
 	while (curconn != NULL)
 	{
-		if (DEBUG)
+		if (ROBUST)
 		{
 			assert (curconn != NULL);
 			assert (curconn->getVal() != NULL);
@@ -156,6 +170,7 @@ void addtoconninode (char * buffer)
 	free (remote_string);
 }
 
+/* opens /proc/net/tcp[6] and adds its contents line by line */
 int addprocinfo (const char * filename) {
 	FILE * procinfo = fopen (filename, "r");
 
@@ -177,65 +192,14 @@ int addprocinfo (const char * filename) {
 	return 1;
 }
 
-std::map <unsigned long, prg_node *> inodeproc;
-
-/* this should be done quickly after the packet
- * arrived, since the inode disappears from the table
- * quickly, too :) */
-struct prg_node * findPID (unsigned long inode)
-{
-	/* we first look in inodeproc */
-	struct prg_node * node = inodeproc[inode];
-	
-	if (node != NULL)
-		return node;
-
-	node = prg_cache_get(inode);
-	if (node != NULL && node->pid == 1)
-	{
-		if (DEBUG)
-			std::cout << "ITP: clearing and reloading cache\n";
-		prg_cache_clear();
-		prg_cache_load();
-		node = prg_cache_get(inode);
-		// this still happens sometimes...
-		//assert (node->pid != 1);
-	} 
-
-	if (node == NULL)
-	{
-		if (DEBUG)
-			std::cout << "ITP: inode " << inode << " not in inode-to-pid-mapping - reloading." << std::endl;
-		prg_cache_clear();
-		prg_cache_load();
-		node = prg_cache_get(inode);
-		if (node == NULL)
-		{
-			if (DEBUG)
-				std::cout << "ITP: inode " << inode << " STILL not in inode-to-pid-mapping." << std::endl;
-			return NULL;
-		}
-	} 
-
-	/* make copy of returned node, add it to map, and return it */
-	if (node != NULL)
-	{
-		struct prg_node * tempnode = (struct prg_node *) malloc (sizeof (struct prg_node));
-		memcpy (tempnode, node, sizeof (struct prg_node));
-		inodeproc[inode] = tempnode;
-		return tempnode;
-	}
-	else
-		return NULL;
-}
-
 Process * findProcess (struct prg_node * node)
 {
 	ProcList * current = processes;
 	while (current != NULL)
 	{
 		Process * currentproc = current->getVal();
-		assert (currentproc != NULL);
+		if (ROBUST)
+			assert (currentproc != NULL);
 		
 		if (node->pid == currentproc->pid)
 			return current->getVal();

@@ -31,7 +31,7 @@ public:
 	}
 	PackList (Packet * m_val)
 	{
-		if (DEBUG)
+		if (ROBUST)
 			assert (m_val != NULL);
 		content = new PackListNode(m_val);
 	}

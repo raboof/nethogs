@@ -14,7 +14,7 @@ class ConnList
 public:
 	ConnList (Connection * m_val, ConnList * m_next)
 	{
-		if (DEBUG)
+		if (ROBUST)
 			assert (m_val != NULL);
 		val = m_val; next = m_next;
 	}
@@ -61,8 +61,10 @@ public:
 		uid = 0;
 	}
 	void check () {
-		assert (pid >= 0);
-		assert (uid >= 0);
+		if (ROBUST) {
+			assert (pid >= 0);
+			assert (uid >= 0);
+		}
 	}
 	/* TODO free m_name and m_devicename again in constructor */
 	~Process ()
@@ -97,7 +99,7 @@ class ProcList
 public:
 	ProcList (Process * m_val, ProcList * m_next)
 	{
-		if (DEBUG)
+		if (ROBUST)
 			assert (m_val != NULL);
 		val = m_val; next = m_next;
 	}
@@ -110,6 +112,9 @@ private:
 };
 
 Process * getProcess (Connection * connection, char * devicename = NULL);
+
+void process_init ();
+
 void refreshconninode ();
 
 void procclean ();

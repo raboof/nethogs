@@ -1,4 +1,6 @@
 /* this comes from netstat.c, but is very useful :)) */
+
+/* now unused, replaced by my own implementation */
 #include <dirent.h>
 #include <errno.h>
 #include <string.h>
@@ -10,6 +12,11 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <stdlib.h>
+#include <stdio.h>
+
+
+#include "nethogs.h"
 
 struct proginfo
 {
@@ -153,25 +160,29 @@ static void prg_cache_load(void)
 	    continue;
 	errno=0;
 	dirfd=opendir(line);
+	// dirfd = fd for /proc/4322341/fd
 	if (! dirfd) {
 	    if (errno==EACCES) 
 		eacces=1;
 	    continue;
 	}
 	line[procfdlen] = '/';
+	// line =~ /proc/4322341/fd/
 	cmdlp = NULL;
 	while ((direfd = readdir(dirfd))) {
-#ifdef DIRENT_HAVE_D_TYPE_WORKS
 	    if (direfd->d_type!=DT_LNK) 
 		continue;
-#endif
 	    if (procfdlen+1+strlen(direfd->d_name)+1>sizeof(line)) 
 		continue;
+	    // line =~ /proc/4322341/fd/<name>
+	    //                       fd/
 	    memcpy(line + procfdlen - PATH_FD_SUFFl, PATH_FD_SUFF "/",
 		   PATH_FD_SUFFl+1);
 	    strcpy(line + procfdlen + 1, direfd->d_name);
 	    lnamelen=readlink(line,lname,sizeof(lname)-1);
+	    fprintf (stdout, "Checking out link: %s\n", line);
             lname[lnamelen] = '\0';  /*make it a null-terminated string*/
+	    fprintf (stdout, "Name: %s\n", lname);
 
             extract_type_1_socket_inode(lname, &inode);
 
@@ -184,6 +195,7 @@ static void prg_cache_load(void)
 		    sizeof(line) - 5) 
 		    continue;
 		strcpy(line + procfdlen-PATH_FD_SUFFl, PATH_CMDLINE);
+		fprintf(stdout, "Looking into %s\n", line);
 		fd = open(line, O_RDONLY);
 		if (fd < 0) 
 		    continue;
@@ -204,6 +216,7 @@ static void prg_cache_load(void)
 	    snprintf(finbuf, sizeof(finbuf), "%s", cmdlp);
 	    int pid; 
 	    sscanf(direproc->d_name, "%d", &pid);
+	    fprintf(stdout, "Adding: inode %d, buf %s, pid %d\n", inode, finbuf, pid);
 	    prg_cache_add(inode, finbuf, pid);
 	}
 	closedir(dirfd); 
@@ -225,3 +238,6 @@ static void prg_cache_load(void)
 			 " will not be shown, you would have to be root to see it all.)\n");
 }
 
+void main () {
+	prg_cache_load();
+}

@@ -203,6 +203,8 @@ public:
 
 int main (int argc, char** argv)
 {
+	process_init();
+
 	device * devices = NULL;
 	//dp_link_type linktype = dp_link_ethernet;
 	int promisc = 0;

@@ -7,9 +7,9 @@ man8 := $(DESTDIR)/usr/share/man/man8/
 
 all: nethogs
 
-#CFLAGS=-g -Wall -pg
-CFLAGS=-O2
-OBJS=structs.o packet.o connection.o process.o refresh.o decpcap.o cui.o
+CFLAGS=-g -Wall -pg
+#CFLAGS=-O2
+OBJS=structs.o packet.o connection.o process.o refresh.o decpcap.o cui.o inode2prog.o
 GCC=g++
 .PHONY: tgz
 
@@ -39,10 +39,10 @@ packet.o: packet.cpp packet.h nethogs.h
 	$(GCC) $(CFLAGS) -c packet.cpp
 connection.o: connection.cpp connection.h nethogs.h
 	$(GCC) $(CFLAGS) -c connection.cpp
-hashtbl.o: hashtbl.cpp hashtbl.h nethogs.h
-	$(GCC) $(CFLAGS) -c hashtbl.cpp
 decpcap.o: decpcap.c decpcap.h
 	gcc $(CFLAGS) -c decpcap.c
+inode2prog.o: inode2prog.cpp inode2prog.h nethogs.h
+	$(GCC) $(CFLAGS) -c inode2prog.cpp
 cui.o: cui.cpp cui.h nethogs.h
 	$(GCC) $(CFLAGS) -c cui.cpp -DVERSION=\"$(VERSION)\" -DSUBVERSION=\"$(SUBVERSION)\" -DMINORVERSION=\"$(MINORVERSION)\"
 

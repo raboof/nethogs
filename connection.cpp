@@ -62,7 +62,7 @@ u_int32_t PackList::sumanddel (timeval t)
 
 Connection::Connection (Packet * packet)
 {
-	if (DEBUG)
+	if (ROBUST)
 		assert (packet != NULL);
 	connections = new ConnList (this, connections);
 	sent_packets = new PackList ();

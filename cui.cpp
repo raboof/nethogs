@@ -25,8 +25,11 @@ public:
 		devicename = n_devicename;
 		m_pid = pid; 
 		m_uid = uid;
-		assert (m_uid >= 0);
-		assert (m_pid >= 0);
+		if (ROBUST) 
+		{
+			assert (m_uid >= 0);
+			assert (m_pid >= 0);
+		}
 	}
 
 	void show (int row);
@@ -42,13 +45,16 @@ private:
 
 char * uid2username (int uid)
 {
-	struct passwd * pwd; 
+	struct passwd * pwd = NULL; 
 	/* getpwuid() allocates space for this itself, 
 	 * which we shouldn't free */
 	pwd = getpwuid(uid);
+
+	if (ROBUST)
+		assert (pwd != NULL);
+
 	if (pwd == NULL)
 	{
-		assert(false);
 		return strdup ("unlisted");
 	} else {
 		return strdup(pwd->pw_name);
@@ -58,11 +64,14 @@ char * uid2username (int uid)
 
 void Line::show (int row)
 {
-	if (DEBUG || tracemode)
+	if (ROBUST)
 	{
 		assert (m_uid >= 0);
 		assert (m_pid >= 0);
+	}
 
+	if (DEBUG || tracemode)
+	{
 		std::cout << m_name << '/' << m_pid << '/' << m_uid << "\t" << sent_kbps << "\t" << recv_kbps << std::endl;
 		return;
 	}
@@ -172,7 +181,7 @@ void do_refresh()
 		// walk though its connections, summing up their data, and 
 		// throwing away connections that haven't received a package 
 		// in the last PROCESSTIMEOUT seconds.
-		if (DEBUG)
+		if (ROBUST)
 		{
 			assert (curproc != NULL);
 			assert (curproc->getVal() != NULL);
@@ -233,7 +242,8 @@ void do_refresh()
 			}
 		}
 		uid_t uid = curproc->getVal()->getUid();
-		assert (uid >= 0);
+		if (ROBUST)
+			assert (uid >= 0);
 		lines[n] = new Line (curproc->getVal()->name, tokbps(sum_sent), tokbps(sum_recv), 
 				curproc->getVal()->pid, uid, curproc->getVal()->devicename);
 		previousproc = curproc;
