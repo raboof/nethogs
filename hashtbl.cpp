@@ -14,7 +14,6 @@ HashNode::~HashNode ()
 
 HashTable::HashTable(int n_size)
 {
-	// size = n_size;
 	// TODO allow for variable size
 	size = n_size;
 	table = (HashNode **) malloc (size * sizeof(HashNode *));

@@ -26,6 +26,8 @@ void getLocal (const char *device);
 class Packet
 {
 public:
+	in6_addr sip6;
+	in6_addr dip6;
 	in_addr sip;
 	in_addr dip;
 	unsigned short sport;
@@ -34,6 +36,7 @@ public:
 	timeval time;
 
 	Packet (in_addr m_sip, unsigned short m_sport, in_addr m_dip, unsigned short m_dport, bpf_u_int32 m_len, timeval m_time, direction dir = dir_unknown);
+	Packet (in6_addr m_sip, unsigned short m_sport, in6_addr m_dip, unsigned short m_dport, bpf_u_int32 m_len, timeval m_time, direction dir = dir_unknown);
 	/* using default copy constructor */
 	/* Packet (const Packet &old_packet); */
 	/* copy constructor that turns the packet around */
@@ -48,6 +51,7 @@ public:
 	char * gethashstring();
 private:
 	direction dir;
+	short int sa_family;
 };
 
 Packet * getPacket (const struct pcap_pkthdr * header, const u_char * packet);

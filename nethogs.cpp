@@ -34,8 +34,35 @@ timeval curtime;
 std::string * caption;
 
 bool local_addr::contains (const in_addr_t & n_addr) {
-	if (n_addr == addr)
+	if ((sa_family == AF_INET)
+	    && (n_addr == addr))
 		return true;
+	if (next == NULL)
+		return false;
+	return next->contains(n_addr);
+}
+
+bool local_addr::contains(const struct in6_addr & n_addr) {
+	if (sa_family == AF_INET6)
+	{
+		/*
+		if (DEBUG) {
+			char addy [50];
+			std::cerr << "Comparing: ";
+			inet_ntop (AF_INET6, &n_addr, addy, 49);
+			std::cerr << addy << " and ";
+			inet_ntop (AF_INET6, &addr6, addy, 49);
+			std::cerr << addy << std::endl;
+		}
+		*/
+		//if (addr6.s6_addr == n_addr.s6_addr)
+		if (memcmp (&addr6, &n_addr, sizeof(struct in6_addr)) == 0)
+		{
+			if (DEBUG)
+				std::cerr << "Match!" << std::endl;
+			return true;
+		}
+	}
 	if (next == NULL)
 		return false;
 	return next->contains(n_addr);
@@ -94,11 +121,12 @@ static void versiondisplay(void)
 
 static void help(void)
 {
-	std::cerr << "usage: nethogs [-V] [-d] [device]\n";
+	std::cerr << "usage: nethogs [-V] [-d] [device [device [device ...]]]\n";
 	std::cerr << "		-V : prints version.\n";
 	std::cerr << "		-d : delay for update refresh rate in seconds. default is 1.\n";
 	std::cerr << "		-t : tracemode.\n";
-	std::cerr << "		device : device to monitor. default is eth0\n";
+	std::cerr << "		-p : sniff in promiscious mode (not recommended).\n";
+	std::cerr << "		device : device(s) to monitor. default is eth0\n";
 }
 
 class device {

@@ -8,7 +8,7 @@
 #include <stdlib.h>
 #include <pwd.h>
 #include <sys/types.h>
- 
+
 #include "process.h"
 #include "hashtbl.h"
 #include "nethogs.h"
@@ -75,6 +75,10 @@ HashTable * conninode = new HashTable (256);
 // TODO check what happens to the 'content' field of the hash
 void addtoconninode (char * buffer)
 {
+	short int sa_family;
+    	struct in6_addr result_addr_local;
+    	struct in6_addr result_addr_remote;
+
 	char rem_addr[128], local_addr[128];
 	int local_port, rem_port;
     	struct sockaddr_in6 localaddr, remaddr;
@@ -84,6 +88,8 @@ void addtoconninode (char * buffer)
     	extern struct aftype inet6_aftype;
 	// the following line leaks memory.
 	unsigned long * inode = (unsigned long *) malloc (sizeof(unsigned long));
+
+
 	// TODO check it matched
 	sscanf(buffer, "%*d: %64[0-9A-Fa-f]:%X %64[0-9A-Fa-f]:%X %*X %*lX:%*lX %*X:%*lX %*lX %*d %*d %ld %*512s\n",
 		local_addr, &local_port, rem_addr, &rem_port, inode);
@@ -108,10 +114,9 @@ void addtoconninode (char * buffer)
 			/* IPv4-compatible address */
 			if (DEBUG)
 				fprintf (stderr, "IPv4-compatible address\n");
-			((struct sockaddr_in *)&localaddr)->sin_addr.s_addr = in6_local.s6_addr32[3];
-			((struct sockaddr_in *)&remaddr)->sin_addr.s_addr = in6_remote.s6_addr32[3];
-			((struct sockaddr *) &localaddr)->sa_family = AF_INET;
-			((struct sockaddr *) &remaddr)->sa_family = AF_INET;
+			result_addr_local  = *((struct in6_addr*) &(in6_local.s6_addr32[3]));
+			result_addr_remote = *((struct in6_addr*) &(in6_remote.s6_addr32[3]));
+			sa_family = AF_INET;
 		} else {
 			/* real IPv6 address */
 			if (DEBUG)
@@ -122,25 +127,28 @@ void addtoconninode (char * buffer)
 			INET6_getsock(addr6, (struct sockaddr *) &remaddr);
 			localaddr.sin6_family = AF_INET6;
 			remaddr.sin6_family = AF_INET6;
+			result_addr_local  = in6_local;
+			result_addr_remote = in6_remote;
+			sa_family = AF_INET6;
 		}
 	}
 	else
 	{
 		/* this is an IPv4-style row */
-		sscanf(local_addr, "%X", &((struct sockaddr_in *)&localaddr)->sin_addr.s_addr);
-		sscanf(rem_addr, "%X", &((struct sockaddr_in *)&remaddr)->sin_addr.s_addr);
-		((struct sockaddr *) &localaddr)->sa_family = AF_INET;
-		((struct sockaddr *) &remaddr)->sa_family = AF_INET;
+		sscanf(local_addr, "%X", &result_addr_local);
+		sscanf(rem_addr, "%X",   &result_addr_remote);
+		sa_family = AF_INET;
 	}
 
-	/* Construct hash key and add inode to conninode table */
-	char * temphashkey = (char *) malloc (92 * sizeof(char));
-	char * hashkey = (char *) malloc (92 * sizeof(char));
+	char * hashkey = (char *) malloc (HASHKEYSIZE * sizeof(char));
+	char * local_string = (char*) malloc (50);
+	char * remote_string = (char*) malloc (50);
+	inet_ntop(sa_family, &result_addr_local,  local_string,  49);
+	inet_ntop(sa_family, &result_addr_remote, remote_string, 49);
 
-	/* TODO make this support the ipv6 addresses properly */
-	snprintf(temphashkey, 92 * sizeof(char), "%s:%d-", inet_ntoa(((struct sockaddr_in *)&localaddr)->sin_addr), local_port);
-	snprintf(hashkey, 92 * sizeof(char), "%s%s:%d", temphashkey, inet_ntoa(((struct sockaddr_in *)&remaddr)->sin_addr), rem_port);
-	free (temphashkey);
+	snprintf(hashkey, HASHKEYSIZE * sizeof(char), "%s:%d-%s:%d", local_string, local_port, remote_string, rem_port);
+	free (local_string);
+	free (remote_string);
 
 	if (DEBUG)
 		fprintf (stderr, "Hashkey: %s\n", hashkey);
@@ -449,11 +457,26 @@ Process * getProcess (Connection * connection, char * devicename)
 		inode = (unsigned long *) conninode->get(connection->refpacket->gethashstring());
 		if (inode == NULL)
 		{
+			/* HACK: the following is a hack for cases where the 'local' addresses
+			 * aren't properly recognised, as is currently the case for IPv6 */
+
+		 	/* we reverse the direction of the stream if successful. */
+
+			Packet * reversepacket = connection->refpacket->newInverted();
+			//inode = (unsigned long *) conninode->get(reversepacket->gethashstring());
+
+			if (inode == NULL)
+			{
+				delete reversepacket;
 #if DEBUG
-			std::cerr << connection->refpacket->gethashstring() << " STILL not in table - adding to the unknown process\n";
+				std::cerr << connection->refpacket->gethashstring() << " STILL not in table - adding to the unknown process\n";
 #endif
-			unknownproc->connections = new ConnList (connection, unknownproc->connections);
-			return unknownproc;
+				unknownproc->connections = new ConnList (connection, unknownproc->connections);
+				return unknownproc;
+			}
+
+			delete connection->refpacket;
+			connection->refpacket = reversepacket;
 		}
 	}
 

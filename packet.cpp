@@ -14,6 +14,15 @@
 
 local_addr * local_addrs = NULL;
 
+/* moves the pointer right until a non-space is seen */
+char * stripspaces (char * input) 
+{
+	char * retval = input;
+	while (*retval == ' ')
+	  retval++;
+	return retval;
+}
+
 /*
  * getLocal
  *	device: This should be device explicit (e.g. eth0:1)
@@ -23,6 +32,7 @@ local_addr * local_addrs = NULL;
  */
 void getLocal (const char *device)
 {
+	/* get local IPv4 addresses */
 	int sock;
 	struct ifreq iFreq;
 	struct sockaddr_in *saddr;
@@ -36,44 +46,43 @@ void getLocal (const char *device)
 	}
 	saddr=(struct sockaddr_in*)&iFreq.ifr_addr;
 	local_addrs = new local_addr (saddr->sin_addr.s_addr, local_addrs);
+
+	/* also get local IPv6 addresses */
+	FILE * ifinfo = fopen ("/proc/net/if_inet6", "r");
+	char buffer [500];
+	if (ifinfo) 
+	{
+		do
+		{
+			if (fgets(buffer, sizeof(buffer), ifinfo))
+			{
+				char address [33];
+				char ifname [9];
+				int n_results = sscanf (buffer, "%32[0-9a-f] %*d %*d %*d %*d %8[0-9a-zA-Z]", address, ifname);
+				if (DEBUG)
+				  assert (n_results = 2);
+
+				if (strcmp (stripspaces(ifname), device) == 0) 
+				{
+					local_addrs = new local_addr (address, local_addrs);
+				}
+#if DEBUG
+				else
+				{
+				  	std::cerr << "Address skipped for interface " << ifname << std::endl;
+				}
+#endif
+			}
+		} while (!feof(ifinfo));
+		fclose(ifinfo);
+	}
 }
 
 typedef u_int32_t tcp_seq;
 
-/* ethernet header (now unused) */
-/*struct ethernet_hdr {
-	u_char ether_dhost[ETHER_ADDR_LEN];
-	u_char ether_shost[ETHER_ADDR_LEN];
-	u_short ether_type; 
-};*/
-
-/* IP header */
-struct ip_hdr
-{
-#if BYTE_ORDER == LITTLE_ENDIAN                                                                      
-       u_int ip_hl:4, /* header length */                                                                   
-       ip_v:4; /* version */                                                                                
-#if BYTE_ORDER == BIG_ENDIAN                                                                         
-       u_int ip_v:4, /* version */                                                                          
-       ip_hl:4; /* header length */                                                                         
-#endif                                                                                               
-#endif /* not _IP_VHL */                                                                             
-       u_char ip_tos; /* type of service */                                                                 
-       u_short ip_len; /* total length */                                                                   
-       u_short ip_id; /* identification */                                                                  
-       u_short ip_off; /* fragment offset field */                                                          
-#define IP_RF 0x8000 /* reserved fragment flag */                                                    
-#define IP_DF 0x4000 /* dont fragment flag */                                                        
-#define IP_MF 0x2000 /* more fragments flag */                                                       
-#define IP_OFFMASK 0x1fff /* mask for fragmenting bits */                                            
-       u_char ip_ttl; /* time to live */                                                                    
-       u_char ip_p; /* protocol */                                                                          
-       u_short ip_sum; /* checksum */                                                                       
-       struct in_addr ip_src,ip_dst; /* source and dest address */                                          
-};                                                                                                       
-
-/* TCP header */                                                                                         
-struct tcp_hdr {                                                                                       
+/* TCP header */
+// TODO take from elsewhere.
+struct tcp_hdr {
        u_short th_sport; /* source port */                                                                  
        u_short th_dport; /* destination port */                                                             
        tcp_seq th_seq; /* sequence number */                                                                
@@ -104,13 +113,12 @@ struct tcp_hdr {
 /* Packet 'Constructor' - but returns NULL on failure */
 Packet * getPacket (const struct pcap_pkthdr * header, const u_char * packet)
 {
-	//const struct ethernet_hdr * ethernet = (struct ethernet_hdr *)packet;
+	// const struct ethernet_hdr * ethernet = (struct ethernet_hdr *)packet;
 	const struct ether_header * ethernet = (struct ether_header *)packet;
 	/* this is the opposite endianness from http://www.iana.org/assignments/ethernet-numbers
 	 * TODO probably have to look at network/host byte order and endianness!! */
 	if (ethernet->ether_type == 0x0008)
 	{
-		//const struct ip_hdr * ip = (struct ip_hdr *)(packet + sizeof(ether_header));
 		const struct ip * ip = (struct ip *)(packet + sizeof(ether_header));
 		if (ip->ip_p != 6)
 		{
@@ -119,7 +127,7 @@ Packet * getPacket (const struct pcap_pkthdr * header, const u_char * packet)
 #endif
 			return NULL;
 		}
-		const struct tcp_hdr * tcp = (struct tcp_hdr *)(packet + sizeof(ether_header) + sizeof(ip_hdr));
+		const struct tcp_hdr * tcp = (struct tcp_hdr *)(packet + sizeof(ether_header) + sizeof(struct ip));
 		return new Packet (ip->ip_src, ntohs(tcp->th_sport), ip->ip_dst, ntohs(tcp->th_dport), header->len, header->ts);
 	} else if (ethernet->ether_type == 0xDD86) {
 		const struct ip6_hdr * ip6 = (struct ip6_hdr *)(packet + sizeof(ether_header));
@@ -134,8 +142,10 @@ Packet * getPacket (const struct pcap_pkthdr * header, const u_char * packet)
 		const struct tcp_hdr * tcp = (struct tcp_hdr *)(packet + sizeof(ether_header) + sizeof(ip6_hdr));
 
 		// TODO make a Packet constructor that properly understands IPv6
-		return new Packet (*((in_addr*)(&(ip6->ip6_src))), ntohs(tcp->th_sport), 
-		    *((in_addr*)(&(ip6->ip6_dst))), ntohs(tcp->th_dport), header->len, header->ts);
+		//return new Packet (*((in_addr*)(&(ip6->ip6_src))), ntohs(tcp->th_sport), 
+		//    *((in_addr*)(&(ip6->ip6_dst))), ntohs(tcp->th_dport), header->len, header->ts);
+		return new Packet (ip6->ip6_src, ntohs(tcp->th_sport), 
+		    ip6->ip6_dst, ntohs(tcp->th_dport), header->len, header->ts);
 	}
 
 #if DEBUG
@@ -149,12 +159,23 @@ Packet::Packet (in_addr m_sip, unsigned short m_sport, in_addr m_dip, unsigned s
 	sip = m_sip; sport = m_sport;
 	dip = m_dip; dport = m_dport;
 	len = m_len; time = m_time;
-	dir = m_dir;
+	dir = m_dir; sa_family = AF_INET;
+}
+
+Packet::Packet (in6_addr m_sip, unsigned short m_sport, in6_addr m_dip, unsigned short m_dport, bpf_u_int32 m_len, timeval m_time, direction m_dir)
+{
+	sip6 = m_sip; sport = m_sport;
+	dip6 = m_dip; dport = m_dport;
+	len = m_len; time = m_time;
+	dir = m_dir; sa_family = AF_INET6;
 }
 
 Packet * Packet::newInverted () {
 	/* TODO if this is a bottleneck, we can calculate the direction */
-	return new Packet (dip, dport, sip, sport, len, time, dir_unknown);
+	if (sa_family == AF_INET)
+		return new Packet (dip, dport, sip, sport, len, time, dir_unknown);
+	else
+		return new Packet (dip6, dport, sip6, sport, len, time, dir_unknown);
 }
 
 /* constructs returns a new Packet() structure with the same contents as this one */
@@ -184,12 +205,33 @@ bool Packet::Outgoing () {
 	  case dir_incoming:
 		return false;
 	  case dir_unknown:
-		if (local_addrs->contains(sip.s_addr)) {
-		  dir = dir_outgoing;
-		  return true;
+		bool islocal;
+		if (sa_family == AF_INET)
+			islocal = local_addrs->contains(sip.s_addr);
+		else
+			islocal = local_addrs->contains(sip6);
+		if (islocal) {
+		  	dir = dir_outgoing;
+		  	return true;
 		} else {
-		  dir = dir_incoming;
-		  return false;
+		  	/*if (DEBUG) {
+				if (sa_family == AF_INET)
+					islocal = local_addrs->contains(dip.s_addr);
+				else
+					islocal = local_addrs->contains(dip6);
+				if (!islocal) {
+					std::cerr << "Neither dip nor sip are local: ";
+					char addy [50];
+					inet_ntop (AF_INET6, &sip6, addy, 49);
+					std::cerr << addy << std::endl;
+					inet_ntop (AF_INET6, &dip6, addy, 49);
+					std::cerr << addy << std::endl;
+
+					return false;
+				}
+		  	}*/
+		  	dir = dir_incoming;
+		  	return false;
 		}
 	}
 }
@@ -198,19 +240,29 @@ bool Packet::Outgoing () {
 /* '1.2.3.4' should be the local address. */
 char * Packet::gethashstring ()
 {
-	// TODO this needs to be bigger to support ipv6?!
-	char * tempretval = (char *) malloc (92 * sizeof(char));
-	char * retval = (char *) malloc (92 * sizeof(char));
-	if (Outgoing()) {
-		snprintf(tempretval, 92 * sizeof(char), "%s:%d-", inet_ntoa(sip), sport);
-		snprintf(retval, 92 * sizeof(char), "%s%s:%d", tempretval, inet_ntoa(dip), dport);
+	char * retval = (char *) malloc (HASHKEYSIZE * sizeof(char));
+	char * local_string  = (char*) malloc (50);
+	char * remote_string = (char*) malloc (50);
+	if (sa_family == AF_INET) {
+		inet_ntop(sa_family, &sip, local_string,  49);
+		inet_ntop(sa_family, &dip, remote_string, 49);
+		if (DEBUG)
+			fprintf(stderr, "Generating IPv4 string: ");
 	} else {
-		snprintf(tempretval, 92 * sizeof(char), "%s:%d-", inet_ntoa(dip), dport);
-		snprintf(retval, 92 * sizeof(char), "%s%s:%d", tempretval, inet_ntoa(sip), sport);
+		inet_ntop(sa_family, &sip6, local_string,  49);
+		inet_ntop(sa_family, &dip6, remote_string, 49);
+		if (DEBUG)
+			fprintf(stderr, "Generating IPv6 string: ");
 	}
-	//if (DEBUG)
-		//cout << "hasshtring: " << retval << endl;
-	free (tempretval);
+	if (Outgoing()) {
+		snprintf(retval, HASHKEYSIZE * sizeof(char), "%s:%d-%s:%d", local_string, sport, remote_string, dport);
+	} else {
+		snprintf(retval, HASHKEYSIZE * sizeof(char), "%s:%d-%s:%d", remote_string, dport, local_string, sport);
+	}
+	free (local_string);
+	free (remote_string);
+	if (DEBUG)
+		std::cout << retval << std::endl;
 	return retval;
 }
 
