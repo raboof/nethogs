@@ -1,3 +1,4 @@
+#include "nethogs.h"
 #include <iostream>
 #include "packet.h"
 #include <netinet/tcp.h>
@@ -5,8 +6,8 @@
 #include <malloc.h>
 #include <assert.h>
 #include <net/if.h>
+#include <net/ethernet.h>
 #include <sys/ioctl.h>
-#include "nethogs.h"
 // #include "inet6.c"
 
 local_addr * local_addrs = NULL;
@@ -33,8 +34,6 @@ void getLocal (const char *device)
 	}
 	saddr=(struct sockaddr_in*)&iFreq.ifr_addr;
 	local_addrs = new local_addr (saddr->sin_addr.s_addr, local_addrs);
-	//malloc
-	//(*local_addr)=saddr->sin_addr;	
 }
 
 typedef u_int32_t tcp_seq;
@@ -103,7 +102,8 @@ struct tcp_hdr {
 /* Packet 'Constructor' - but returns NULL on failure */
 Packet * getPacket (const struct pcap_pkthdr * header, const u_char * packet)
 {
-	const struct ethernet_hdr * ethernet = (struct ethernet_hdr *)packet;
+	//const struct ethernet_hdr * ethernet = (struct ethernet_hdr *)packet;
+	const struct ether_header * ethernet = (struct ether_header *)packet;
 	if (ethernet->ether_type != 8)
 	{
 #if DEBUG
