@@ -126,15 +126,17 @@ Packet * getPacket (const struct pcap_pkthdr * header, const u_char * packet)
 	return new Packet (ip->ip_src, ntohs(tcp->th_sport), ip->ip_dst, ntohs(tcp->th_dport), header->len, header->ts);
 }
 
-Packet::Packet (in_addr m_sip, unsigned short m_sport, in_addr m_dip, unsigned short m_dport, bpf_u_int32 m_len, timeval m_time)
+Packet::Packet (in_addr m_sip, unsigned short m_sport, in_addr m_dip, unsigned short m_dport, bpf_u_int32 m_len, timeval m_time, direction m_dir)
 {
 	sip = m_sip; sport = m_sport;
 	dip = m_dip; dport = m_dport;
 	len = m_len; time = m_time;
+	dir = m_dir;
 }
 
 Packet * Packet::newInverted () {
-	return new Packet (dip, dport, sip, sport, len, time);
+	/* TODO if this is a bottleneck, we can calculate the direction */
+	return new Packet (dip, dport, sip, sport, len, time, dir_unknown);
 }
 
 /* constructs returns a new Packet() structure with the same contents as this one */
@@ -158,15 +160,35 @@ bool Packet::Outgoing () {
 	if (DEBUG)
 		assert (local_addrs != NULL);
 
-	return (local_addrs->contains(sip.s_addr));
+	switch (dir) {
+	  case dir_outgoing:
+		return true;
+	  case dir_incoming:
+		return false;
+	  case dir_unknown:
+		if (local_addrs->contains(sip.s_addr)) {
+		  dir = dir_outgoing;
+		  return true;
+		} else {
+		  dir = dir_incoming;
+		  return false;
+		}
+	}
 }
 
+/* returns the packet in '1.2.3.4:5-1.2.3.4:5'-form, for use in the 'conninode' table */
+/* '1.2.3.4' should be the local address. */
 char * Packet::gethashstring ()
 {
 	// TODO this needs to be bigger to support ipv6?!
 	char * retval = (char *) malloc (92 * sizeof(char));
-	snprintf(retval, 92 * sizeof(char), "%s:%d-", inet_ntoa(sip), sport);
-	snprintf(retval, 92 * sizeof(char), "%s%s:%d", retval, inet_ntoa(dip), dport);
+	if (Outgoing()) {
+		snprintf(retval, 92 * sizeof(char), "%s:%d-", inet_ntoa(sip), sport);
+		snprintf(retval, 92 * sizeof(char), "%s%s:%d", retval, inet_ntoa(dip), dport);
+	} else {
+		snprintf(retval, 92 * sizeof(char), "%s:%d-", inet_ntoa(dip), dport);
+		snprintf(retval, 92 * sizeof(char), "%s%s:%d", retval, inet_ntoa(sip), sport);
+	}
 	//if (DEBUG)
 		//cout << "hasshtring: " << retval << endl;
 	return retval;

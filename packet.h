@@ -13,6 +13,12 @@ extern "C"
 	#include <pcap.h>
 }
 
+enum direction {
+  dir_unknown, 
+  dir_incoming, 
+  dir_outgoing
+};
+
 /* To initialise this module, call getLocal with the currently
  * monitored device (e.g. "eth0:1") */
 void getLocal (const char *device);
@@ -27,7 +33,7 @@ public:
 	bpf_u_int32 len;
 	timeval time;
 
-	Packet (in_addr m_sip, unsigned short m_sport, in_addr m_dip, unsigned short m_dport, bpf_u_int32 m_len, timeval m_time);
+	Packet (in_addr m_sip, unsigned short m_sport, in_addr m_dip, unsigned short m_dport, bpf_u_int32 m_len, timeval m_time, direction dir = dir_unknown);
 	/* using default copy constructor */
 	/* Packet (const Packet &old_packet); */
 	/* copy constructor that turns the packet around */
@@ -40,6 +46,8 @@ public:
 	bool match (Packet * other);
 	/* returns '1.2.3.4:5-1.2.3.4:6'-style string */
 	char * gethashstring();
+private:
+	direction dir;
 };
 
 Packet * getPacket (const struct pcap_pkthdr * header, const u_char * packet);

@@ -18,17 +18,6 @@
 extern timeval curtime;
 extern std::string * caption;
 
-/*struct aftype inet6_aftype =
-{
-	    "inet6", NULL, AF_INET6, sizeof(struct in6_addr),
-	        INET6_print, INET6_sprint, INET6_input, INET6_reserror,
-		    INET6_rprint, INET6_rinput, NULL,
-
-		        -1,
-			    "/proc/net/if_inet6"
-};*/
-
-
 static int INET6_getsock(char *bufp, struct sockaddr *sap)
 {
     struct sockaddr_in6 *sin6;
@@ -73,9 +62,117 @@ struct aftype {
  */
 HashTable * conninode = new HashTable (256);
 
-// TODO check what happens to the 'content' field of the hash!!
+/*
+ * parses a /proc/net/tcp-line of the form:
+ *     sl  local_address rem_address   st tx_queue rx_queue tr tm->when retrnsmt   uid  timeout inode
+ *     10: 020310AC:1770 9DD8A9C3:A525 01 00000000:00000000 00:00000000 00000000     0        0 2119 1 c0f4f0c0 206 40 10 3 -1                            
+ *     11: 020310AC:0404 936B2ECF:0747 01 00000000:00000000 00:00000000 00000000  1000        0 2109 1 c0f4fc00 368 40 20 2 -1                            
+ *
+ */
+// TODO check what happens to the 'content' field of the hash
 void addtoconninode (char * buffer)
 {
+	char rem_addr[128], local_addr[128];
+	int local_port, rem_port;
+    	struct sockaddr_in6 localaddr, remaddr;
+    	char addr6[INET6_ADDRSTRLEN];
+    	struct in6_addr in6;
+    	extern struct aftype inet6_aftype;
+	// the following line leaks memory.
+	unsigned long * inode = (unsigned long *) malloc (sizeof(unsigned long));
+	// TODO check it matched
+	sscanf(buffer, "%*d: %64[0-9A-Fa-f]:%X %64[0-9A-Fa-f]:%X %*X %*lX:%*lX %*X:%*lX %*lX %*d %*d %ld %*512s\n",
+		local_addr, &local_port, rem_addr, &rem_port, inode);
+
+	if (strlen(local_addr) > 8)
+	{
+		/* Demangle what the kernel gives us */
+		sscanf(local_addr, "%08X%08X%08X%08X", 
+			&in6.s6_addr32[0], &in6.s6_addr32[1],
+			&in6.s6_addr32[2], &in6.s6_addr32[3]);
+		inet_ntop(AF_INET6, &in6, addr6, sizeof(addr6));
+		INET6_getsock(addr6, (struct sockaddr *) &localaddr);
+		sscanf(rem_addr, "%08X%08X%08X%08X",
+		       &in6.s6_addr32[0], &in6.s6_addr32[1],
+		       &in6.s6_addr32[2], &in6.s6_addr32[3]);
+		inet_ntop(AF_INET6, &in6, addr6, sizeof(addr6));
+		INET6_getsock(addr6, (struct sockaddr *) &remaddr);
+		localaddr.sin6_family = AF_INET6;
+		remaddr.sin6_family = AF_INET6;
+	}
+	else
+	{
+		sscanf(local_addr, "%X", &((struct sockaddr_in *)&localaddr)->sin_addr.s_addr);
+		sscanf(rem_addr, "%X", &((struct sockaddr_in *)&remaddr)->sin_addr.s_addr);
+		((struct sockaddr *) &localaddr)->sa_family = AF_INET;
+		((struct sockaddr *) &remaddr)->sa_family = AF_INET;
+	}
+
+	/* Construct hash key and add inode to conninode table */
+	char * hashkey = (char *) malloc (92 * sizeof(char));
+	snprintf(hashkey, 92 * sizeof(char), "%s:%d-", inet_ntoa(((struct sockaddr_in *)&localaddr)->sin_addr), local_port);
+	snprintf(hashkey, 92 * sizeof(char), "%s%s:%d", hashkey, inet_ntoa(((struct sockaddr_in *)&remaddr)->sin_addr), rem_port);
+	conninode->add(hashkey, (void *)inode);
+
+	// TODO maybe also add this inode for our other local addresses with that destination
+	
+	return;
+
+	/*
+	 * OLD CODE BELOW - dead now.
+	 *
+	 *
+	if (strcmp(inet_ntoa(((struct sockaddr_in *)&localaddr)->sin_addr), "172.16.3.1") == 0)
+	{
+		hashkey = (char *) malloc (92 * sizeof(char));
+		snprintf(hashkey, 92 * sizeof(char), "%s:%d-", "195.169.216.157", local_port);
+		snprintf(hashkey, 92 * sizeof(char), "%s%s:%d", hashkey, inet_ntoa(((struct sockaddr_in *)&remaddr)->sin_addr), rem_port);
+		conninode->add(hashkey, (void *)inode);
+	}
+	if (strcmp(inet_ntoa(((struct sockaddr_in *)&remaddr)->sin_addr), "172.16.3.1") == 0)
+	{
+		hashkey = (char *) malloc (92 * sizeof(char));
+		snprintf(hashkey, 92 * sizeof(char), "%s:%d-", inet_ntoa(((struct sockaddr_in *)&localaddr)->sin_addr), local_port);
+		snprintf(hashkey, 92 * sizeof(char), "%s%s:%d", hashkey, "195.169.216.157", rem_port);
+		conninode->add(hashkey, (void *)inode);
+	}
+	if (strcmp(inet_ntoa(((struct sockaddr_in *)&localaddr)->sin_addr), "195.169.216.157") == 0)
+	{
+		hashkey = (char *) malloc (92 * sizeof(char));
+		snprintf(hashkey, 92 * sizeof(char), "%s:%d-", "172.16.3.1", local_port);
+		snprintf(hashkey, 92 * sizeof(char), "%s%s:%d", hashkey, inet_ntoa(((struct sockaddr_in *)&remaddr)->sin_addr), rem_port);
+		conninode->add(hashkey, (void *)inode);
+
+		hashkey = (char *) malloc (92 * sizeof(char));
+		snprintf(hashkey, 92 * sizeof(char), "%s:%d-", inet_ntoa(((struct sockaddr_in *)&remaddr)->sin_addr), rem_port);
+		snprintf(hashkey, 92 * sizeof(char), "%s%s:%d", hashkey, "172.16.3.1", local_port);
+		conninode->add(hashkey, (void *)inode);
+	}
+	if (strcmp(inet_ntoa(((struct sockaddr_in *)&remaddr)->sin_addr), "195.169.216.157") == 0)
+	{
+		hashkey = (char *) malloc (92 * sizeof(char));
+		snprintf(hashkey, 92 * sizeof(char), "%s:%d-", inet_ntoa(((struct sockaddr_in *)&localaddr)->sin_addr), local_port);
+		snprintf(hashkey, 92 * sizeof(char), "%s%s:%d", hashkey, "172.16.3.1", rem_port);
+		conninode->add(hashkey, (void *)inode);
+
+		hashkey = (char *) malloc (92 * sizeof(char));
+		snprintf(hashkey, 92 * sizeof(char), "%s:%d-", "172.16.3.1", rem_port);
+		snprintf(hashkey, 92 * sizeof(char), "%s%s:%d", hashkey, inet_ntoa(((struct sockaddr_in *)&localaddr)->sin_addr), local_port);
+		conninode->add(hashkey, (void *)inode);
+	}
+	*/
+}
+
+/*
+ * parses a /proc/net/tcp6-line of the form:
+ *     sl  local_address                         remote_address                        st tx_queue rx_queue tr tm->when retrnsmt   uid  timeout inode
+ *      2: 0000000000000000FFFF0000020310AC:0016 0000000000000000FFFF00009DD8A9C3:A526 01 00000000:00000000 02:000A7214 00000000     0        0 2525 2 c732eca0 201 40 1 2 -1
+ *
+ */
+void addtoconninodev6 (char * buffer)
+{
+	/* TODO implement */
+
 	char rem_addr[128], local_addr[128];
 	int local_port, rem_port;
     	struct sockaddr_in6 localaddr, remaddr;
@@ -202,7 +299,7 @@ void refreshconninode ()
 		fgets(buffer, sizeof(buffer), procinfo);
 		do {
 			if (fgets(buffer, sizeof(buffer), procinfo))
-				addtoconninode(buffer);
+				addtoconninodev6(buffer);
 		} while (!feof(procinfo));
 		fclose (procinfo);
 	}
