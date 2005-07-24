@@ -1,14 +1,17 @@
 VERSION      := 0
 SUBVERSION   := 6
-MINORVERSION := 1pre2
+MINORVERSION := 2pre1
 
-bin  := $(DESTDIR)/usr/bin
-man8 := $(DESTDIR)/usr/share/man/man8/
+#DESTDIR := /usr
+DESTDIR := /usr/local
+
+bin  := $(DESTDIR)/bin
+man8 := $(DESTDIR)/share/man/man8/
 
 all: nethogs
 
-CFLAGS=-g -Wall
-#CFLAGS=-O2
+#CFLAGS=-g -Wall
+CFLAGS=-O2
 OBJS=structs.o packet.o connection.o process.o refresh.o decpcap.o cui.o inode2prog.o
 GCC=g++
 .PHONY: tgz
