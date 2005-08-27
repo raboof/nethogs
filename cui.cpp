@@ -268,7 +268,9 @@ void do_refresh()
 			uid_t uid = curproc->getVal()->getUid();
 			if (!ROBUST)
 			{
-				assert (getpwuid(uid) != NULL);
+				struct passwd * pwuid = getpwuid(uid);
+				assert (pwuid != NULL);
+				free (pwuid);
 				assert (curproc->getVal()->pid >= 0);
 				assert (n < nproc);
 			}

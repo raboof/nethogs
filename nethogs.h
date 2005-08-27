@@ -36,7 +36,7 @@
 // assertions. good for finding bugs
 // at an early stage of development.
 // for production, should be 1.
-#define ROBUST 0
+#define ROBUST 1
 
 #define REVERSEHACK 0
 

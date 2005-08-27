@@ -10,8 +10,8 @@ man8 := $(DESTDIR)/share/man/man8/
 
 all: nethogs
 
-#CFLAGS=-g -Wall
-CFLAGS=-O2
+CFLAGS=-g -Wall
+#CFLAGS=-O2
 OBJS=structs.o packet.o connection.o process.o refresh.o decpcap.o cui.o inode2prog.o
 GCC=g++
 .PHONY: tgz
