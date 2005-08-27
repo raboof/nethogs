@@ -1,6 +1,6 @@
 VERSION      := 0
 SUBVERSION   := 6
-MINORVERSION := 2pre1
+MINORVERSION := 2pre2
 
 #DESTDIR := /usr
 DESTDIR := /usr/local
