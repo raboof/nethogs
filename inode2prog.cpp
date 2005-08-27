@@ -68,12 +68,16 @@ char * getprogname (char * pid) {
 	if (length < bufsize - 1)
 		buffer[length]='\0';
 
-	char * retval;
+	char * retval = buffer;
 
+	/* this removed directory names, but that malfunctions
+	 * when the program name is like "sshd: arnouten@pts/8"
 	if ((retval = strrchr(buffer, '/')))
 		retval++;
 	else 
 		retval = buffer; 
+	*/
+	// truncating is now done where it should be, in cui.cpp
 
 	return strdup(retval);
 }
@@ -105,12 +109,16 @@ void get_info_by_linkname (char * pid, char * linkname) {
 	}
 }
 
+/* updates the `inodeproc' inode-to-prg_node 
+ * for all inodes belonging to this PID 
+ * (/proc/pid/fd/*)
+ * */
 void get_info_for_pid(char * pid) {
 	size_t dirlen = 10 + strlen(pid);
 	char * dirname = (char *) malloc (dirlen * sizeof(char));
 	snprintf(dirname, dirlen, "/proc/%s/fd", pid);
 
-	//std::cout << "Entering directory " << dirname << std::endl;
+	//std::cout << "Getting info for pid " << pid << std::endl;
 
 	DIR * dir = opendir(dirname);
 
@@ -153,11 +161,13 @@ void get_info_for_pid(char * pid) {
 	free (dirname);
 }
 
+/* updates the `inodeproc' inode-to-prg_node mapping 
+ * for all processes in /proc */
 void reread_mapping () {
 	DIR * proc = opendir ("/proc");
 
 	if (proc == 0) {
-		std::cerr << "Error getting inode-to-pid mapping\n";
+		std::cerr << "Error reading /proc, neede to get inode-to-pid-maping\n";
 		exit(1);
 	}
 

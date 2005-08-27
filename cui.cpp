@@ -12,7 +12,10 @@ std::string * caption;
 const char version[] = " version " VERSION "." SUBVERSION "." MINORVERSION;
 extern ProcList * processes;
 extern timeval curtime;
-extern Process * unknownproc;
+
+extern Process * unknowntcp;
+extern Process * unknownudp;
+extern Process * unknownip;
 
 class Line 
 {
@@ -74,6 +77,7 @@ void Line::show (int row)
 	{
 		assert (m_uid >= 0);
 		assert (m_pid >= 0);
+		assert (m_pid <= 100000);
 	}
 
 	if (DEBUG || tracemode)
@@ -86,7 +90,17 @@ void Line::show (int row)
 	char * username = uid2username(m_uid);
 	mvprintw (3+row, 6, "%s", username);
 	free (username);
-	mvprintw (3+row, 6 + 9, "%s", m_name);
+	if (strlen (m_name) > PROGNAME_WIDTH) {
+		// truncate oversized names
+		char * tmp = strdup(m_name);
+		char * start = tmp + strlen (m_name) - PROGNAME_WIDTH;
+		start[0] = '.';
+		start[1] = '.';
+		mvprintw (3+row, 6 + 9, "%s", start);
+		free (tmp);
+	} else {
+		mvprintw (3+row, 6 + 9, "%s", m_name);
+	}
 	mvprintw (3+row, 6 + 9 + PROGNAME_WIDTH + 2, "%s", devicename);
 	mvprintw (3+row, 6 + 9 + PROGNAME_WIDTH + 2 + 6, "%10.3f", sent_kbps);
 	mvprintw (3+row, 6 + 9 + PROGNAME_WIDTH + 2 + 6 + 9 + 3, "%10.3f", recv_kbps);
@@ -193,10 +207,12 @@ void do_refresh()
 			assert (curproc->getVal() != NULL);
 			assert (nproc == processes->size());
 		}
-		/* do not remove the unknown process */
-		if ((curproc->getVal()->getLastPacket() + PROCESSTIMEOUT <= curtime.tv_sec) && (curproc->getVal() != unknownproc))
+		/* remove timed-out processes (unless it's the unknown process) */
+		if ((curproc->getVal()->getLastPacket() + PROCESSTIMEOUT <= curtime.tv_sec) 
+				&& (curproc->getVal() != unknowntcp)
+				&& (curproc->getVal() != unknownudp)
+				&& (curproc->getVal() != unknownip))
 		{
-			/* remove process */
 			if (DEBUG)
 				std::cout << "PROC: Deleting process\n";
 			ProcList * todelete = curproc;
@@ -220,8 +236,8 @@ void do_refresh()
 			u_int32_t sum_sent = 0, 
 			  	sum_recv = 0;
 
-			/* walk though all this process's connections, and sum them
-			 * up */
+			/* walk though all this process's connections, and sum 
+			 * them up */
 			ConnList * curconn = curproc->getVal()->connections;
 			ConnList * previous = NULL;
 			while (curconn != NULL)
@@ -286,7 +302,7 @@ void do_refresh()
 	}
 	if (tracemode || DEBUG) {
 		/* print the 'unknown' connections, for debugging */
-		ConnList * curr_unknownconn = unknownproc->connections;
+		ConnList * curr_unknownconn = unknowntcp->connections;
 		while (curr_unknownconn != NULL) {
 			std::cout << "Unknown connection: " << 
 				curr_unknownconn->getVal()->refpacket->gethashstring() << std::endl;

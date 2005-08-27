@@ -36,7 +36,9 @@
 // assertions. good for finding bugs
 // at an early stage of development.
 // for production, should be 1.
-#define ROBUST 1
+#define ROBUST 0
+
+#define REVERSEHACK 0
 
 // 2 times: 32 characters, 7 ':''s, a ':12345'.
 // 1 '-'
@@ -88,8 +90,8 @@ public:
 		address[37] = m_address[30]; address[38] = m_address[31];
 		address[39] = 0;
 		string = strdup(address);
-		if (DEBUG)
-			std::cout << "Converting address " << address << std::endl;
+		//if (DEBUG)
+		//	std::cout << "Converting address " << address << std::endl;
 
 		int result = inet_pton (AF_INET6, address, &addr6);
 

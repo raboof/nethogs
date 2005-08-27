@@ -31,16 +31,31 @@ extern local_addr * local_addrs;
 std::map <std::string, unsigned long> conninode;
 
 /*
- * Initialise the global process-list with `the' unknown process
+ * Initialise the global process-list with some special processes:
+ * * unknown TCP traffic
+ * * UDP traffic
+ * * unknown IP traffic
  * We must take care this one never gets removed from the list.
  */
-Process * unknownproc; 
+Process * unknowntcp; 
+Process * unknownudp; 
+Process * unknownip; 
 ProcList * processes;
+
+/* We're migrating to having several `unknown' processes that are added as 
+ * normal processes, instead of hard-wired unknown processes.
+ * This mapping maps from unknown processes descriptions to processes */
+std::map <std::string, Process*> unknownprocs;
+
 
 void process_init () 
 {
-	unknownproc = new Process (0, "", "unknown");
-	processes = new ProcList (unknownproc, NULL);
+	unknowntcp = new Process (0, "", "unknown TCP");
+	//unknownudp = new Process (0, "", "unknown UDP");
+	//unknownip = new Process (0, "", "unknown IP");
+	processes = new ProcList (unknowntcp, NULL);
+	//processes = new ProcList (unknownudp, processes);
+	//processes = new ProcList (unknownip, processes);
 }
 
 int Process::getLastPacket()
@@ -226,7 +241,7 @@ Process * findProcess (unsigned long inode)
  * connections are now known */
 void reviewUnknown ()
 {
-	ConnList * curr_conn = unknownproc->connections;
+	ConnList * curr_conn = unknowntcp->connections;
 	ConnList * previous_conn = NULL;
 
 	while (curr_conn != NULL) {
@@ -234,12 +249,13 @@ void reviewUnknown ()
 		if (inode != 0)
 		{
 			Process * proc = findProcess (inode);
-			if (proc != unknownproc && proc != NULL)
+			if (proc != unknowntcp && proc != NULL)
 			{
 				if (DEBUG)
 					std::cout << "ITP: WARNING: Previously unknown inode " << inode << " now got process...??\n";
-				/* Yay! - but how could this happen? */
-				//assert(false);
+				/* Yay! - but how can this happen? */
+				if (!ROBUST)
+					assert(false);
 				if (previous_conn != NULL)
 				{
 					previous_conn->setNext (curr_conn->getNext());
@@ -249,10 +265,10 @@ void reviewUnknown ()
 				}
 				else
 				{
-					unknownproc->connections = curr_conn->getNext();
+					unknowntcp->connections = curr_conn->getNext();
 					proc->connections = new ConnList (curr_conn->getVal(), proc->connections);
 					delete curr_conn;
-					curr_conn = unknownproc->connections;
+					curr_conn = unknowntcp->connections;
 				}
 			}
 		}
@@ -275,7 +291,8 @@ void refreshconninode ()
 	}
 	addprocinfo ("/proc/net/tcp6");
 
-	reviewUnknown();
+	if (DEBUG)
+		reviewUnknown();
 
 }
 
@@ -309,7 +326,11 @@ Process * getProcess (unsigned long inode, char * devicename)
 	struct prg_node * node = findPID(inode);
 	
 	if (node == NULL)
-		return unknownproc;
+	{
+		if (DEBUG)
+			std::cout << "No PID information for inode " << inode << std::endl;
+		return unknowntcp;
+	}
 
 	Process * proc = findProcess (node);
 
@@ -370,6 +391,7 @@ Process * getProcess (Connection * connection, char * devicename)
 #endif
 		refreshconninode();
 		inode = conninode[connection->refpacket->gethashstring()];
+#if REVERSEHACK
 		if (inode == 0)
 		{
 			/* HACK: the following is a hack for cases where the 
@@ -378,7 +400,6 @@ Process * getProcess (Connection * connection, char * devicename)
 
 		 	/* we reverse the direction of the stream if 
 			 * successful. */
-
 			Packet * reversepacket = connection->refpacket->newInverted();
 			inode = conninode[reversepacket->gethashstring()];
 
@@ -387,16 +408,26 @@ Process * getProcess (Connection * connection, char * devicename)
 				delete reversepacket;
 				if (DEBUG)
 					std::cout << "LOC: " << connection->refpacket->gethashstring() << " STILL not in connection-to-inode table - adding to the unknown process\n";
-				unknownproc->connections = new ConnList (connection, unknownproc->connections);
-				return unknownproc;
+				unknowntcp->connections = new ConnList (connection, unknowntcp->connections);
+				return unknowntcp;
 			}
 
 			delete connection->refpacket;
 			connection->refpacket = reversepacket;
 		}
+#endif
 	}
 
-	Process * proc = getProcess(inode, devicename);
+	Process * proc;
+	if (inode == 0) {
+		proc = new Process (0, "", connection->refpacket->gethashstring());
+		processes = new ProcList (proc, processes);
+	} 
+	else
+	{
+		proc = getProcess(inode, devicename);
+	}
+
 	proc->connections = new ConnList (connection, proc->connections);
 	return proc;
 }
