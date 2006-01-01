@@ -13,7 +13,6 @@ all: nethogs
 #CFLAGS=-g -Wall
 CFLAGS=-O2
 OBJS=structs.o packet.o connection.o process.o refresh.o decpcap.o cui.o inode2prog.o
-GCC=g++
 .PHONY: tgz
 
 tgz: clean
@@ -28,26 +27,26 @@ install: nethogs nethogs.8
 	cp nethogs.8 $(man8)
 
 nethogs: nethogs.cpp $(OBJS)
-	$(GCC) $(CFLAGS) nethogs.cpp $(OBJS) -o nethogs -lpcap -lm -lncurses -DVERSION=\"$(VERSION)\" -DSUBVERSION=\"$(SUBVERSION)\" -DMINORVERSION=\"$(MINORVERSION)\"
+	$(CXX) $(CFLAGS) nethogs.cpp $(OBJS) -o nethogs -lpcap -lm -lncurses -DVERSION=\"$(VERSION)\" -DSUBVERSION=\"$(SUBVERSION)\" -DMINORVERSION=\"$(MINORVERSION)\"
 
 #-lefence
 
 refresh.o: refresh.cpp refresh.h nethogs.h
-	$(GCC) $(CFLAGS) -c refresh.cpp
+	$(CXX) $(CFLAGS) -c refresh.cpp
 structs.o: structs.cpp structs.h nethogs.h
-	$(GCC) $(CFLAGS) -c structs.cpp
+	$(CXX) $(CFLAGS) -c structs.cpp
 process.o: process.cpp process.h nethogs.h
-	$(GCC) $(CFLAGS) -c process.cpp
+	$(CXX) $(CFLAGS) -c process.cpp
 packet.o: packet.cpp packet.h nethogs.h
-	$(GCC) $(CFLAGS) -c packet.cpp
+	$(CXX) $(CFLAGS) -c packet.cpp
 connection.o: connection.cpp connection.h nethogs.h
-	$(GCC) $(CFLAGS) -c connection.cpp
+	$(CXX) $(CFLAGS) -c connection.cpp
 decpcap.o: decpcap.c decpcap.h
-	gcc $(CFLAGS) -c decpcap.c
+	$(CC) $(CFLAGS) -c decpcap.c
 inode2prog.o: inode2prog.cpp inode2prog.h nethogs.h
-	$(GCC) $(CFLAGS) -c inode2prog.cpp
+	$(CXX) $(CFLAGS) -c inode2prog.cpp
 cui.o: cui.cpp cui.h nethogs.h
-	$(GCC) $(CFLAGS) -c cui.cpp -DVERSION=\"$(VERSION)\" -DSUBVERSION=\"$(SUBVERSION)\" -DMINORVERSION=\"$(MINORVERSION)\"
+	$(CXX) $(CFLAGS) -c cui.cpp -DVERSION=\"$(VERSION)\" -DSUBVERSION=\"$(SUBVERSION)\" -DMINORVERSION=\"$(MINORVERSION)\"
 
 .PHONY: clean
 clean:
