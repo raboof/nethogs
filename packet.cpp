@@ -31,7 +31,7 @@ char * stripspaces (char * input)
  * uses ioctl to get address of this device, and adds it to the
  * local_addrs-list.
  */
-void getLocal (const char *device)
+void getLocal (const char *device, bool tracemode)
 {
 	/* get local IPv4 addresses */
 	int sock;
@@ -47,6 +47,10 @@ void getLocal (const char *device)
 	}
 	saddr=(struct sockaddr_in*)&iFreq.ifr_addr;
 	local_addrs = new local_addr (saddr->sin_addr.s_addr, local_addrs);
+
+	if (tracemode || DEBUG) {
+		printf ("Adding local address: %s\n", inet_ntoa(saddr->sin_addr));
+	}
 
 	/* also get local IPv6 addresses */
 	FILE * ifinfo = fopen ("/proc/net/if_inet6", "r");

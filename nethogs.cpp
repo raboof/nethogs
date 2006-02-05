@@ -313,7 +313,7 @@ int main (int argc, char** argv)
 	handle * handles = NULL;
 	device * current_dev = devices;
 	while (current_dev != NULL) {
-		getLocal(current_dev->name);
+		getLocal(current_dev->name, tracemode);
 		if ((!tracemode) && (!DEBUG)){
 			//caption->append(current_dev->name);
 			//caption->append(" ");
