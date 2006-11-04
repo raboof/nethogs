@@ -2,11 +2,14 @@
 #include <stdio.h>
 #include <pcap.h>
 
+#define DP_ERRBUFF_SIZE PCAP_ERRBUF_SIZE
+
 /* definitions */
 
 enum dp_packet_type {
 	dp_packet_ethernet,
 	dp_packet_ppp,
+	dp_packet_sll,
 	dp_packet_ip,
 	dp_packet_ip6,
 	dp_packet_tcp,
@@ -37,6 +40,7 @@ struct dp_handle {
 /* functions to set up a handle (which is basically just a pcap handle) */
 
 struct dp_handle * dp_open_live(char * device, int snaplen, int promisc, int to_ms, char * ebuf);
+struct dp_handle * dp_open_offline(char * fname, char * ebuf);
 
 /* functions to add callbacks */
 
@@ -56,4 +60,4 @@ int dp_datalink(struct dp_handle * handle);
 
 int dp_setnonblock (struct dp_handle * handle, int i, char * errbuf);
 
-
+char * dp_geterr (struct dp_handle * handle);

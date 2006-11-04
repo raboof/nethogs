@@ -9,18 +9,11 @@
 
 /* functions to set up a handle (which is basically just a pcap handle) */
 
-struct dp_handle * dp_open_live(char * device, int snaplen, int promisc, int to_ms, char * ebuf)
+struct dp_handle * dp_fillhandle(pcap_t * phandle)
 {
 	struct dp_handle * retval = (struct dp_handle *) malloc (sizeof (struct dp_handle));
-	pcap_t * temp = pcap_open_live(device, snaplen, promisc, to_ms, ebuf); 
 	int i;
-	retval->pcap_handle = temp;
-
-	if (retval->pcap_handle == NULL)
-	{
-		free (retval);
-		return NULL;
-	}
+	retval->pcap_handle = phandle;
 
 	for (i = 0; i < dp_n_packet_types; i++)
 	{
@@ -36,13 +29,40 @@ struct dp_handle * dp_open_live(char * device, int snaplen, int promisc, int to_
 		case (DLT_PPP):
 			fprintf(stdout, "PPP link detected\n");
 			break;
+		case (DLT_LINUX_SLL):
+			fprintf(stdout, "Linux Cooked Socket link detected\n");
+			break;
 		default:
 			fprintf(stdout, "No PPP or Ethernet link: %d\n", retval->linktype);
 			// TODO maybe error? or 'other' callback?
 			break;
 	}
 
-	return retval;
+	return retval;	
+}
+
+struct dp_handle * dp_open_offline(char * fname, char * ebuf)
+{
+	pcap_t * temp = pcap_open_offline(fname, ebuf); 
+
+	if (temp == NULL)
+	{
+		return NULL;
+	}
+
+	return dp_fillhandle(temp);
+}
+
+struct dp_handle * dp_open_live(char * device, int snaplen, int promisc, int to_ms, char * ebuf)
+{
+	pcap_t * temp = pcap_open_live(device, snaplen, promisc, to_ms, ebuf); 
+
+	if (temp == NULL)
+	{
+		return NULL;
+	}
+
+	return dp_fillhandle(temp);
 }
 
 /* functions to add callbacks */
@@ -192,6 +212,48 @@ void dp_parse_ppp (struct dp_handle * handle, const dp_header * header, const u_
 	}
 }
 
+/* linux cooked header, i hope ;) */
+/* glanced from libpcap/ssl.h */
+#define SLL_ADDRLEN	8		/* length of address field */
+struct sll_header {
+	u_int16_t sll_pkttype;		/* packet type */
+	u_int16_t sll_hatype;		/* link-layer address type */
+	u_int16_t sll_halen;		/* link-layer address length */
+	u_int8_t sll_addr[SLL_ADDRLEN];	/* link-layer address */
+	u_int16_t sll_protocol;		/* protocol */
+};
+
+void dp_parse_linux_cooked (struct dp_handle * handle, const dp_header * header, const u_char * packet)
+{
+	const struct sll_header * sll = (struct sll_header *) packet;
+	u_char * payload = (u_char *) packet + sizeof (struct sll_header);
+
+	/* call handle if it exists */
+	if (handle->callback[dp_packet_sll] != NULL)
+	{
+		int done = (handle->callback[dp_packet_sll])
+			(handle->userdata, header, packet);
+
+		/* return if handle decides we're done */
+		if (done)
+			return;
+	}
+
+	/* parse payload */
+	switch (sll->sll_protocol)
+	{
+		case (0x0008):
+			dp_parse_ip (handle, header, payload);
+			break;
+		case (0xDD86):
+			dp_parse_ip6 (handle, header, payload);
+			break;
+		default:
+			// TODO: support for other than IPv4 / IPv6
+			break;
+	}	
+}
+
 /* functions to do the monitoring */
 void dp_pcap_callback (u_char * u_handle, const struct pcap_pkthdr * header, const u_char * packet)
 {
@@ -209,12 +271,16 @@ void dp_pcap_callback (u_char * u_handle, const struct pcap_pkthdr * header, con
 		case (DLT_PPP):
 			dp_parse_ppp (handle, header, packet);
 			break;
+		case (DLT_LINUX_SLL):
+			dp_parse_linux_cooked (handle, header, packet);
+			break;
 		case (DLT_RAW):
 		case (DLT_NULL):
-			// just a guess
+			// hope for the best
 			dp_parse_ip (handle, header, packet);
+			break;
 		default:
-			// TODO maybe error? or 'other' callback?
+			fprintf(stdout, "Unknown linktype %d", handle->linktype);
 			break;
 	}
 	free (userdata_copy);
@@ -228,4 +294,9 @@ int dp_dispatch (struct dp_handle * handle, int count, u_char *user, int size) {
 
 int dp_setnonblock (struct dp_handle * handle, int i, char * errbuf) {
 	return pcap_setnonblock (handle->pcap_handle, i, errbuf);
+}
+
+char * dp_geterr (struct dp_handle * handle)
+{
+	return pcap_geterr (handle->pcap_handle);
 }

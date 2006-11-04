@@ -8,7 +8,7 @@ DESTDIR := /usr/local
 bin  := $(DESTDIR)/bin
 man8 := $(DESTDIR)/share/man/man8/
 
-all: nethogs
+all: nethogs decpcap_test
 
 #CFLAGS=-g -Wall
 CFLAGS=-O2
@@ -28,6 +28,9 @@ install: nethogs nethogs.8
 
 nethogs: nethogs.cpp $(OBJS)
 	$(CXX) $(CFLAGS) nethogs.cpp $(OBJS) -o nethogs -lpcap -lm -lncurses -DVERSION=\"$(VERSION)\" -DSUBVERSION=\"$(SUBVERSION)\" -DMINORVERSION=\"$(MINORVERSION)\"
+
+decpcap_test: decpcap_test.cpp decpcap.o
+	$(CXX) $(CFLAGS) decpcap_test.cpp decpcap.o -o decpcap_test -lpcap -lm 
 
 #-lefence
 
