@@ -341,7 +341,7 @@ int main (int argc, char** argv)
 		dp_addcb (newhandle, dp_packet_ip, process_ip);
 		dp_addcb (newhandle, dp_packet_ip6, process_ip6);
 		dp_addcb (newhandle, dp_packet_tcp, process_tcp);
-		dp_addcb (newhandle, dp_packet_tcp, process_udp);
+		dp_addcb (newhandle, dp_packet_udp, process_udp);
 		if (newhandle != NULL)
 		{
 			/* The following code solves sf.net bug 1019381, but is only available
@@ -374,6 +374,7 @@ int main (int argc, char** argv)
 		}
 
 		if ((!DEBUG)&&(!tracemode)) {
+			// handle user input
 			ui_tick();
 		}
 		if (needrefresh)

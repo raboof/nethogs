@@ -80,6 +80,8 @@ Connection::Connection (Packet * packet)
 	lastpacket = packet->time.tv_sec;
 	if (DEBUG)
 		std::cout << "New reference packet created at " << refpacket << std::endl;
+	sumSent = 0;
+	sumRecv = 0;
 }
 
 Connection::~Connection ()
@@ -124,8 +126,12 @@ void Connection::add (Packet * packet)
 	lastpacket = packet->time.tv_sec;
 	if (packet->Outgoing())
 	{
+		sumSent += packet->len;
 		sent_packets->add (packet);
-	} else {
+	} 
+	else 
+	{
+		sumRecv += packet->len;
 		recv_packets->add (packet);
 	}
 }

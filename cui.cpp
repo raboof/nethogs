@@ -17,10 +17,18 @@ extern Process * unknowntcp;
 extern Process * unknownudp;
 extern Process * unknownip;
 
+// sort on sent or received?
+bool sortRecv = true;
+// viewMode: kb/s or total
+int viewMode = 0;
+int VIEWMODE_KBPS = 0;
+int VIEWMODE_TOTAL_KB = 1;
+int nViewModes = 2;
+
 class Line 
 {
 public:
-	Line (const char * name, double n_sent_kbps, double n_recv_kbps, pid_t pid, uid_t uid, const char * n_devicename)
+	Line (const char * name, double n_sent_value, double n_recv_value, pid_t pid, uid_t uid, const char * n_devicename)
 	{
 		if (!ROBUST) 
 		{
@@ -28,8 +36,8 @@ public:
 			assert (pid >= 0);
 		}
 		m_name = name; 
-		sent_kbps = n_sent_kbps; 
-		recv_kbps = n_recv_kbps;
+		sent_value = n_sent_value; 
+		recv_value = n_recv_value;
 		devicename = n_devicename;
 		m_pid = pid; 
 		m_uid = uid;
@@ -42,8 +50,8 @@ public:
 
 	void show (int row);
 	
-	double sent_kbps;
-	double recv_kbps; 
+	double sent_value;
+	double recv_value; 
 private:
 	const char * m_name;
 	const char * devicename;
@@ -82,7 +90,7 @@ void Line::show (int row)
 
 	if (DEBUG || tracemode)
 	{
-		std::cout << m_name << '/' << m_pid << '/' << m_uid << "\t" << sent_kbps << "\t" << recv_kbps << std::endl;
+		std::cout << m_name << '/' << m_pid << '/' << m_uid << "\t" << sent_value << "\t" << recv_value << std::endl;
 		return;
 	}
 
@@ -102,9 +110,16 @@ void Line::show (int row)
 		mvprintw (3+row, 6 + 9, "%s", m_name);
 	}
 	mvprintw (3+row, 6 + 9 + PROGNAME_WIDTH + 2, "%s", devicename);
-	mvprintw (3+row, 6 + 9 + PROGNAME_WIDTH + 2 + 6, "%10.3f", sent_kbps);
-	mvprintw (3+row, 6 + 9 + PROGNAME_WIDTH + 2 + 6 + 9 + 3, "%10.3f", recv_kbps);
-	mvprintw (3+row, 6 + 9 + PROGNAME_WIDTH + 2 + 6 + 9 + 3 + 11, "KB/sec", recv_kbps);
+	mvprintw (3+row, 6 + 9 + PROGNAME_WIDTH + 2 + 6, "%10.3f", sent_value);
+	mvprintw (3+row, 6 + 9 + PROGNAME_WIDTH + 2 + 6 + 9 + 3, "%10.3f", recv_value);
+	if (viewMode == VIEWMODE_KBPS)
+	{
+		mvprintw (3+row, 6 + 9 + PROGNAME_WIDTH + 2 + 6 + 9 + 3 + 11, "KB/sec");
+	} 
+	else if (viewMode == VIEWMODE_TOTAL_KB)
+	{
+		mvprintw (3+row, 6 + 9 + PROGNAME_WIDTH + 2 + 6 + 9 + 3 + 11, "KB");
+	}
 }
 
 int GreatestFirst (const void * ma, const void * mb)
@@ -113,11 +128,31 @@ int GreatestFirst (const void * ma, const void * mb)
 	Line ** pb = (Line **)mb;
 	Line * a = *pa;
 	Line * b = *pb;
-	if (a->recv_kbps > b->recv_kbps)
+	double aValue;
+	if (sortRecv)
+	{
+		aValue = a->recv_value;
+	}
+	else
+	{
+		aValue = a->sent_value;
+	}
+
+	double bValue;
+	if (sortRecv)
+	{
+		bValue = b->recv_value;
+	}
+	else
+	{
+		bValue = b->sent_value;
+	}
+
+	if (aValue > bValue)
 	{
 		return -1;
 	}
-	if (a->recv_kbps == b->recv_kbps)
+	if (aValue == bValue)
 	{
 		return 0;
 	} 
@@ -152,9 +187,15 @@ void ui_tick ()
 			break;
 		case 's':
 			/* sort on 'sent' */
+			sortRecv = false;
 			break;
 		case 'r':
 			/* sort on 'received' */
+			sortRecv = true;
+			break;
+		case 'm':
+			/* switch mode: total vs kb/s */
+			viewMode = (viewMode + 1) % nViewModes;
 			break;
 	}
 }
@@ -162,6 +203,62 @@ void ui_tick ()
 float tokbps (u_int32_t bytes)
 {
 	return (((double)bytes) / PERIOD) / 1024;
+}
+
+/** Get the kb/s values for this process */
+void getkbps (Process * curproc, float * recvd, float * sent)
+{
+	u_int32_t sum_sent = 0, 
+	  	sum_recv = 0;
+
+	/* walk though all this process's connections, and sum 
+	 * them up */
+	ConnList * curconn = curproc->connections;
+	ConnList * previous = NULL;
+	while (curconn != NULL)
+	{
+		if (curconn->getVal()->getLastPacket() <= curtime.tv_sec - CONNTIMEOUT)
+		{
+			/* stalled connection, remove. */
+			ConnList * todelete = curconn;
+			Connection * conn_todelete = curconn->getVal();
+			curconn = curconn->getNext();
+			if (todelete == curproc->connections)
+				curproc->connections = curconn;
+			if (previous != NULL)
+				previous->setNext(curconn);
+			delete (todelete);
+			delete (conn_todelete);
+		} 
+		else 
+		{
+			u_int32_t sent = 0, recv = 0;
+			curconn->getVal()->sumanddel(curtime, &sent, &recv);
+			sum_sent += sent;
+			sum_recv += recv;
+			previous = curconn;
+			curconn = curconn->getNext();
+		}
+	}
+	*recvd = tokbps(sum_recv);
+	*sent = tokbps(sum_sent);
+}
+
+/** get total values for this process */
+void gettotal(Process * curproc, float * recvd, float * sent)
+{
+	u_int32_t sum_sent = 0, 
+	  	sum_recv = 0;
+	ConnList * curconn = curproc->connections;
+	while (curconn != NULL)
+	{
+		Connection * conn = curconn->getVal();
+		sum_sent += conn->sumSent;
+		sum_recv += conn->sumRecv;
+		curconn = curconn->getNext();
+	}
+	*recvd = tokbps(sum_recv);
+	*sent = tokbps(sum_sent);
 }
 
 // Display all processes and relevant network traffic using show function
@@ -207,7 +304,7 @@ void do_refresh()
 			assert (curproc->getVal() != NULL);
 			assert (nproc == processes->size());
 		}
-		/* remove timed-out processes (unless it's the unknown process) */
+		/* remove timed-out processes (unless it's one of the the unknown process) */
 		if ((curproc->getVal()->getLastPacket() + PROCESSTIMEOUT <= curtime.tv_sec) 
 				&& (curproc->getVal() != unknowntcp)
 				&& (curproc->getVal() != unknownudp)
@@ -232,39 +329,22 @@ void do_refresh()
 		}
 		else
 		{
+			// add a non-timed-out process to the list of stuff to show
+			float value_sent = 0,
+				value_recv = 0;
 
-			u_int32_t sum_sent = 0, 
-			  	sum_recv = 0;
-
-			/* walk though all this process's connections, and sum 
-			 * them up */
-			ConnList * curconn = curproc->getVal()->connections;
-			ConnList * previous = NULL;
-			while (curconn != NULL)
+			if (viewMode == VIEWMODE_KBPS)
 			{
-				if (curconn->getVal()->getLastPacket() <= curtime.tv_sec - CONNTIMEOUT)
-				{
-					/* stalled connection, remove. */
-					ConnList * todelete = curconn;
-					Connection * conn_todelete = curconn->getVal();
-					curconn = curconn->getNext();
-					if (todelete == curproc->getVal()->connections)
-						curproc->getVal()->connections = curconn;
-					if (previous != NULL)
-						previous->setNext(curconn);
-					delete (todelete);
-					delete (conn_todelete);
-				} 
-				else 
-				{
-					u_int32_t sent = 0, recv = 0;
-					curconn->getVal()->sumanddel(curtime, &sent, &recv);
-					sum_sent += sent;
-					sum_recv += recv;
-					previous = curconn;
-					curconn = curconn->getNext();
-				}
+				getkbps (curproc->getVal(), &value_recv, &value_sent);	
 			}
+			else if (viewMode == VIEWMODE_TOTAL_KB)
+			{
+				gettotal(curproc->getVal(), &value_recv, &value_sent);	
+			}
+			else
+			{
+				forceExit("Invalid viewmode");
+			}				
 			uid_t uid = curproc->getVal()->getUid();
 			if (!ROBUST)
 			{
@@ -274,7 +354,7 @@ void do_refresh()
 				assert (curproc->getVal()->pid >= 0);
 				assert (n < nproc);
 			}
-			lines[n] = new Line (curproc->getVal()->name, tokbps(sum_sent), tokbps(sum_recv), 
+			lines[n] = new Line (curproc->getVal()->name, value_sent, value_recv, 
 					curproc->getVal()->pid, uid, curproc->getVal()->devicename);
 			previousproc = curproc;
 			curproc = curproc->next;
@@ -298,8 +378,8 @@ void do_refresh()
 	for (i=0; i<nproc; i++)
 	{
 		lines[i]->show(i);
-		recv_global += lines[i]->recv_kbps;
-		sent_global += lines[i]->sent_kbps;
+		recv_global += lines[i]->recv_value;
+		sent_global += lines[i]->sent_value;
 		delete lines[i];
 	}
 	if (tracemode || DEBUG) {
@@ -315,7 +395,13 @@ void do_refresh()
 
 	if ((!tracemode) && (!DEBUG)){
 		attron(A_REVERSE);
-		mvprintw (3+1+i, 0, "  TOTAL                                           %10.3f  %10.3f KB/sec ", sent_global, recv_global);
+		mvprintw (3+1+i, 0, "  TOTAL                                           %10.3f  %10.3f ", sent_global, recv_global);
+		if (viewMode == VIEWMODE_KBPS)
+		{
+			mvprintw (3+1+i, 73, "KB/sec ");
+		} else if (viewMode == VIEWMODE_TOTAL_KB) {
+			mvprintw (3+1+i, 73, "KB     ");
+		}
 		attroff(A_REVERSE);
 		mvprintw (4+1+i, 0, "");
 		refresh();

@@ -78,6 +78,10 @@ public:
 	/* for checking if a packet is part of this connection */
 	/* the reference packet is always *outgoing*. */
 	Packet * refpacket;
+
+	/* total sum or sent/received bytes */
+	u_int32_t sumSent;
+	u_int32_t sumRecv;
 private:
 	PackList * sent_packets; 
 	PackList * recv_packets; 
