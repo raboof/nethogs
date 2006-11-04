@@ -237,6 +237,11 @@ static void help(void)
 	//std::cerr << "		-f : format of packets on interface, default is eth.\n";
 	std::cerr << "		-p : sniff in promiscious mode (not recommended).\n";
 	std::cerr << "		device : device(s) to monitor. default is eth0\n";
+	std::cerr << std::endl;
+	std::cerr << "When nethogs is running, press:\n";
+	std::cerr << " q: quit\n";
+	std::cerr << " m: switch between total and kb/s mode\n";
+
 }
 
 class device {

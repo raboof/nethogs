@@ -209,6 +209,10 @@ void dp_pcap_callback (u_char * u_handle, const struct pcap_pkthdr * header, con
 		case (DLT_PPP):
 			dp_parse_ppp (handle, header, packet);
 			break;
+		case (DLT_RAW):
+		case (DLT_NULL):
+			// just a guess
+			dp_parse_ip (handle, header, packet);
 		default:
 			// TODO maybe error? or 'other' callback?
 			break;

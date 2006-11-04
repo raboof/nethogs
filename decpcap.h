@@ -55,3 +55,5 @@ int dp_dispatch (struct dp_handle * handler, int count, u_char *user, int size);
 int dp_datalink(struct dp_handle * handle);
 
 int dp_setnonblock (struct dp_handle * handle, int i, char * errbuf);
+
+
