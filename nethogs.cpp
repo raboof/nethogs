@@ -204,10 +204,21 @@ void quit_cb (int i)
 
 void forceExit(const char *msg)
 {
+	forceExit (msg, NULL);
+}
+
+void forceExit(const char *msg, const char* msg2)
+{
 	if ((!tracemode)&&(!DEBUG)){
 		exit_ui();
 	}
-	std::cerr << msg << std::endl;
+	std::cerr << msg;
+	if (msg2 != NULL)
+	{
+		std::cerr << msg2;
+	}
+	std::cerr << std::endl;
+
         exit(0);
 }
 
@@ -299,7 +310,9 @@ int main (int argc, char** argv)
 	}
 
 	if (devices == NULL)
+	{	
 		devices = new device (strdup("eth0"));
+	}
 
 	if ((!tracemode) && (!DEBUG)){
 		init_ui();

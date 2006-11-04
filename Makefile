@@ -12,7 +12,7 @@ all: nethogs
 
 #CFLAGS=-g -Wall
 CFLAGS=-O2
-OBJS=structs.o packet.o connection.o process.o refresh.o decpcap.o cui.o inode2prog.o
+OBJS=packet.o connection.o process.o refresh.o decpcap.o cui.o inode2prog.o
 .PHONY: tgz
 
 tgz: clean
@@ -33,8 +33,6 @@ nethogs: nethogs.cpp $(OBJS)
 
 refresh.o: refresh.cpp refresh.h nethogs.h
 	$(CXX) $(CFLAGS) -c refresh.cpp
-structs.o: structs.cpp structs.h nethogs.h
-	$(CXX) $(CFLAGS) -c structs.cpp
 process.o: process.cpp process.h nethogs.h
 	$(CXX) $(CFLAGS) -c process.cpp
 packet.o: packet.cpp packet.h nethogs.h
