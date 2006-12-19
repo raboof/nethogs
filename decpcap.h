@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <pcap.h>
 
-#define DP_ERRBUFF_SIZE PCAP_ERRBUF_SIZE
+#define DP_ERRBUF_SIZE PCAP_ERRBUF_SIZE
 
 /* definitions */
 
@@ -24,6 +24,7 @@ enum dp_packet_type {
 };*/
 
 /*struct dp_header {
+ * pcap
 };*/
 typedef struct pcap_pkthdr dp_header;
 

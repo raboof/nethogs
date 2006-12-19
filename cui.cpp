@@ -20,15 +20,17 @@ extern Process * unknownip;
 // sort on sent or received?
 bool sortRecv = true;
 // viewMode: kb/s or total
-int viewMode = 0;
 int VIEWMODE_KBPS = 0;
 int VIEWMODE_TOTAL_KB = 1;
-int nViewModes = 2;
+int VIEWMODE_TOTAL_B = 2;
+int VIEWMODE_TOTAL_MB = 3;
+int viewMode = VIEWMODE_TOTAL_B;
+int nViewModes = 4;
 
 class Line 
 {
 public:
-	Line (const char * name, double n_sent_value, double n_recv_value, pid_t pid, uid_t uid, const char * n_devicename)
+	Line (const char * name, double n_recv_value, double n_sent_value, pid_t pid, uid_t uid, const char * n_devicename)
 	{
 		if (!ROBUST) 
 		{
@@ -116,9 +118,17 @@ void Line::show (int row)
 	{
 		mvprintw (3+row, 6 + 9 + PROGNAME_WIDTH + 2 + 6 + 9 + 3 + 11, "KB/sec");
 	} 
+	else if (viewMode == VIEWMODE_TOTAL_MB)
+	{
+		mvprintw (3+row, 6 + 9 + PROGNAME_WIDTH + 2 + 6 + 9 + 3 + 11, "MB    ");
+	} 
 	else if (viewMode == VIEWMODE_TOTAL_KB)
 	{
-		mvprintw (3+row, 6 + 9 + PROGNAME_WIDTH + 2 + 6 + 9 + 3 + 11, "KB");
+		mvprintw (3+row, 6 + 9 + PROGNAME_WIDTH + 2 + 6 + 9 + 3 + 11, "KB    ");
+	}
+	else if (viewMode == VIEWMODE_TOTAL_B)
+	{
+		mvprintw (3+row, 6 + 9 + PROGNAME_WIDTH + 2 + 6 + 9 + 3 + 11, "B     ");
 	}
 }
 
@@ -200,6 +210,14 @@ void ui_tick ()
 	}
 }
 
+float tomb (u_int32_t bytes)
+{
+	return ((double)bytes) / 1024 / 1024;
+}
+float tokb (u_int32_t bytes)
+{
+	return ((double)bytes) / 1024;
+}
 float tokbps (u_int32_t bytes)
 {
 	return (((double)bytes) / PERIOD) / 1024;
@@ -233,7 +251,7 @@ void getkbps (Process * curproc, float * recvd, float * sent)
 		else 
 		{
 			u_int32_t sent = 0, recv = 0;
-			curconn->getVal()->sumanddel(curtime, &sent, &recv);
+			curconn->getVal()->sumanddel(curtime, &recv, &sent);
 			sum_sent += sent;
 			sum_recv += recv;
 			previous = curconn;
@@ -245,7 +263,7 @@ void getkbps (Process * curproc, float * recvd, float * sent)
 }
 
 /** get total values for this process */
-void gettotal(Process * curproc, float * recvd, float * sent)
+void gettotal(Process * curproc, u_int32_t * recvd, u_int32_t * sent)
 {
 	u_int32_t sum_sent = 0, 
 	  	sum_recv = 0;
@@ -257,8 +275,39 @@ void gettotal(Process * curproc, float * recvd, float * sent)
 		sum_recv += conn->sumRecv;
 		curconn = curconn->getNext();
 	}
-	*recvd = tokbps(sum_recv);
-	*sent = tokbps(sum_sent);
+	//std::cout << "Sum sent: " << sum_sent << std::endl;
+	//std::cout << "Sum recv: " << sum_recv << std::endl;
+	*recvd = sum_recv;
+	*sent = sum_sent;
+}
+
+void gettotalmb(Process * curproc, float * recvd, float * sent)
+{
+	u_int32_t sum_sent = 0, 
+	  	sum_recv = 0;
+	gettotal(curproc, &sum_recv, &sum_sent);
+	*recvd = tomb(sum_recv);
+	*sent = tomb(sum_sent);
+}
+
+/** get total values for this process */
+void gettotalkb(Process * curproc, float * recvd, float * sent)
+{
+	u_int32_t sum_sent = 0, 
+	  	sum_recv = 0;
+	gettotal(curproc, &sum_recv, &sum_sent);
+	*recvd = tokb(sum_recv);
+	*sent = tokb(sum_sent);
+}
+
+void gettotalb(Process * curproc, float * recvd, float * sent)
+{
+	u_int32_t sum_sent = 0, 
+	  	sum_recv = 0;
+	gettotal(curproc, &sum_recv, &sum_sent);
+	//std::cout << "Total sent: " << sum_sent << std::endl;
+	*sent = sum_sent;
+	*recvd = sum_recv;
 }
 
 // Display all processes and relevant network traffic using show function
@@ -335,11 +384,23 @@ void do_refresh()
 
 			if (viewMode == VIEWMODE_KBPS)
 			{
+				std::cout << "kbps viemode" << std::endl;
 				getkbps (curproc->getVal(), &value_recv, &value_sent);	
 			}
 			else if (viewMode == VIEWMODE_TOTAL_KB)
 			{
-				gettotal(curproc->getVal(), &value_recv, &value_sent);	
+				//std::cout << "total viemode" << std::endl;
+				gettotalkb(curproc->getVal(), &value_recv, &value_sent);	
+			}
+			else if (viewMode == VIEWMODE_TOTAL_MB)
+			{
+				//std::cout << "total viemode" << std::endl;
+				gettotalmb(curproc->getVal(), &value_recv, &value_sent);	
+			}
+			else if (viewMode == VIEWMODE_TOTAL_B)
+			{
+				//std::cout << "total viemode" << std::endl;
+				gettotalb(curproc->getVal(), &value_recv, &value_sent);	
 			}
 			else
 			{
@@ -354,7 +415,7 @@ void do_refresh()
 				assert (curproc->getVal()->pid >= 0);
 				assert (n < nproc);
 			}
-			lines[n] = new Line (curproc->getVal()->name, value_sent, value_recv, 
+			lines[n] = new Line (curproc->getVal()->name, value_recv, value_sent, 
 					curproc->getVal()->pid, uid, curproc->getVal()->devicename);
 			previousproc = curproc;
 			curproc = curproc->next;
@@ -399,8 +460,12 @@ void do_refresh()
 		if (viewMode == VIEWMODE_KBPS)
 		{
 			mvprintw (3+1+i, 73, "KB/sec ");
+		} else if (viewMode == VIEWMODE_TOTAL_B) {
+			mvprintw (3+1+i, 73, "B      ");
 		} else if (viewMode == VIEWMODE_TOTAL_KB) {
 			mvprintw (3+1+i, 73, "KB     ");
+		} else if (viewMode == VIEWMODE_TOTAL_MB) {
+			mvprintw (3+1+i, 73, "MB     ");
 		}
 		attroff(A_REVERSE);
 		mvprintw (4+1+i, 0, "");

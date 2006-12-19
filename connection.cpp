@@ -69,19 +69,25 @@ Connection::Connection (Packet * packet)
 	connections = new ConnList (this, connections);
 	sent_packets = new PackList ();
 	recv_packets = new PackList ();
+	sumSent = 0;
+	sumRecv = 0;
+	if (DEBUG)
+	{
+		std::cout << "New connection, with package len " << packet->len << std::endl;
+	}
 	if (packet->Outgoing())
 	{
+		sumSent += packet->len;
 		sent_packets->add(packet);
 		refpacket = new Packet (*packet);
 	} else {
+		sumRecv += packet->len;
 		recv_packets->add(packet);
 		refpacket = packet->newInverted();
 	}
 	lastpacket = packet->time.tv_sec;
 	if (DEBUG)
 		std::cout << "New reference packet created at " << refpacket << std::endl;
-	sumSent = 0;
-	sumRecv = 0;
 }
 
 Connection::~Connection ()
@@ -126,12 +132,21 @@ void Connection::add (Packet * packet)
 	lastpacket = packet->time.tv_sec;
 	if (packet->Outgoing())
 	{
+		if (DEBUG)
+		{
+			std::cout << "Outgoing: " << packet->len << std::endl;
+		}
 		sumSent += packet->len;
 		sent_packets->add (packet);
 	} 
 	else 
 	{
+		if (DEBUG)
+		{
+			std::cout << "Incoming: " << packet->len << std::endl;
+		}
 		sumRecv += packet->len;
+		std::cout << "sumRecv now: " << sumRecv << std::endl;
 		recv_packets->add (packet);
 	}
 }
@@ -168,7 +183,7 @@ Connection * findConnection (Packet * packet)
  * Returns sum of sent packages (by address)
  *	   sum of recieved packages (by address)
  */
-void Connection::sumanddel (timeval t, u_int32_t * sent, u_int32_t * recv)
+void Connection::sumanddel (timeval t, u_int32_t * recv, u_int32_t * sent)
 {
     (*sent)=(*recv)=0;
 

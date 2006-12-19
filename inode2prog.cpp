@@ -111,7 +111,7 @@ void get_info_by_linkname (char * pid, char * linkname) {
 
 /* updates the `inodeproc' inode-to-prg_node 
  * for all inodes belonging to this PID 
- * (/proc/pid/fd/*)
+ * (/proc/pid/fd/42)
  * */
 void get_info_for_pid(char * pid) {
 	size_t dirlen = 10 + strlen(pid);

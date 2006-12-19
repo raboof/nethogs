@@ -345,7 +345,8 @@ int main (int argc, char** argv)
 		if (newhandle != NULL)
 		{
 			/* The following code solves sf.net bug 1019381, but is only available
-			 * in newer versions (from 0.8 it seems) of libpcap */
+			 * in newer versions (from 0.8 it seems) of libpcap 
+			 */
 			if (dp_setnonblock (newhandle, 1, errbuf) == -1)
 			{
 			  // ERROR
@@ -359,28 +360,53 @@ int main (int argc, char** argv)
 	signal (SIGALRM, &alarm_cb);
 	signal (SIGINT, &quit_cb);
 	alarm (refreshdelay);
+
 	fprintf(stderr, "Waiting for first packet to arrive (see sourceforge.net bug 1019381)\n");
+
+	// Main loop:
+	// 
+	//  Walks though the 'handles' list, which contains handles opened in non-blocking mode.
+	//  This causes the CPU utilisation to go up to 100%. This is tricky: 
 	while (1)
 	{
+		bool packets_read = false;
+
 		handle * current_handle = handles;
 		while (current_handle != NULL)
 		{
 			struct dpargs * userdata = (dpargs *) malloc (sizeof (struct dpargs));
 			userdata->sa_family = AF_UNSPEC;
 			currentdevice = current_handle->devicename;
-			dp_dispatch (current_handle->content, -1, (u_char *)userdata, sizeof (struct dpargs));
+			int retval = dp_dispatch (current_handle->content, -1, (u_char *)userdata, sizeof (struct dpargs));
+			if (retval == -1 || retval == -2)
+			{
+				std::cerr << "Error dispatching" << std::endl;
+			}
+			else if (retval != 0)
+			{
+				packets_read = true;
+			}
 			free (userdata);
 			current_handle = current_handle->next;
 		}
 
-		if ((!DEBUG)&&(!tracemode)) {
+		if ((!DEBUG)&&(!tracemode)) 
+		{
 			// handle user input
 			ui_tick();
 		}
+
 		if (needrefresh)
 		{
 			do_refresh(); 
 			needrefresh = false;
+		}
+
+		// If no packets were read at all this iteration, pause to prevent 100%
+		// CPU utilisation;
+		if (!packets_read)
+		{
+			usleep(100);
 		}
 	}
 }

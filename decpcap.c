@@ -7,6 +7,8 @@
 #include <pcap.h>
 #include "decpcap.h"
 
+#define DP_DEBUG 0
+
 /* functions to set up a handle (which is basically just a pcap handle) */
 
 struct dp_handle * dp_fillhandle(pcap_t * phandle)
@@ -92,6 +94,10 @@ void dp_parse_tcp (struct dp_handle * handle, const dp_header * header, const u_
 void dp_parse_ip (struct dp_handle * handle, const dp_header * header, const u_char * packet)
 {
 	const struct ip * ip = (struct ip *) packet;
+	if (DP_DEBUG)
+	{
+		fprintf(stdout, "Looking at packet with length %ud\n", header->len);
+	}
 	u_char * payload = (u_char *) packet + sizeof (struct ip);
 
 	if (handle->callback[dp_packet_ip] != NULL)

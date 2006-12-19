@@ -73,7 +73,7 @@ public:
 
 	/* sums up the total bytes used
 	 * and removes 'old' packets. */
-	void sumanddel(timeval curtime, u_int32_t * sent, u_int32_t * recv);
+	void sumanddel(timeval curtime, u_int32_t * recv, u_int32_t * sent);
 
 	/* for checking if a packet is part of this connection */
 	/* the reference packet is always *outgoing*. */

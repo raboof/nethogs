@@ -46,6 +46,7 @@ public:
 	/* the process makes a copy of the device name and name. */
 	Process (unsigned long m_inode, char * m_devicename, char * m_name = NULL)
 	{
+		//std::cout << "ARN: Process created with dev " << m_devicename << std::endl;
 		if (DEBUG)
 			std::cout << "PROC: Process created at " << this << std::endl;
 		inode = m_inode;

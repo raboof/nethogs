@@ -8,10 +8,10 @@ DESTDIR := /usr/local
 bin  := $(DESTDIR)/bin
 man8 := $(DESTDIR)/share/man/man8/
 
-all: nethogs decpcap_test
+all: nethogs decpcap_test nethogs_testsum
 
-#CFLAGS=-g -Wall
-CFLAGS=-O2
+CFLAGS=-g -Wall
+#CFLAGS=-O2
 OBJS=packet.o connection.o process.o refresh.o decpcap.o cui.o inode2prog.o
 .PHONY: tgz
 
@@ -28,6 +28,8 @@ install: nethogs nethogs.8
 
 nethogs: nethogs.cpp $(OBJS)
 	$(CXX) $(CFLAGS) nethogs.cpp $(OBJS) -o nethogs -lpcap -lm -lncurses -DVERSION=\"$(VERSION)\" -DSUBVERSION=\"$(SUBVERSION)\" -DMINORVERSION=\"$(MINORVERSION)\"
+nethogs_testsum: nethogs_testsum.cpp $(OBJS)
+	$(CXX) $(CFLAGS) -g nethogs_testsum.cpp $(OBJS) -o nethogs_testsum -lpcap -lm -lncurses -DVERSION=\"$(VERSION)\" -DSUBVERSION=\"$(SUBVERSION)\" -DMINORVERSION=\"$(MINORVERSION)\"
 
 decpcap_test: decpcap_test.cpp decpcap.o
 	$(CXX) $(CFLAGS) decpcap_test.cpp decpcap.o -o decpcap_test -lpcap -lm 
