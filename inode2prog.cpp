@@ -5,6 +5,7 @@
 #include <ctype.h>
 #include <iostream>
 #include <stdio.h>
+#include <stdlib.h>
 #include <unistd.h>
 #include <string>
 #include <map>
