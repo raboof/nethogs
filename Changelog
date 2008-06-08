@@ -6,6 +6,7 @@ Changelog
   strings 'const'
 - set view mode to 'kbps' by default,
   instead of the 'grand total' number of bytes
+- some fixes thanks to Bart Martens
 
 27/08/05 (Arnout)
 - giving all unknown connections their own

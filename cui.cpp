@@ -2,6 +2,7 @@
 #include <string>
 #include <pwd.h>
 #include <sys/types.h>
+#include <algorithm>
 
 #include <ncurses.h>
 #include "nethogs.h"

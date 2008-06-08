@@ -338,12 +338,13 @@ int main (int argc, char** argv)
 		}
 
 		dp_handle * newhandle = dp_open_live(current_dev->name, BUFSIZ, promisc, 100, errbuf); 
-		dp_addcb (newhandle, dp_packet_ip, process_ip);
-		dp_addcb (newhandle, dp_packet_ip6, process_ip6);
-		dp_addcb (newhandle, dp_packet_tcp, process_tcp);
-		dp_addcb (newhandle, dp_packet_udp, process_udp);
 		if (newhandle != NULL)
 		{
+			dp_addcb (newhandle, dp_packet_ip, process_ip);
+			dp_addcb (newhandle, dp_packet_ip6, process_ip6);
+			dp_addcb (newhandle, dp_packet_tcp, process_tcp);
+			dp_addcb (newhandle, dp_packet_udp, process_udp);
+
 			/* The following code solves sf.net bug 1019381, but is only available
 			 * in newer versions (from 0.8 it seems) of libpcap 
 			 *
@@ -355,6 +356,10 @@ int main (int argc, char** argv)
 				fprintf(stderr, "Error putting libpcap in nonblocking mode\n");
 			}
 			handles = new handle (newhandle, current_dev->name, handles);
+		}
+		else
+		{
+			fprintf(stderr, "Error opening handler for device %s\n", current_dev->name);
 		}
 
 		current_dev = current_dev->next;
