@@ -1,5 +1,12 @@
 Changelog
 
+08/06/08 (Arnout, thanks to MeneerJansen for sparking some activity again :) )
+- add 'if (DEBUG)' to debug message
+- fix compiler warning by marking some constant 
+  strings 'const'
+- set view mode to 'kbps' by default,
+  instead of the 'grand total' number of bytes
+
 27/08/05 (Arnout)
 - giving all unknown connections their own
   `unknown' process

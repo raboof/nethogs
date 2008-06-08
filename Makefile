@@ -1,6 +1,6 @@
 VERSION      := 0
-SUBVERSION   := 6
-MINORVERSION := 2pre2
+SUBVERSION   := 7
+MINORVERSION := snapshot
 
 #DESTDIR := /usr
 DESTDIR := /usr/local
@@ -8,7 +8,8 @@ DESTDIR := /usr/local
 bin  := $(DESTDIR)/bin
 man8 := $(DESTDIR)/share/man/man8/
 
-all: nethogs decpcap_test nethogs_testsum
+all: nethogs decpcap_test 
+# nethogs_testsum
 
 CFLAGS=-g -Wall
 #CFLAGS=-O2

@@ -146,7 +146,10 @@ void Connection::add (Packet * packet)
 			std::cout << "Incoming: " << packet->len << std::endl;
 		}
 		sumRecv += packet->len;
-		std::cout << "sumRecv now: " << sumRecv << std::endl;
+		if (DEBUG)
+		{
+			std::cout << "sumRecv now: " << sumRecv << std::endl;
+		}
 		recv_packets->add (packet);
 	}
 }

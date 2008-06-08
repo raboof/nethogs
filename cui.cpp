@@ -24,7 +24,7 @@ int VIEWMODE_KBPS = 0;
 int VIEWMODE_TOTAL_KB = 1;
 int VIEWMODE_TOTAL_B = 2;
 int VIEWMODE_TOTAL_MB = 3;
-int viewMode = VIEWMODE_TOTAL_B;
+int viewMode = VIEWMODE_KBPS;
 int nViewModes = 4;
 
 class Line 
