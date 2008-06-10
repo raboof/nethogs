@@ -1,5 +1,8 @@
 Changelog
 
+10/08/08 (Arnout)
+- compile with g++ 4.3, thanks to Leslie P. Polzer - skypher
+
 08/06/08 (Arnout, thanks to MeneerJansen for sparking some activity again :) )
 - add 'if (DEBUG)' to debug message
 - fix compiler warning by marking some constant 
