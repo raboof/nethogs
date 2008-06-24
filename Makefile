@@ -13,7 +13,7 @@ all: nethogs decpcap_test
 
 CFLAGS=-g -Wall
 #CFLAGS=-O2
-OBJS=packet.o connection.o process.o refresh.o decpcap.o cui.o inode2prog.o
+OBJS=packet.o connection.o process.o refresh.o decpcap.o cui.o inode2prog.o conninode.o
 .PHONY: tgz
 
 tgz: clean
