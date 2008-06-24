@@ -2,6 +2,7 @@
 #include <string>
 #include <pwd.h>
 #include <sys/types.h>
+#include <stdlib.h>
 #include <cstdlib>
 #include <algorithm>
 
@@ -386,7 +387,7 @@ void do_refresh()
 
 			if (viewMode == VIEWMODE_KBPS)
 			{
-				std::cout << "kbps viemode" << std::endl;
+				//std::cout << "kbps viemode" << std::endl;
 				getkbps (curproc->getVal(), &value_recv, &value_sent);	
 			}
 			else if (viewMode == VIEWMODE_TOTAL_KB)

@@ -15,6 +15,8 @@
 
 #include "inode2prog.h"
 
+extern bool bughuntmode;
+
 /* maps from inode to program-struct */
 std::map <unsigned long, prg_node *> inodeproc;
 
@@ -193,11 +195,29 @@ struct prg_node * findPID (unsigned long inode)
 	struct prg_node * node = inodeproc[inode];
 	
 	if (node != NULL)
+	{
+		if (bughuntmode)
+		{
+			std::cout << ":) Found pid in inodeproc table" << std::endl;
+		}
 		return node;
+	}
 
 	reread_mapping();
 	
-	return inodeproc[inode];
+	struct prg_node * retval = inodeproc[inode];
+	if (bughuntmode)
+	{
+		if (retval == NULL)
+		{
+			std::cout << ":( No pid after inodeproc refresh" << std::endl;
+		}
+		else
+		{
+			std::cout << ":) Found pid after inodeproc refresh" << std::endl;
+		}
+	}
+	return retval;
 }
 
 void prg_cache_clear() {};

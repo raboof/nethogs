@@ -31,6 +31,7 @@ extern Process * unknownudp;
 
 unsigned refreshdelay = 1;
 bool tracemode = false;
+bool bughuntmode = false;
 bool needrefresh = true;
 //packet_type packettype = packet_ethernet;
 //dp_link_type linktype = dp_link_ethernet;
@@ -89,7 +90,7 @@ int process_tcp (u_char * userdata, const dp_header * header, const u_char * m_p
 
 	curtime = header->ts;
 
-	/* TODO get info from userdata, then call getPacket */
+	/* get info from userdata, then call getPacket */
 	Packet * packet; 
 	switch (args->sa_family)
 	{
@@ -100,9 +101,6 @@ int process_tcp (u_char * userdata, const dp_header * header, const u_char * m_p
 			packet = new Packet (args->ip6_src, ntohs(tcp->source), args->ip6_dst, ntohs(tcp->dest), header->len, header->ts);
 			break;
 	}
-
-	//if (DEBUG)
-	//	std::cout << "Got packet from " << packet->gethashstring() << std::endl;
 
 	Connection * connection = findConnection(packet);
 
@@ -229,12 +227,13 @@ static void versiondisplay(void)
 
 static void help(void)
 {
-	//std::cerr << "usage: nethogs [-V] [-d seconds] [-t] [-p] [-f (eth|ppp))] [device [device [device ...]]]\n";
-	std::cerr << "usage: nethogs [-V] [-d seconds] [-t] [-p] [device [device [device ...]]]\n";
+	//std::cerr << "usage: nethogs [-V] [-b] [-d seconds] [-t] [-p] [-f (eth|ppp))] [device [device [device ...]]]\n";
+	std::cerr << "usage: nethogs [-V] [-b] [-d seconds] [-t] [-p] [device [device [device ...]]]\n";
 	std::cerr << "		-V : prints version.\n";
 	std::cerr << "		-d : delay for update refresh rate in seconds. default is 1.\n";
 	std::cerr << "		-t : tracemode.\n";
 	//std::cerr << "		-f : format of packets on interface, default is eth.\n";
+	std::cerr << "		-b : bughunt mode - implies tracemode.\n";
 	std::cerr << "		-p : sniff in promiscious mode (not recommended).\n";
 	std::cerr << "		device : device(s) to monitor. default is eth0\n";
 	std::cerr << std::endl;
@@ -284,6 +283,9 @@ int main (int argc, char** argv)
 					  exit(0);
 				case 'h': help();
 					  exit(0);
+				case 'b': bughuntmode = true;
+					  tracemode = true;
+					  break;
 				case 't': tracemode = true;
 					  break;
 				case 'p': promisc = 1;
@@ -324,7 +326,7 @@ int main (int argc, char** argv)
 	}
 
 	if (NEEDROOT && (getuid() != 0))
-		forceExit("You need to be root to run NetHogs !");
+		forceExit("You need to be root to run NetHogs!");
 
 	char errbuf[PCAP_ERRBUF_SIZE];
 

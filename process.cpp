@@ -238,7 +238,11 @@ Process * findProcess (unsigned long inode)
 }
 
 /* check if we have identified any previously unknown
- * connections are now known */
+ * connections are now known 
+ *
+ * When this is the case, something weird is going on.
+ * This function is only called in bughunt-mode
+ */
 void reviewUnknown ()
 {
 	ConnList * curr_conn = unknowntcp->connections;
@@ -251,8 +255,8 @@ void reviewUnknown ()
 			Process * proc = findProcess (inode);
 			if (proc != unknowntcp && proc != NULL)
 			{
-				if (DEBUG)
-					std::cout << "ITP: WARNING: Previously unknown inode " << inode << " now got process...??\n";
+				if (DEBUG || bughuntmode)
+					std::cout << "FIXME: Previously unknown inode " << inode << " now got process - apparently it makes sense to review unknown connections\n";
 				/* Yay! - but how can this happen? */
 				if (!ROBUST)
 					assert(false);
@@ -327,7 +331,7 @@ Process * getProcess (unsigned long inode, char * devicename)
 	
 	if (node == NULL)
 	{
-		if (DEBUG)
+		if (DEBUG || bughuntmode)
 			std::cout << "No PID information for inode " << inode << std::endl;
 		return unknowntcp;
 	}
@@ -386,11 +390,28 @@ Process * getProcess (Connection * connection, char * devicename)
 	if (inode == 0)
 	{
 		// no? refresh and check conn/inode table
-#if DEBUG
-		std::cout << "LOC: new connection not in connection-to-inode table.\n"; 
-#endif
+		if (bughuntmode)
+		{
+			std::cout << "?  new connection not in connection-to-inode table before refresh.\n"; 
+		}
+		// refresh the inode->pid table first. Presumably processing the renewed connection->inode table 
+		// is slow, making this worthwhile.
+		// We take the fact for granted that we might already know the inode->pid (unlikely anyway if we 
+		// haven't seen the connection->inode yet though).
+		reread_mapping();
 		refreshconninode();
 		inode = conninode[connection->refpacket->gethashstring()];
+		if (bughuntmode)
+		{
+			if (inode == 0)
+			{
+				std::cout << ":( inode for connection not found after refresh.\n"; 
+			}
+			else
+			{
+				std::cout << ":) inode for connection found after refresh.\n"; 
+			}
+		}
 #if REVERSEHACK
 		if (inode == 0)
 		{
@@ -406,7 +427,7 @@ Process * getProcess (Connection * connection, char * devicename)
 			if (inode == 0)
 			{
 				delete reversepacket;
-				if (DEBUG)
+				if (bughuntmode || DEBUG)
 					std::cout << "LOC: " << connection->refpacket->gethashstring() << " STILL not in connection-to-inode table - adding to the unknown process\n";
 				unknowntcp->connections = new ConnList (connection, unknowntcp->connections);
 				return unknowntcp;
@@ -416,6 +437,15 @@ Process * getProcess (Connection * connection, char * devicename)
 			connection->refpacket = reversepacket;
 		}
 #endif
+	}
+	else if (bughuntmode)
+	{
+		std::cout << ";) new connection in connection-to-inode table before refresh.\n";
+	}
+
+	if (bughuntmode)
+	{
+		std::cout << "   inode # " << inode << std::endl;
 	}
 
 	Process * proc;

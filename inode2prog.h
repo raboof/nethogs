@@ -14,3 +14,6 @@ struct prg_node {
 struct prg_node * findPID (unsigned long inode);
 
 void prg_cache_clear();
+ 
+// reread the inode-to-prg_node-mapping
+void reread_mapping ();

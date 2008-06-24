@@ -154,18 +154,33 @@ void Connection::add (Packet * packet)
 	}
 }
 
-/* finds connection to which this packet belongs.
+/* 
+ * finds connection to which this packet belongs.
  * a packet belongs to a connection if it matches
- * to its reference packet */
+ * to its reference packet 
+ */
 Connection * findConnection (Packet * packet)
 {
 	ConnList * current = connections;
-	Packet * invertedPacket = packet->newInverted();
 	while (current != NULL)
 	{
 		/* the reference packet is always *outgoing* */
-		if ((packet->match(current->val->refpacket))
-		  || (invertedPacket->match(current->val->refpacket)))
+		if (packet->match(current->val->refpacket))
+		{
+			return current->val;
+		}
+
+		current = current->next;
+	}
+
+	// Try again, now with the packet inverted:
+	current = connections;
+	Packet * invertedPacket = packet->newInverted();
+
+	while (current != NULL)
+	{
+		/* the reference packet is always *outgoing* */
+		if (invertedPacket->match(current->val->refpacket))
 		{
 			delete invertedPacket;
 			return current->val;
@@ -173,6 +188,7 @@ Connection * findConnection (Packet * packet)
 
 		current = current->next;
 	}
+
 	delete invertedPacket;
 	return NULL;
 }

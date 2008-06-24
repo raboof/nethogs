@@ -43,7 +43,7 @@ void getLocal (const char *device, bool tracemode)
 	}
 	strcpy(iFreq.ifr_name, device);
 	if(ioctl(sock, SIOCGIFADDR, &iFreq)<0){
-		forceExit("ioctl failed while establishing local IP for device ", device);
+		forceExit("ioctl failed while establishing local IP for selected device ", device);
 	}
 	saddr=(struct sockaddr_in*)&iFreq.ifr_addr;
 	local_addrs = new local_addr (saddr->sin_addr.s_addr, local_addrs);
