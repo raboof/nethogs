@@ -65,7 +65,6 @@ public:
 	void check () {
 		if (!ROBUST) {
 			assert (pid >= 0);
-			assert (uid >= 0);
 		}
 	}
 	
@@ -91,7 +90,6 @@ public:
 
 	void setUid(uid_t m_uid)
 	{
-		assert (m_uid >= 0);
 		uid = m_uid;
 	}
 private:

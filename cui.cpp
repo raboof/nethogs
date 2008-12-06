@@ -37,7 +37,6 @@ public:
 	{
 		if (!ROBUST) 
 		{
-			assert (uid >= 0);
 			assert (pid >= 0);
 		}
 		m_name = name; 
@@ -48,7 +47,6 @@ public:
 		m_uid = uid;
 		if (!ROBUST) 
 		{
-			assert (m_uid >= 0);
 			assert (m_pid >= 0);
 		}
 	}
@@ -88,7 +86,6 @@ void Line::show (int row)
 {
 	if (!ROBUST)
 	{
-		assert (m_uid >= 0);
 		assert (m_pid >= 0);
 		assert (m_pid <= 100000);
 	}

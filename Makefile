@@ -11,7 +11,7 @@ man8 := $(DESTDIR)/share/man/man8/
 all: nethogs decpcap_test 
 # nethogs_testsum
 
-CFLAGS=-g -Wall
+CFLAGS=-g -Wall -Wextra
 #CFLAGS=-O2
 OBJS=packet.o connection.o process.o refresh.o decpcap.o cui.o inode2prog.o conninode.o
 .PHONY: tgz
