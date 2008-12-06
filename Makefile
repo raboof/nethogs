@@ -24,8 +24,10 @@ check:
 	echo "Not implemented"
 
 install: nethogs nethogs.8
-	cp nethogs $(bin)
-	cp nethogs.8 $(man8)
+	install -d -m 755 $(bin)                                                                                                                                                  
+	install -m 755 nethogs $(bin)                                                                                                                                             
+	install -d -m 755 $(man8)                                                                                                                                                 
+	install -m 644 nethogs.8 $(man8)     
 
 nethogs: nethogs.cpp $(OBJS)
 	$(CXX) $(CFLAGS) nethogs.cpp $(OBJS) -o nethogs -lpcap -lm -lncurses -DVERSION=\"$(VERSION)\" -DSUBVERSION=\"$(SUBVERSION)\" -DMINORVERSION=\"$(MINORVERSION)\"
