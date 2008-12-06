@@ -1,7 +1,7 @@
 #include <netinet/in.h>
 #include <map>
+#include <stdlib.h>
 
-#
 #include "nethogs.h"
 #include "conninode.h"
 
