@@ -412,7 +412,9 @@ void do_refresh()
 			{
 				struct passwd * pwuid = getpwuid(uid);
 				assert (pwuid != NULL);
-				free (pwuid);
+				// value returned by pwuid should not be freed, according to
+				// Petr Uzel.
+				//free (pwuid);
 				assert (curproc->getVal()->pid >= 0);
 				assert (n < nproc);
 			}
