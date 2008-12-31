@@ -10,6 +10,7 @@
 #include <signal.h>
 #include <string>
 #include <string.h>
+#include <getopt.h>
 #include <stdarg.h>
 
 #include <netinet/ip.h>
@@ -268,48 +269,46 @@ int main (int argc, char** argv)
 	//dp_link_type linktype = dp_link_ethernet;
 	int promisc = 0;
 
-	for (argv++; *argv; argv++)
-	{
-		if (**argv=='-')
-		{
-			(*argv)++;
-			switch(**argv)
-			{
-				case 'V': versiondisplay();
-					  exit(0);
-				case 'h': help();
-					  exit(0);
-				case 'b': bughuntmode = true;
-					  tracemode = true;
-					  break;
-				case 't': tracemode = true;
-					  break;
-				case 'p': promisc = 1;
-					  break;
-				case 'd': if (argv[1])
-					  {
-						argv++;
-						refreshdelay=atoi(*argv);
-					  }
-					  break;
-				/*case 'f': if (argv[1])
-					  {
-						argv++;
-						if (strcmp (*argv, "ppp") == 0)
-							linktype = dp_link_ppp;
-						else if (strcmp (*argv, "eth") == 0)
-							linktype = dp_link_ethernet;
-					  }
-					  break;
-					  */
-				default : help();
-					  exit(0);
-			}
+	int opt;
+	while ((opt = getopt(argc, argv, "Vhbtpd:")) != -1) {
+		switch(opt) {
+			case 'V':
+				versiondisplay();
+				exit(0);
+			case 'h':
+				help();
+				exit(0);
+			case 'b':
+				bughuntmode = true;
+				tracemode = true;
+				break;
+			case 't':
+				tracemode = true;
+				break;
+			case 'p':
+				promisc = 1;
+				break;
+			case 'd':
+				refreshdelay=atoi(optarg);
+				break;
+			/*
+			case 'f':
+				argv++;
+				if (strcmp (optarg, "ppp") == 0)
+					linktype = dp_link_ppp;
+				else if (strcmp (optarg, "eth") == 0)
+					linktype = dp_link_ethernet;
+				}
+				break;
+			*/
+			default:
+				help();
+				exit(EXIT_FAILURE);
 		}
-		else
-		{
-			devices = new device (strdup(*argv), devices);
-		}
+	}
+
+	while (optind < argc) {
+		devices = new device (strdup(argv[optind++]), devices);
 	}
 
 	if (devices == NULL)
