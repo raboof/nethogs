@@ -15,8 +15,7 @@ class ConnList
 public:
 	ConnList (Connection * m_val, ConnList * m_next)
 	{
-		if (!ROBUST)
-			assert (m_val != NULL);
+		assert (m_val != NULL);
 		val = m_val; next = m_next;
 	}
 	~ConnList ()
@@ -63,9 +62,7 @@ public:
 		uid = 0;
 	}
 	void check () {
-		if (!ROBUST) {
-			assert (pid >= 0);
-		}
+		assert (pid >= 0);
 	}
 	
 	~Process ()
@@ -101,8 +98,7 @@ class ProcList
 public:
 	ProcList (Process * m_val, ProcList * m_next)
 	{
-		if (!ROBUST)
-			assert (m_val != NULL);
+		assert (m_val != NULL);
 		val = m_val; next = m_next;
 	}
 	int size (); 

@@ -154,8 +154,7 @@ void get_info_for_pid(char * pid) {
 			free (fromname);
 			continue;
 		}
-		if (!ROBUST)
-			assert (usedlen < linklen);
+		assert (usedlen < linklen);
 		linkname[usedlen] = '\0';
 		//std::cout << "Linking to: " << linkname << std::endl;
 		get_info_by_linkname (pid, linkname);

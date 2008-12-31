@@ -65,11 +65,8 @@ int Process::getLastPacket()
 	ConnList * curconn=connections;
 	while (curconn != NULL)
 	{
-		if (!ROBUST)
-		{
-			assert (curconn != NULL);
-			assert (curconn->getVal() != NULL);
-		}
+		assert (curconn != NULL);
+		assert (curconn->getVal() != NULL);
 		if (curconn->getVal()->getLastPacket() > lastpacket)
 			lastpacket = curconn->getVal()->getLastPacket();
 		curconn = curconn->getNext();
@@ -83,8 +80,7 @@ Process * findProcess (struct prg_node * node)
 	while (current != NULL)
 	{
 		Process * currentproc = current->getVal();
-		if (!ROBUST)
-			assert (currentproc != NULL);
+		assert (currentproc != NULL);
 		
 		if (node->pid == currentproc->pid)
 			return current->getVal();
@@ -127,8 +123,10 @@ void reviewUnknown ()
 				if (DEBUG || bughuntmode)
 					std::cout << "FIXME: Previously unknown inode " << inode << " now got process - apparently it makes sense to review unknown connections\n";
 				/* Yay! - but how can this happen? */
-				if (!ROBUST)
-					assert(false);
+				assert(false);
+
+				/* TODO: this needs some investigation/refactoring - we should never get here due to assert(false) */
+
 				if (previous_conn != NULL)
 				{
 					previous_conn->setNext (curr_conn->getNext());

@@ -36,20 +36,14 @@ class Line
 public:
 	Line (const char * name, double n_recv_value, double n_sent_value, pid_t pid, uid_t uid, const char * n_devicename)
 	{
-		if (!ROBUST)
-		{
-			assert (pid >= 0);
-		}
+		assert (pid >= 0);
 		m_name = name;
 		sent_value = n_sent_value;
 		recv_value = n_recv_value;
 		devicename = n_devicename;
 		m_pid = pid;
 		m_uid = uid;
-		if (!ROBUST)
-		{
-			assert (m_pid >= 0);
-		}
+		assert (m_pid >= 0);
 	}
 
 	void show (int row);
@@ -72,10 +66,7 @@ char * uid2username (uid_t uid)
 
 	if (pwd == NULL)
 	{
-		if (!ROBUST)
-		{
-			assert(false);
-		}
+		assert(false);
 		return strdup ("unlisted");
 	} else {
 		return strdup(pwd->pw_name);
@@ -85,11 +76,8 @@ char * uid2username (uid_t uid)
 
 void Line::show (int row)
 {
-	if (!ROBUST)
-	{
-		assert (m_pid >= 0);
-		assert (m_pid <= 100000);
-	}
+	assert (m_pid >= 0);
+	assert (m_pid <= 100000);
 
 	if (DEBUG || tracemode)
 	{
@@ -336,24 +324,21 @@ void do_refresh()
 	double sent_global = 0;
 	double recv_global = 0;
 
-	if (!ROBUST)
-	{
-		// initialise to null pointers
-		for (int i = 0; i < nproc; i++)
-			lines[i] = NULL;
-	}
+#ifndef NDEBUG
+	// initialise to null pointers
+	for (int i = 0; i < nproc; i++)
+		lines[i] = NULL;
+#endif
 
 	while (curproc != NULL)
 	{
 		// walk though its connections, summing up their data, and
 		// throwing away connections that haven't received a package
 		// in the last PROCESSTIMEOUT seconds.
-		if (!ROBUST)
-		{
-			assert (curproc != NULL);
-			assert (curproc->getVal() != NULL);
-			assert (nproc == processes->size());
-		}
+		assert (curproc != NULL);
+		assert (curproc->getVal() != NULL);
+		assert (nproc == processes->size());
+
 		/* remove timed-out processes (unless it's one of the the unknown process) */
 		if ((curproc->getVal()->getLastPacket() + PROCESSTIMEOUT <= curtime.tv_sec)
 				&& (curproc->getVal() != unknowntcp)
@@ -408,30 +393,28 @@ void do_refresh()
 				forceExit("Invalid viewmode");
 			}
 			uid_t uid = curproc->getVal()->getUid();
-			if (!ROBUST)
-			{
-				struct passwd * pwuid = getpwuid(uid);
-				assert (pwuid != NULL);
-				// value returned by pwuid should not be freed, according to
-				// Petr Uzel.
-				//free (pwuid);
-				assert (curproc->getVal()->pid >= 0);
-				assert (n < nproc);
-			}
+#ifndef NDEBUG
+			struct passwd * pwuid = getpwuid(uid);
+			assert (pwuid != NULL);
+			// value returned by pwuid should not be freed, according to
+			// Petr Uzel.
+			//free (pwuid);
+#endif
+			assert (curproc->getVal()->pid >= 0);
+			assert (n < nproc);
+
 			lines[n] = new Line (curproc->getVal()->name, value_recv, value_sent,
 					curproc->getVal()->pid, uid, curproc->getVal()->devicename);
 			previousproc = curproc;
 			curproc = curproc->next;
 			n++;
-			if (!ROBUST)
-			{
-				assert (nproc == processes->size());
-				if (curproc == NULL)
-					assert (n-1 < nproc);
-				else
-					assert (n < nproc);
-
-			}
+#ifndef NDEBUG
+			assert (nproc == processes->size());
+			if (curproc == NULL)
+				assert (n-1 < nproc);
+			else
+				assert (n < nproc);
+#endif
 		}
 	}
 
