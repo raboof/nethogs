@@ -10,6 +10,7 @@
 #include "nethogs.h"
 #include "process.h"
 
+
 std::string * caption;
 //extern char [] version;
 const char version[] = " version " VERSION "." SUBVERSION "." MINORVERSION;
@@ -30,31 +31,31 @@ int VIEWMODE_TOTAL_MB = 3;
 int viewMode = VIEWMODE_KBPS;
 int nViewModes = 4;
 
-class Line 
+class Line
 {
 public:
 	Line (const char * name, double n_recv_value, double n_sent_value, pid_t pid, uid_t uid, const char * n_devicename)
 	{
-		if (!ROBUST) 
+		if (!ROBUST)
 		{
 			assert (pid >= 0);
 		}
-		m_name = name; 
-		sent_value = n_sent_value; 
+		m_name = name;
+		sent_value = n_sent_value;
 		recv_value = n_recv_value;
 		devicename = n_devicename;
-		m_pid = pid; 
+		m_pid = pid;
 		m_uid = uid;
-		if (!ROBUST) 
+		if (!ROBUST)
 		{
 			assert (m_pid >= 0);
 		}
 	}
 
 	void show (int row);
-	
+
 	double sent_value;
-	double recv_value; 
+	double recv_value;
 private:
 	const char * m_name;
 	const char * devicename;
@@ -64,8 +65,8 @@ private:
 
 char * uid2username (uid_t uid)
 {
-	struct passwd * pwd = NULL; 
-	/* getpwuid() allocates space for this itself, 
+	struct passwd * pwd = NULL;
+	/* getpwuid() allocates space for this itself,
 	 * which we shouldn't free */
 	pwd = getpwuid(uid);
 
@@ -117,11 +118,11 @@ void Line::show (int row)
 	if (viewMode == VIEWMODE_KBPS)
 	{
 		mvprintw (3+row, 6 + 9 + PROGNAME_WIDTH + 2 + 6 + 9 + 3 + 11, "KB/sec");
-	} 
+	}
 	else if (viewMode == VIEWMODE_TOTAL_MB)
 	{
 		mvprintw (3+row, 6 + 9 + PROGNAME_WIDTH + 2 + 6 + 9 + 3 + 11, "MB    ");
-	} 
+	}
 	else if (viewMode == VIEWMODE_TOTAL_KB)
 	{
 		mvprintw (3+row, 6 + 9 + PROGNAME_WIDTH + 2 + 6 + 9 + 3 + 11, "KB    ");
@@ -165,7 +166,7 @@ int GreatestFirst (const void * ma, const void * mb)
 	if (aValue == bValue)
 	{
 		return 0;
-	} 
+	}
 	return 1;
 }
 
@@ -226,10 +227,10 @@ float tokbps (u_int32_t bytes)
 /** Get the kb/s values for this process */
 void getkbps (Process * curproc, float * recvd, float * sent)
 {
-	u_int32_t sum_sent = 0, 
+	u_int32_t sum_sent = 0,
 	  	sum_recv = 0;
 
-	/* walk though all this process's connections, and sum 
+	/* walk though all this process's connections, and sum
 	 * them up */
 	ConnList * curconn = curproc->connections;
 	ConnList * previous = NULL;
@@ -247,8 +248,8 @@ void getkbps (Process * curproc, float * recvd, float * sent)
 				previous->setNext(curconn);
 			delete (todelete);
 			delete (conn_todelete);
-		} 
-		else 
+		}
+		else
 		{
 			u_int32_t sent = 0, recv = 0;
 			curconn->getVal()->sumanddel(curtime, &recv, &sent);
@@ -265,7 +266,7 @@ void getkbps (Process * curproc, float * recvd, float * sent)
 /** get total values for this process */
 void gettotal(Process * curproc, u_int32_t * recvd, u_int32_t * sent)
 {
-	u_int32_t sum_sent = 0, 
+	u_int32_t sum_sent = 0,
 	  	sum_recv = 0;
 	ConnList * curconn = curproc->connections;
 	while (curconn != NULL)
@@ -283,7 +284,7 @@ void gettotal(Process * curproc, u_int32_t * recvd, u_int32_t * sent)
 
 void gettotalmb(Process * curproc, float * recvd, float * sent)
 {
-	u_int32_t sum_sent = 0, 
+	u_int32_t sum_sent = 0,
 	  	sum_recv = 0;
 	gettotal(curproc, &sum_recv, &sum_sent);
 	*recvd = tomb(sum_recv);
@@ -293,7 +294,7 @@ void gettotalmb(Process * curproc, float * recvd, float * sent)
 /** get total values for this process */
 void gettotalkb(Process * curproc, float * recvd, float * sent)
 {
-	u_int32_t sum_sent = 0, 
+	u_int32_t sum_sent = 0,
 	  	sum_recv = 0;
 	gettotal(curproc, &sum_recv, &sum_sent);
 	*recvd = tokb(sum_recv);
@@ -302,7 +303,7 @@ void gettotalkb(Process * curproc, float * recvd, float * sent)
 
 void gettotalb(Process * curproc, float * recvd, float * sent)
 {
-	u_int32_t sum_sent = 0, 
+	u_int32_t sum_sent = 0,
 	  	sum_recv = 0;
 	gettotal(curproc, &sum_recv, &sum_sent);
 	//std::cout << "Total sent: " << sum_sent << std::endl;
@@ -344,8 +345,8 @@ void do_refresh()
 
 	while (curproc != NULL)
 	{
-		// walk though its connections, summing up their data, and 
-		// throwing away connections that haven't received a package 
+		// walk though its connections, summing up their data, and
+		// throwing away connections that haven't received a package
 		// in the last PROCESSTIMEOUT seconds.
 		if (!ROBUST)
 		{
@@ -354,7 +355,7 @@ void do_refresh()
 			assert (nproc == processes->size());
 		}
 		/* remove timed-out processes (unless it's one of the the unknown process) */
-		if ((curproc->getVal()->getLastPacket() + PROCESSTIMEOUT <= curtime.tv_sec) 
+		if ((curproc->getVal()->getLastPacket() + PROCESSTIMEOUT <= curtime.tv_sec)
 				&& (curproc->getVal() != unknowntcp)
 				&& (curproc->getVal() != unknownudp)
 				&& (curproc->getVal() != unknownip))
@@ -385,27 +386,27 @@ void do_refresh()
 			if (viewMode == VIEWMODE_KBPS)
 			{
 				//std::cout << "kbps viemode" << std::endl;
-				getkbps (curproc->getVal(), &value_recv, &value_sent);	
+				getkbps (curproc->getVal(), &value_recv, &value_sent);
 			}
 			else if (viewMode == VIEWMODE_TOTAL_KB)
 			{
 				//std::cout << "total viemode" << std::endl;
-				gettotalkb(curproc->getVal(), &value_recv, &value_sent);	
+				gettotalkb(curproc->getVal(), &value_recv, &value_sent);
 			}
 			else if (viewMode == VIEWMODE_TOTAL_MB)
 			{
 				//std::cout << "total viemode" << std::endl;
-				gettotalmb(curproc->getVal(), &value_recv, &value_sent);	
+				gettotalmb(curproc->getVal(), &value_recv, &value_sent);
 			}
 			else if (viewMode == VIEWMODE_TOTAL_B)
 			{
 				//std::cout << "total viemode" << std::endl;
-				gettotalb(curproc->getVal(), &value_recv, &value_sent);	
+				gettotalb(curproc->getVal(), &value_recv, &value_sent);
 			}
 			else
 			{
 				forceExit("Invalid viewmode");
-			}				
+			}
 			uid_t uid = curproc->getVal()->getUid();
 			if (!ROBUST)
 			{
@@ -415,7 +416,7 @@ void do_refresh()
 				assert (curproc->getVal()->pid >= 0);
 				assert (n < nproc);
 			}
-			lines[n] = new Line (curproc->getVal()->name, value_recv, value_sent, 
+			lines[n] = new Line (curproc->getVal()->name, value_recv, value_sent,
 					curproc->getVal()->pid, uid, curproc->getVal()->devicename);
 			previousproc = curproc;
 			curproc = curproc->next;
@@ -447,7 +448,7 @@ void do_refresh()
 		/* print the 'unknown' connections, for debugging */
 		ConnList * curr_unknownconn = unknowntcp->connections;
 		while (curr_unknownconn != NULL) {
-			std::cout << "Unknown connection: " << 
+			std::cout << "Unknown connection: " <<
 				curr_unknownconn->getVal()->refpacket->gethashstring() << std::endl;
 
 			curr_unknownconn = curr_unknownconn->getNext();
