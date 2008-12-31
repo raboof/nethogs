@@ -47,8 +47,7 @@
 
 #define PROGNAME_WIDTH 27
 
-void forceExit(const char *msg);
-void forceExit(const char *msg, const char* msg2);
+void forceExit(const char *msg, ...);
 
 class local_addr {
 public:

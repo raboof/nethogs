@@ -10,6 +10,7 @@
 #include <signal.h>
 #include <string>
 #include <string.h>
+#include <stdarg.h>
 
 #include <netinet/ip.h>
 #include <netinet/ip6.h>
@@ -27,7 +28,7 @@ extern "C" {
 #include "process.h"
 #include "refresh.h"
 
-extern Process * unknownudp; 
+extern Process * unknownudp;
 
 unsigned refreshdelay = 1;
 bool tracemode = false;
@@ -91,7 +92,7 @@ int process_tcp (u_char * userdata, const dp_header * header, const u_char * m_p
 	curtime = header->ts;
 
 	/* get info from userdata, then call getPacket */
-	Packet * packet; 
+	Packet * packet;
 	switch (args->sa_family)
 	{
 		case (AF_INET):
@@ -133,7 +134,7 @@ int process_udp (u_char * userdata, const dp_header * header, const u_char * m_p
 	curtime = header->ts;
 
 	/* TODO get info from userdata, then call getPacket */
-	Packet * packet; 
+	Packet * packet;
 	switch (args->sa_family)
 	{
 		case (AF_INET):
@@ -200,24 +201,19 @@ void quit_cb (int i)
 	exit(0);
 }
 
-void forceExit(const char *msg)
-{
-	forceExit (msg, NULL);
-}
-
-void forceExit(const char *msg, const char* msg2)
+void forceExit(const char *msg, ...)
 {
 	if ((!tracemode)&&(!DEBUG)){
 		exit_ui();
 	}
-	std::cerr << msg;
-	if (msg2 != NULL)
-	{
-		std::cerr << msg2;
-	}
+
+	va_list argp;
+	va_start(argp, msg);
+	vfprintf(stderr, msg, argp);
+	va_end(argp);
 	std::cerr << std::endl;
 
-        exit(0);
+    exit(0);
 }
 
 static void versiondisplay(void)
@@ -255,7 +251,7 @@ public:
 
 class handle {
 public:
-	handle (dp_handle * m_handle, char * m_devicename = NULL, 
+	handle (dp_handle * m_handle, char * m_devicename = NULL,
 			handle * m_next = NULL) {
 		content = m_handle; next = m_next; devicename = m_devicename;
 	}
@@ -317,7 +313,7 @@ int main (int argc, char** argv)
 	}
 
 	if (devices == NULL)
-	{	
+	{
 		devices = new device (strdup("eth0"));
 	}
 
@@ -339,7 +335,7 @@ int main (int argc, char** argv)
 			//caption->append(" ");
 		}
 
-		dp_handle * newhandle = dp_open_live(current_dev->name, BUFSIZ, promisc, 100, errbuf); 
+		dp_handle * newhandle = dp_open_live(current_dev->name, BUFSIZ, promisc, 100, errbuf);
 		if (newhandle != NULL)
 		{
 			dp_addcb (newhandle, dp_packet_ip, process_ip);
@@ -348,10 +344,10 @@ int main (int argc, char** argv)
 			dp_addcb (newhandle, dp_packet_udp, process_udp);
 
 			/* The following code solves sf.net bug 1019381, but is only available
-			 * in newer versions (from 0.8 it seems) of libpcap 
+			 * in newer versions (from 0.8 it seems) of libpcap
 			 *
 			 * update: version 0.7.2, which is in debian stable now, should be ok
-			 * also. 
+			 * also.
 			 */
 			if (dp_setnonblock (newhandle, 1, errbuf) == -1)
 			{
@@ -374,9 +370,9 @@ int main (int argc, char** argv)
 	fprintf(stderr, "Waiting for first packet to arrive (see sourceforge.net bug 1019381)\n");
 
 	// Main loop:
-	// 
+	//
 	//  Walks though the 'handles' list, which contains handles opened in non-blocking mode.
-	//  This causes the CPU utilisation to go up to 100%. This is tricky: 
+	//  This causes the CPU utilisation to go up to 100%. This is tricky:
 	while (1)
 	{
 		bool packets_read = false;
@@ -400,7 +396,7 @@ int main (int argc, char** argv)
 			current_handle = current_handle->next;
 		}
 
-		if ((!DEBUG)&&(!tracemode)) 
+		if ((!DEBUG)&&(!tracemode))
 		{
 			// handle user input
 			ui_tick();
@@ -408,7 +404,7 @@ int main (int argc, char** argv)
 
 		if (needrefresh)
 		{
-			do_refresh(); 
+			do_refresh();
 			needrefresh = false;
 		}
 
