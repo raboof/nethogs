@@ -12,6 +12,7 @@
 #include <map>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <limits.h>
 
 #include "inode2prog.h"
 
