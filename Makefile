@@ -1,6 +1,6 @@
 VERSION      := 0
 SUBVERSION   := 7
-MINORVERSION := snapshot
+MINORVERSION := 0
 
 #DESTDIR := /usr
 DESTDIR := /usr/local
@@ -24,8 +24,8 @@ check:
 	echo "Not implemented"
 
 install: nethogs nethogs.8
-	install -d -m 755 $(bin)
-	install -m 755 nethogs $(bin)
+	install -d -m 755 $(sbin)
+	install -m 755 nethogs $(sbin)
 	install -d -m 755 $(man8)
 	install -m 644 nethogs.8 $(man8)
 
