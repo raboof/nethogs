@@ -1,5 +1,6 @@
 #include <netinet/in.h>
 #include <map>
+#include <stdio.h>
 #include <stdlib.h>
 
 #include "nethogs.h"
