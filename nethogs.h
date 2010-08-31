@@ -39,7 +39,7 @@
 // -> 2*45+1=91. we make it 92, for the null.
 #define HASHKEYSIZE 92
 
-#define PROGNAME_WIDTH 27
+#define PROGNAME_WIDTH 512
 
 void forceExit(const char *msg, ...);
 

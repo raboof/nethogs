@@ -46,7 +46,7 @@ public:
 		assert (m_pid >= 0);
 	}
 
-	void show (int row);
+	void show (int row, unsigned int proglen);
 
 	double sent_value;
 	double recv_value;
@@ -74,7 +74,7 @@ char * uid2username (uid_t uid)
 }
 
 
-void Line::show (int row)
+void Line::show (int row, unsigned int proglen)
 {
 	assert (m_pid >= 0);
 	assert (m_pid <= 100000);
@@ -89,10 +89,10 @@ void Line::show (int row)
 	char * username = uid2username(m_uid);
 	mvprintw (3+row, 6, "%s", username);
 	free (username);
-	if (strlen (m_name) > PROGNAME_WIDTH) {
+	if (strlen (m_name) > proglen) {
 		// truncate oversized names
 		char * tmp = strdup(m_name);
-		char * start = tmp + strlen (m_name) - PROGNAME_WIDTH;
+		char * start = tmp + strlen (m_name) - proglen;
 		start[0] = '.';
 		start[1] = '.';
 		mvprintw (3+row, 6 + 9, "%s", start);
@@ -100,24 +100,24 @@ void Line::show (int row)
 	} else {
 		mvprintw (3+row, 6 + 9, "%s", m_name);
 	}
-	mvprintw (3+row, 6 + 9 + PROGNAME_WIDTH + 2, "%s", devicename);
-	mvprintw (3+row, 6 + 9 + PROGNAME_WIDTH + 2 + 6, "%10.3f", sent_value);
-	mvprintw (3+row, 6 + 9 + PROGNAME_WIDTH + 2 + 6 + 9 + 3, "%10.3f", recv_value);
+	mvprintw (3+row, 6 + 9 + proglen + 2, "%s", devicename);
+	mvprintw (3+row, 6 + 9 + proglen + 2 + 6, "%10.3f", sent_value);
+	mvprintw (3+row, 6 + 9 + proglen + 2 + 6 + 9 + 3, "%10.3f", recv_value);
 	if (viewMode == VIEWMODE_KBPS)
 	{
-		mvprintw (3+row, 6 + 9 + PROGNAME_WIDTH + 2 + 6 + 9 + 3 + 11, "KB/sec");
+		mvprintw (3+row, 6 + 9 + proglen + 2 + 6 + 9 + 3 + 11, "KB/sec");
 	}
 	else if (viewMode == VIEWMODE_TOTAL_MB)
 	{
-		mvprintw (3+row, 6 + 9 + PROGNAME_WIDTH + 2 + 6 + 9 + 3 + 11, "MB    ");
+		mvprintw (3+row, 6 + 9 + proglen + 2 + 6 + 9 + 3 + 11, "MB    ");
 	}
 	else if (viewMode == VIEWMODE_TOTAL_KB)
 	{
-		mvprintw (3+row, 6 + 9 + PROGNAME_WIDTH + 2 + 6 + 9 + 3 + 11, "KB    ");
+		mvprintw (3+row, 6 + 9 + proglen + 2 + 6 + 9 + 3 + 11, "KB    ");
 	}
 	else if (viewMode == VIEWMODE_TOTAL_B)
 	{
-		mvprintw (3+row, 6 + 9 + PROGNAME_WIDTH + 2 + 6 + 9 + 3 + 11, "B     ");
+		mvprintw (3+row, 6 + 9 + proglen + 2 + 6 + 9 + 3 + 11, "B     ");
 	}
 }
 
@@ -302,6 +302,21 @@ void gettotalb(Process * curproc, float * recvd, float * sent)
 // Display all processes and relevant network traffic using show function
 void do_refresh()
 {
+	int row; // number of terminal rows
+	int col; // number of terminal columns
+	unsigned int proglen; // max length of the "PROGRAM" column
+
+	getmaxyx(stdscr, row, col);	 /* find the boundaries of the screeen */
+	if (col < 60) {
+		clear();
+		mvprintw(0,0, "The terminal is too narrow! Please make it wider.\nI'll wait...");
+		return;
+	}
+
+	if (col > PROGNAME_WIDTH) col = PROGNAME_WIDTH;
+
+	proglen = col - 53;
+
 	refreshconninode();
 	if (DEBUG || tracemode)
 	{
@@ -312,7 +327,7 @@ void do_refresh()
 		clear();
 		mvprintw (0, 0, "%s", caption->c_str());
 		attron(A_REVERSE);
-		mvprintw (2, 0, "  PID USER     PROGRAM                      DEV        SENT      RECEIVED       ");
+		mvprintw (2, 0, "  PID USER     %-*.*s  DEV        SENT      RECEIVED       ", proglen, proglen, "PROGRAM");
 		attroff(A_REVERSE);
 	}
 	ProcList * curproc = processes;
@@ -424,7 +439,7 @@ void do_refresh()
 	/* print them */
 	for (i=0; i<nproc; i++)
 	{
-		lines[i]->show(i);
+		lines[i]->show(i, proglen);
 		recv_global += lines[i]->recv_value;
 		sent_global += lines[i]->sent_value;
 		delete lines[i];
@@ -442,16 +457,16 @@ void do_refresh()
 
 	if ((!tracemode) && (!DEBUG)){
 		attron(A_REVERSE);
-		mvprintw (3+1+i, 0, "  TOTAL                                           %10.3f  %10.3f ", sent_global, recv_global);
+		mvprintw (3+1+i, 0, "  TOTAL        %-*.*s        %10.3f  %10.3f ", proglen, proglen, " ", sent_global, recv_global);
 		if (viewMode == VIEWMODE_KBPS)
 		{
-			mvprintw (3+1+i, 73, "KB/sec ");
+			mvprintw (3+1+i, col - 7, "KB/sec ");
 		} else if (viewMode == VIEWMODE_TOTAL_B) {
-			mvprintw (3+1+i, 73, "B      ");
+			mvprintw (3+1+i, col - 7, "B      ");
 		} else if (viewMode == VIEWMODE_TOTAL_KB) {
-			mvprintw (3+1+i, 73, "KB     ");
+			mvprintw (3+1+i, col - 7, "KB     ");
 		} else if (viewMode == VIEWMODE_TOTAL_MB) {
-			mvprintw (3+1+i, 73, "MB     ");
+			mvprintw (3+1+i, col - 7, "MB     ");
 		}
 		attroff(A_REVERSE);
 		mvprintw (4+1+i, 0, "");

@@ -1,5 +1,9 @@
 Changelog
 
+31/08/10 (Arnout)
+- support for screens wider than 80 characters, thanks to Shock
+  at https://bugs.launchpad.net/ubuntu/+source/nethogs/+bug/627626
+
 10/08/08 (Arnout)
 - compile with g++ 4.3, thanks to Leslie P. Polzer - skypher
 
