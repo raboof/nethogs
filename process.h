@@ -109,7 +109,7 @@ private:
 	Process * val;
 };
 
-Process * getProcess (Connection * connection, char * devicename = NULL);
+Process * getProcess (Connection * connection, const char * devicename = NULL);
 
 void process_init ();
 

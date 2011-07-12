@@ -4,7 +4,7 @@ extern "C" {
 	#include "decpcap.h"
 }
 
-int process_tcp (u_char * userdata, const dp_header * header, const u_char * m_packet) {
+int process_tcp (u_char * /* userdata */, const dp_header * /* header */, const u_char * /* m_packet */) {
 	std::cout << "Callback for processing TCP packet called" << std::endl;
 	return 0;
 }

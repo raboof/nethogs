@@ -174,7 +174,7 @@ void check_all_procs ()
  * if the inode is not associated with any PID, return the unknown process
  * if the process is not yet in the proclist, add it
  */
-Process * getProcess (unsigned long inode, char * devicename)
+Process * getProcess (unsigned long inode, const char * devicename)
 {
 	struct prg_node * node = findPID(inode);
 	
@@ -232,7 +232,7 @@ Process * getProcess (unsigned long inode, char * devicename)
  * is made. If no process can be found even then, it's added to the 
  * 'unknown' process.
  */
-Process * getProcess (Connection * connection, char * devicename)
+Process * getProcess (Connection * connection, const char * devicename)
 {
 	unsigned long inode = conninode[connection->refpacket->gethashstring()];
 

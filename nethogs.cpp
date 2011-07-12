@@ -28,6 +28,7 @@ extern "C" {
 #include "connection.h"
 #include "process.h"
 #include "refresh.h"
+#include "devices.h"
 
 extern Process * unknownudp;
 
@@ -39,7 +40,7 @@ bool needrefresh = true;
 //dp_link_type linktype = dp_link_ethernet;
 const char version[] = " version " VERSION "." SUBVERSION "." MINORVERSION;
 
-char * currentdevice = NULL;
+const char * currentdevice = NULL;
 
 timeval curtime;
 
@@ -172,7 +173,7 @@ int process_udp (u_char * userdata, const dp_header * header, const u_char * m_p
 	return true;
 }
 
-int process_ip (u_char * userdata, const dp_header * header, const u_char * m_packet) {
+int process_ip (u_char * userdata, const dp_header * /* header */, const u_char * m_packet) {
 	struct dpargs * args = (struct dpargs *) userdata;
 	struct ip * ip = (struct ip *) m_packet;
 	args->sa_family = AF_INET;
@@ -183,7 +184,7 @@ int process_ip (u_char * userdata, const dp_header * header, const u_char * m_pa
 	return false;
 }
 
-int process_ip6 (u_char * userdata, const dp_header * header, const u_char * m_packet) {
+int process_ip6 (u_char * userdata, const dp_header * /* header */, const u_char * m_packet) {
 	struct dpargs * args = (struct dpargs *) userdata;
 	const struct ip6_hdr * ip6 = (struct ip6_hdr *) m_packet;
 	args->sa_family = AF_INET6;
@@ -194,7 +195,7 @@ int process_ip6 (u_char * userdata, const dp_header * header, const u_char * m_p
 	return false;
 }
 
-void quit_cb (int i)
+void quit_cb (int /* i */)
 {
 	procclean();
 	if ((!tracemode) && (!DEBUG))
@@ -240,24 +241,14 @@ static void help(void)
 
 }
 
-class device {
-public:
-	device (char * m_name, device * m_next = NULL)
-	{
-		name = m_name; next = m_next;
-	}
-	char * name;
-	device * next;
-};
-
 class handle {
 public:
-	handle (dp_handle * m_handle, char * m_devicename = NULL,
+	handle (dp_handle * m_handle, const char * m_devicename = NULL,
 			handle * m_next = NULL) {
 		content = m_handle; next = m_next; devicename = m_devicename;
 	}
 	dp_handle * content;
-	char * devicename;
+	const char * devicename;
 	handle * next;
 };
 
@@ -313,7 +304,7 @@ int main (int argc, char** argv)
 
 	if (devices == NULL)
 	{
-		devices = new device (strdup("eth0"));
+		devices = determine_default_device();
 	}
 
 	if ((!tracemode) && (!DEBUG)){

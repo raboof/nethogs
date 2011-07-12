@@ -13,7 +13,7 @@ all: nethogs decpcap_test
 
 CFLAGS=-g -Wall -Wextra
 #CFLAGS=-O2
-OBJS=packet.o connection.o process.o refresh.o decpcap.o cui.o inode2prog.o conninode.o
+OBJS=packet.o connection.o process.o refresh.o decpcap.o cui.o inode2prog.o conninode.o devices.o
 .PHONY: tgz
 
 tgz: clean
@@ -53,6 +53,8 @@ inode2prog.o: inode2prog.cpp inode2prog.h nethogs.h
 	$(CXX) $(CFLAGS) -c inode2prog.cpp
 conninode.o: conninode.cpp nethogs.h conninode.h
 	$(CXX) $(CFLAGS) -c conninode.cpp
+#devices.o: devices.cpp devices.h
+#	$(CXX) $(CFLAGS) -c devices.cpp
 cui.o: cui.cpp cui.h nethogs.h
 	$(CXX) $(CFLAGS) -c cui.cpp -DVERSION=\"$(VERSION)\" -DSUBVERSION=\"$(SUBVERSION)\" -DMINORVERSION=\"$(MINORVERSION)\"
 

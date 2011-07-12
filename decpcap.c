@@ -55,7 +55,7 @@ struct dp_handle * dp_open_offline(char * fname, char * ebuf)
 	return dp_fillhandle(temp);
 }
 
-struct dp_handle * dp_open_live(char * device, int snaplen, int promisc, int to_ms, char * ebuf)
+struct dp_handle * dp_open_live(const char * device, int snaplen, int promisc, int to_ms, const char * ebuf)
 {
 	pcap_t * temp = pcap_open_live(device, snaplen, promisc, to_ms, ebuf); 
 
