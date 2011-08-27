@@ -17,7 +17,7 @@ OBJS=packet.o connection.o process.o refresh.o decpcap.o cui.o inode2prog.o conn
 .PHONY: tgz
 
 tgz: clean
-	cd .. ; tar czvf nethogs-$(VERSION).$(SUBVERSION).$(MINORVERSION).tar.gz nethogs/*
+	cd .. ; tar czvf nethogs-$(VERSION).$(SUBVERSION).$(MINORVERSION).tar.gz --exclude-vcs nethogs/*
 
 .PHONY: check
 check:
