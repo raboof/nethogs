@@ -85,7 +85,10 @@ void Line::show (int row, unsigned int proglen)
 		return;
 	}
 
-	mvprintw (3+row, 0, "%d", m_pid);
+	if (m_pid == 0)
+		mvprintw (3+row, 0, "?");
+	else
+		mvprintw (3+row, 0, "%d", m_pid);
 	char * username = uid2username(m_uid);
 	mvprintw (3+row, 6, "%s", username);
 	free (username);
