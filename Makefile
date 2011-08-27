@@ -1,6 +1,6 @@
 VERSION      := 0
 SUBVERSION   := 8
-MINORVERSION := 0
+MINORVERSION := 1-SNAPSHOT
 
 #DESTDIR := /usr
 DESTDIR := /usr/local
