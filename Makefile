@@ -1,5 +1,5 @@
 VERSION      := 0
-SUBVERSION   := 7
+SUBVERSION   := 8
 MINORVERSION := 0
 
 #DESTDIR := /usr
