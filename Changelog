@@ -18,7 +18,7 @@ Changelog
 27/08/05 (Arnout)
 - giving all unknown connections their own
   `unknown' process
-- UDP support
+- Initial work on UDP support
 - investigated memleak, turns out to be a problem in libc:
   http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=273051 
   https://bugzilla.redhat.com/bugzilla/show_bug.cgi?id=103142
