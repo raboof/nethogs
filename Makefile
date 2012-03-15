@@ -2,11 +2,11 @@ VERSION      := 0
 SUBVERSION   := 8
 MINORVERSION := 1-SNAPSHOT
 
-#DESTDIR := /usr
-DESTDIR := /usr/local
+#prefix := /usr
+prefix := /usr/local
 
-sbin  := $(DESTDIR)/sbin
-man8 := $(DESTDIR)/share/man/man8/
+sbin := $(prefix)/sbin
+man8 := $(prefix)/share/man/man8/
 
 all: nethogs decpcap_test
 
@@ -16,8 +16,9 @@ runtests: test
 	
 # nethogs_testsum
 
-CFLAGS=-g -Wall -Wextra
-#CFLAGS=-O2
+CFLAGS=-Wall
+CXXFLAGS=-Wall
+
 OBJS=packet.o connection.o process.o refresh.o decpcap.o cui.o inode2prog.o conninode.o devices.o
 .PHONY: tgz
 
@@ -29,42 +30,42 @@ check:
 	echo "Not implemented"
 
 install: nethogs nethogs.8
-	install -d -m 755 $(sbin)
-	install -m 755 nethogs $(sbin)
-	install -d -m 755 $(man8)
-	install -m 644 nethogs.8 $(man8)
+	install -d -m 755 $(DESTDIR)$(sbin)
+	install -m 755 nethogs $(DESTDIR)$(sbin)
+	install -d -m 755 $(DESTDIR)$(man8)
+	install -m 644 nethogs.8 $(DESTDIR)$(man8)
 
 test: test.cpp 
-	$(CXX) $(CFLAGS) test.cpp -o test -lpcap -lm -lncurses -DVERSION=\"$(VERSION)\" -DSUBVERSION=\"$(SUBVERSION)\" -DMINORVERSION=\"$(MINORVERSION)\"
+	$(CXX) $(CXXFLAGS) $(LDFLAGS) test.cpp -o test -lpcap -lm -lncurses -DVERSION=\"$(VERSION)\" -DSUBVERSION=\"$(SUBVERSION)\" -DMINORVERSION=\"$(MINORVERSION)\"
 
 nethogs: main.cpp nethogs.cpp $(OBJS)
-	$(CXX) $(CFLAGS) main.cpp $(OBJS) -o nethogs -lpcap -lm -lncurses -DVERSION=\"$(VERSION)\" -DSUBVERSION=\"$(SUBVERSION)\" -DMINORVERSION=\"$(MINORVERSION)\"
+	$(CXX) $(CXXFLAGS) $(LDFLAGS) main.cpp $(OBJS) -o nethogs -lpcap -lm -lncurses -DVERSION=\"$(VERSION)\" -DSUBVERSION=\"$(SUBVERSION)\" -DMINORVERSION=\"$(MINORVERSION)\"
 nethogs_testsum: nethogs_testsum.cpp $(OBJS)
-	$(CXX) $(CFLAGS) -g nethogs_testsum.cpp $(OBJS) -o nethogs_testsum -lpcap -lm -lncurses -DVERSION=\"$(VERSION)\" -DSUBVERSION=\"$(SUBVERSION)\" -DMINORVERSION=\"$(MINORVERSION)\"
+	$(CXX) $(CXXFLAGS) $(LDFLAGS) nethogs_testsum.cpp $(OBJS) -o nethogs_testsum -lpcap -lm -lncurses -DVERSION=\"$(VERSION)\" -DSUBVERSION=\"$(SUBVERSION)\" -DMINORVERSION=\"$(MINORVERSION)\"
 
 decpcap_test: decpcap_test.cpp decpcap.o
-	$(CXX) $(CFLAGS) decpcap_test.cpp decpcap.o -o decpcap_test -lpcap -lm
+	$(CXX) $(CXXFLAGS) $(LDFLAGS) decpcap_test.cpp decpcap.o -o decpcap_test -lpcap -lm
 
 #-lefence
 
 refresh.o: refresh.cpp refresh.h nethogs.h
-	$(CXX) $(CFLAGS) -c refresh.cpp
+	$(CXX) $(CXXFLAGS) -c refresh.cpp
 process.o: process.cpp process.h nethogs.h
-	$(CXX) $(CFLAGS) -c process.cpp
+	$(CXX) $(CXXFLAGS) -c process.cpp
 packet.o: packet.cpp packet.h nethogs.h
-	$(CXX) $(CFLAGS) -c packet.cpp
+	$(CXX) $(CXXFLAGS) -c packet.cpp
 connection.o: connection.cpp connection.h nethogs.h
-	$(CXX) $(CFLAGS) -c connection.cpp
+	$(CXX) $(CXXFLAGS) -c connection.cpp
 decpcap.o: decpcap.c decpcap.h
 	$(CC) $(CFLAGS) -c decpcap.c
 inode2prog.o: inode2prog.cpp inode2prog.h nethogs.h
-	$(CXX) $(CFLAGS) -c inode2prog.cpp
+	$(CXX) $(CXXFLAGS) -c inode2prog.cpp
 conninode.o: conninode.cpp nethogs.h conninode.h
-	$(CXX) $(CFLAGS) -c conninode.cpp
+	$(CXX) $(CXXFLAGS) -c conninode.cpp
 #devices.o: devices.cpp devices.h
-#	$(CXX) $(CFLAGS) -c devices.cpp
+#	$(CXX) $(CXXFLAGS) -c devices.cpp
 cui.o: cui.cpp cui.h nethogs.h
-	$(CXX) $(CFLAGS) -c cui.cpp -DVERSION=\"$(VERSION)\" -DSUBVERSION=\"$(SUBVERSION)\" -DMINORVERSION=\"$(MINORVERSION)\"
+	$(CXX) $(CXXFLAGS) -c cui.cpp -DVERSION=\"$(VERSION)\" -DSUBVERSION=\"$(SUBVERSION)\" -DMINORVERSION=\"$(MINORVERSION)\"
 
 .PHONY: clean
 clean:
