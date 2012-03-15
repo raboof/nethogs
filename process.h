@@ -65,7 +65,7 @@ private:
 class Process
 {
 public:
-	/* the process makes a copy of the device name and name. */
+	/* the process makes a copy of the name. the device name needs to be stable. */
 	Process (unsigned long m_inode, const char * m_devicename, const char * m_name = NULL)
 	{
 		//std::cout << "ARN: Process created with dev " << m_devicename << std::endl;
@@ -78,7 +78,7 @@ public:
 		else
 			name = strdup(m_name);
 
-		devicename = strdup(m_devicename);
+		devicename = m_devicename;
 		connections = NULL;
 		pid = 0;
 		uid = 0;
@@ -90,14 +90,13 @@ public:
 	~Process ()
 	{
 		free (name);
-		free (devicename);
 		if (DEBUG)
 			std::cout << "PROC: Process deleted at " << this << std::endl;
 	}
 	int getLastPacket ();
 
 	char * name;
-	char * devicename;
+	const char * devicename;
 	int pid;
 
 	unsigned long inode;

@@ -58,7 +58,7 @@ extern std::map <std::string, unsigned long> conninode;
  * * unknown TCP traffic
  * * UDP traffic
  * * unknown IP traffic
- * We must take care this one never gets removed from the list.
+ * We must take care these never get removed from the list.
  */
 Process * unknowntcp; 
 Process * unknownudp; 
