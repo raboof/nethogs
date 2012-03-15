@@ -112,7 +112,9 @@ std::string uid2username (uid_t uid)
 void Line::show (int row, unsigned int proglen)
 {
 	assert (m_pid >= 0);
-	assert (m_pid <= 100000);
+	// actually m_pid can be bigger than this..
+	// https://sourceforge.net/tracker/?func=detail&aid=3459408&group_id=110349&atid=656353
+	//assert (m_pid <= 100000);
 
 	if (DEBUG || tracemode)
 	{
