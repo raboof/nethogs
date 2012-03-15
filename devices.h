@@ -19,6 +19,8 @@
  *
  */
 
+#ifndef __DEVICES_H
+#define __DEVICES_H
 
 #include <cstddef> // NULL
 
@@ -33,3 +35,5 @@ public:
 };
 
 device * determine_default_device();
+
+#endif

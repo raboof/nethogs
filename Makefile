@@ -9,6 +9,11 @@ sbin  := $(DESTDIR)/sbin
 man8 := $(DESTDIR)/share/man/man8/
 
 all: nethogs decpcap_test
+
+runtests: test
+	./test
+	
+	
 # nethogs_testsum
 
 CFLAGS=-g -Wall -Wextra
@@ -29,8 +34,11 @@ install: nethogs nethogs.8
 	install -d -m 755 $(man8)
 	install -m 644 nethogs.8 $(man8)
 
-nethogs: nethogs.cpp $(OBJS)
-	$(CXX) $(CFLAGS) nethogs.cpp $(OBJS) -o nethogs -lpcap -lm -lncurses -DVERSION=\"$(VERSION)\" -DSUBVERSION=\"$(SUBVERSION)\" -DMINORVERSION=\"$(MINORVERSION)\"
+test: test.cpp 
+	$(CXX) $(CFLAGS) test.cpp -o test -lpcap -lm -lncurses -DVERSION=\"$(VERSION)\" -DSUBVERSION=\"$(SUBVERSION)\" -DMINORVERSION=\"$(MINORVERSION)\"
+
+nethogs: main.cpp nethogs.cpp $(OBJS)
+	$(CXX) $(CFLAGS) main.cpp $(OBJS) -o nethogs -lpcap -lm -lncurses -DVERSION=\"$(VERSION)\" -DSUBVERSION=\"$(SUBVERSION)\" -DMINORVERSION=\"$(MINORVERSION)\"
 nethogs_testsum: nethogs_testsum.cpp $(OBJS)
 	$(CXX) $(CFLAGS) -g nethogs_testsum.cpp $(OBJS) -o nethogs_testsum -lpcap -lm -lncurses -DVERSION=\"$(VERSION)\" -DSUBVERSION=\"$(SUBVERSION)\" -DMINORVERSION=\"$(MINORVERSION)\"
 
@@ -62,3 +70,4 @@ cui.o: cui.cpp cui.h nethogs.h
 clean:
 	rm -f $(OBJS)
 	rm -f nethogs
+	rm -f test

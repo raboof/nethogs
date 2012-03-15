@@ -25,6 +25,7 @@
 #include <pwd.h>
 #include <sys/types.h>
 #include <stdlib.h>
+#include <errno.h>
 #include <cstdlib>
 #include <algorithm>
 
@@ -34,8 +35,7 @@
 
 
 std::string * caption;
-//extern char [] version;
-const char version[] = " version " VERSION "." SUBVERSION "." MINORVERSION;
+extern const char version[];
 extern ProcList * processes;
 extern timeval curtime;
 
@@ -79,20 +79,33 @@ private:
 	uid_t m_uid;
 };
 
-char * uid2username (uid_t uid)
+#include <sstream>
+
+std::string itoa(int i)
+{
+	std::stringstream out;
+	out << i;
+	return out.str();
+}
+
+/**
+ * @returns the username that corresponds to this uid 
+ */
+std::string uid2username (uid_t uid)
 {
 	struct passwd * pwd = NULL;
-	/* getpwuid() allocates space for this itself,
-	 * which we shouldn't free */
+	errno = NULL;
+
+	/* points to a static memory area, should not be freed */
 	pwd = getpwuid(uid);
 
 	if (pwd == NULL)
-	{
-		assert(false);
-		return strdup ("unlisted");
-	} else {
-		return strdup(pwd->pw_name);
-	}
+		if (errno == 0)
+			return itoa(uid);
+		else
+			forceExit(false, "Error calling getpwuid(3) for uid %d: %d %s", uid, errno, strerror(errno));
+	else
+		return std::string(pwd->pw_name);
 }
 
 
@@ -111,9 +124,8 @@ void Line::show (int row, unsigned int proglen)
 		mvprintw (3+row, 0, "?");
 	else
 		mvprintw (3+row, 0, "%d", m_pid);
-	char * username = uid2username(m_uid);
-	mvprintw (3+row, 6, "%s", username);
-	free (username);
+	std::string username = uid2username(m_uid);
+	mvprintw (3+row, 6, "%s", username.c_str());
 	if (strlen (m_name) > proglen) {
 		// truncate oversized names
 		char * tmp = strdup(m_name);
@@ -191,7 +203,7 @@ void init_ui ()
 	cbreak();
 	nodelay(screen, TRUE);
 	caption = new std::string ("NetHogs");
-	caption->append(version);
+	caption->append(getVersion());
 	//caption->append(", running at ");
 }
 
@@ -430,7 +442,7 @@ void do_refresh()
 			}
 			else
 			{
-				forceExit("Invalid viewmode", -1);
+				forceExit(false, "Invalid viewMode: %d", viewMode);
 			}
 			uid_t uid = curproc->getVal()->getUid();
 #ifndef NDEBUG

@@ -18,7 +18,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  *
  */
-
+#ifndef __INODE2PROG_h
+#define __INODE2PROG_h
 
 /* this should be called quickly after the packet
  * arrived, since the inode may disappear from the table
@@ -39,3 +40,5 @@ void prg_cache_clear();
  
 // reread the inode-to-prg_node-mapping
 void reread_mapping ();
+
+#endif

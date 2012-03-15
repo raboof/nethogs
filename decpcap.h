@@ -18,7 +18,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  *
  */
-
+#ifndef __DECPCAP_H
+#define __DECPCAP_H
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -84,3 +85,5 @@ int dp_datalink(struct dp_handle * handle);
 int dp_setnonblock (struct dp_handle * handle, int i, char * errbuf);
 
 char * dp_geterr (struct dp_handle * handle);
+
+#endif

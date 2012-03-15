@@ -25,17 +25,7 @@
 #include <malloc.h>
 #include "nethogs.h"
 #include "connection.h"
-
-class ConnList
-{
-public:
-	ConnList (Connection * m_val = NULL, ConnList * m_next = NULL)
-	{
-	    val = m_val; next = m_next;
-	}
-	Connection * val;
-	ConnList * next;
-};
+#include "process.h"
 
 ConnList * connections = NULL;
 
@@ -127,22 +117,22 @@ Connection::~Connection ()
 	ConnList * prev_conn = NULL;
 	while (curr_conn != NULL)
 	{
-		if (curr_conn->val == this)
+		if (curr_conn->getVal() == this)
 		{
 			ConnList * todelete = curr_conn;
-			curr_conn = curr_conn->next;
+			curr_conn = curr_conn->getNext();
 			if (prev_conn == NULL)
 			{
 				connections = curr_conn;
 			} else {
-				prev_conn->next = curr_conn;
+				prev_conn->setNext(curr_conn);
 			}
 			delete (todelete);
 		}
 		else
 		{
 			prev_conn = curr_conn;
-			curr_conn = curr_conn->next;
+			curr_conn = curr_conn->getNext();
 		}
 	}
 }
@@ -186,12 +176,12 @@ Connection * findConnection (Packet * packet)
 	while (current != NULL)
 	{
 		/* the reference packet is always *outgoing* */
-		if (packet->match(current->val->refpacket))
+		if (packet->match(current->getVal()->refpacket))
 		{
-			return current->val;
+			return current->getVal();
 		}
 
-		current = current->next;
+		current = current->getNext();
 	}
 
 	// Try again, now with the packet inverted:
@@ -201,13 +191,13 @@ Connection * findConnection (Packet * packet)
 	while (current != NULL)
 	{
 		/* the reference packet is always *outgoing* */
-		if (invertedPacket->match(current->val->refpacket))
+		if (invertedPacket->match(current->getVal()->refpacket))
 		{
 			delete invertedPacket;
-			return current->val;
+			return current->getVal();
 		}
 
-		current = current->next;
+		current = current->getNext();
 	}
 
 	delete invertedPacket;

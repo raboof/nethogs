@@ -63,7 +63,9 @@
 
 #define PROGNAME_WIDTH 512
 
-void forceExit(const char *msg, int errcode, ...);
+#define NORETURN __attribute__ ((__noreturn__))
+
+void forceExit(bool success, const char *msg, ...) NORETURN;
 
 class local_addr {
 public:
@@ -127,5 +129,7 @@ private:
 };
 
 void quit_cb (int i);
+
+const char* getVersion();
 
 #endif
