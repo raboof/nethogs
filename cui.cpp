@@ -123,40 +123,40 @@ void Line::show (int row, unsigned int proglen)
 	}
 
 	if (m_pid == 0)
-		mvprintw (3+row, 0, "?");
+		mvprintw (row, 0, "?");
 	else
-		mvprintw (3+row, 0, "%d", m_pid);
+		mvprintw (row, 0, "%d", m_pid);
 	std::string username = uid2username(m_uid);
-	mvprintw (3+row, 6, "%s", username.c_str());
+	mvprintw (row, 6, "%s", username.c_str());
 	if (strlen (m_name) > proglen) {
 		// truncate oversized names
 		char * tmp = strdup(m_name);
 		char * start = tmp + strlen (m_name) - proglen;
 		start[0] = '.';
 		start[1] = '.';
-		mvprintw (3+row, 6 + 9, "%s", start);
+		mvprintw (row, 6 + 9, "%s", start);
 		free (tmp);
 	} else {
-		mvprintw (3+row, 6 + 9, "%s", m_name);
+		mvprintw (row, 6 + 9, "%s", m_name);
 	}
-	mvprintw (3+row, 6 + 9 + proglen + 2, "%s", devicename);
-	mvprintw (3+row, 6 + 9 + proglen + 2 + 6, "%10.3f", sent_value);
-	mvprintw (3+row, 6 + 9 + proglen + 2 + 6 + 9 + 3, "%10.3f", recv_value);
+	mvprintw (row, 6 + 9 + proglen + 2, "%s", devicename);
+	mvprintw (row, 6 + 9 + proglen + 2 + 6, "%10.3f", sent_value);
+	mvprintw (row, 6 + 9 + proglen + 2 + 6 + 9 + 3, "%10.3f", recv_value);
 	if (viewMode == VIEWMODE_KBPS)
 	{
-		mvprintw (3+row, 6 + 9 + proglen + 2 + 6 + 9 + 3 + 11, "KB/sec");
+		mvprintw (row, 6 + 9 + proglen + 2 + 6 + 9 + 3 + 11, "KB/sec");
 	}
 	else if (viewMode == VIEWMODE_TOTAL_MB)
 	{
-		mvprintw (3+row, 6 + 9 + proglen + 2 + 6 + 9 + 3 + 11, "MB    ");
+		mvprintw (row, 6 + 9 + proglen + 2 + 6 + 9 + 3 + 11, "MB    ");
 	}
 	else if (viewMode == VIEWMODE_TOTAL_KB)
 	{
-		mvprintw (3+row, 6 + 9 + proglen + 2 + 6 + 9 + 3 + 11, "KB    ");
+		mvprintw (row, 6 + 9 + proglen + 2 + 6 + 9 + 3 + 11, "KB    ");
 	}
 	else if (viewMode == VIEWMODE_TOTAL_B)
 	{
-		mvprintw (3+row, 6 + 9 + proglen + 2 + 6 + 9 + 3 + 11, "B     ");
+		mvprintw (row, 6 + 9 + proglen + 2 + 6 + 9 + 3 + 11, "B     ");
 	}
 }
 
@@ -341,20 +341,20 @@ void gettotalb(Process * curproc, float * recvd, float * sent)
 // Display all processes and relevant network traffic using show function
 void do_refresh()
 {
-	int row; // number of terminal rows
-	int col; // number of terminal columns
+	int rows; // number of terminal rows
+	int cols; // number of terminal columns
 	unsigned int proglen; // max length of the "PROGRAM" column
 
-	getmaxyx(stdscr, row, col);	 /* find the boundaries of the screeen */
-	if (col < 60) {
+	getmaxyx(stdscr, rows, cols);	 /* find the boundaries of the screeen */
+	if (cols < 60) {
 		clear();
 		mvprintw(0,0, "The terminal is too narrow! Please make it wider.\nI'll wait...");
 		return;
 	}
 
-	if (col > PROGNAME_WIDTH) col = PROGNAME_WIDTH;
+	if (cols > PROGNAME_WIDTH) cols = PROGNAME_WIDTH;
 
-	proglen = col - 53;
+	proglen = cols - 53;
 
 	refreshconninode();
 	if (DEBUG || tracemode)
@@ -478,7 +478,8 @@ void do_refresh()
 	/* print them */
 	for (i=0; i<nproc; i++)
 	{
-		lines[i]->show(i, proglen);
+		if (i+3 < rows)
+			lines[i]->show(i+3, proglen);
 		recv_global += lines[i]->recv_value;
 		sent_global += lines[i]->sent_value;
 		delete lines[i];
@@ -496,19 +497,20 @@ void do_refresh()
 
 	if ((!tracemode) && (!DEBUG)){
 		attron(A_REVERSE);
-		mvprintw (3+1+i, 0, "  TOTAL        %-*.*s        %10.3f  %10.3f ", proglen, proglen, " ", sent_global, recv_global);
+		int totalrow = std::min(rows-1, 3+1+i);
+		mvprintw (totalrow, 0, "  TOTAL        %-*.*s        %10.3f  %10.3f ", proglen, proglen, " ", sent_global, recv_global);
 		if (viewMode == VIEWMODE_KBPS)
 		{
-			mvprintw (3+1+i, col - 7, "KB/sec ");
+			mvprintw (3+1+i, cols - 7, "KB/sec ");
 		} else if (viewMode == VIEWMODE_TOTAL_B) {
-			mvprintw (3+1+i, col - 7, "B      ");
+			mvprintw (3+1+i, cols - 7, "B      ");
 		} else if (viewMode == VIEWMODE_TOTAL_KB) {
-			mvprintw (3+1+i, col - 7, "KB     ");
+			mvprintw (3+1+i, cols - 7, "KB     ");
 		} else if (viewMode == VIEWMODE_TOTAL_MB) {
-			mvprintw (3+1+i, col - 7, "MB     ");
+			mvprintw (3+1+i, cols - 7, "MB     ");
 		}
 		attroff(A_REVERSE);
-		mvprintw (4+1+i, 0, "");
+		mvprintw (totalrow+1, 0, "");
 		refresh();
 	}
 }
