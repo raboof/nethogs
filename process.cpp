@@ -124,53 +124,6 @@ Process * findProcess (unsigned long inode)
 	return findProcess (node);
 }
 
-/* check if we have identified any previously unknown
- * connections are now known 
- *
- * When this is the case, something weird is going on.
- * This function is only called in bughunt-mode
- */
-void reviewUnknown ()
-{
-	ConnList * curr_conn = unknowntcp->connections;
-	ConnList * previous_conn = NULL;
-
-	while (curr_conn != NULL) {
-		unsigned long inode = conninode[curr_conn->getVal()->refpacket->gethashstring()];
-		if (inode != 0)
-		{
-			Process * proc = findProcess (inode);
-			if (proc != unknowntcp && proc != NULL)
-			{
-				if (DEBUG || bughuntmode)
-					std::cout << "FIXME: Previously unknown inode " << inode << " now got process - apparently it makes sense to review unknown connections\n";
-				/* Yay! - but how can this happen? */
-				assert(false);
-
-				/* TODO: this needs some investigation/refactoring - we should never get here due to assert(false) */
-
-				if (previous_conn != NULL)
-				{
-					previous_conn->setNext (curr_conn->getNext());
-					proc->connections = new ConnList (curr_conn->getVal(), proc->connections);
-					delete curr_conn;
-					curr_conn = previous_conn;
-				}
-				else
-				{
-					unknowntcp->connections = curr_conn->getNext();
-					proc->connections = new ConnList (curr_conn->getVal(), proc->connections);
-					delete curr_conn;
-					curr_conn = unknowntcp->connections;
-				}
-			}
-		}
-		previous_conn = curr_conn;
-		if (curr_conn != NULL)
-			curr_conn = curr_conn->getNext();
-	}
-}
-
 int ProcList::size ()
 {
 	int i=1;
@@ -193,7 +146,7 @@ void check_all_procs ()
 
 /* 
  * returns the process from proclist with matching pid
- * if the inode is not associated with any PID, return the unknown process
+ * if the inode is not associated with any PID, return NULL
  * if the process is not yet in the proclist, add it
  */
 Process * getProcess (unsigned long inode, const char * devicename)
@@ -204,7 +157,7 @@ Process * getProcess (unsigned long inode, const char * devicename)
 	{
 		if (DEBUG || bughuntmode)
 			std::cout << "No PID information for inode " << inode << std::endl;
-		return unknowntcp;
+		return NULL;
 	}
 
 	Process * proc = findProcess (node);
@@ -212,8 +165,7 @@ Process * getProcess (unsigned long inode, const char * devicename)
 	if (proc != NULL)
 		return proc;
 
-	Process * newproc = new Process (inode, devicename);
-	newproc->name = strdup(node->name);
+	Process * newproc = new Process (inode, devicename, node->name);
 	newproc->pid = node->pid;
 
 	char procdir [100];
@@ -319,14 +271,13 @@ Process * getProcess (Connection * connection, const char * devicename)
 		std::cout << "   inode # " << inode << std::endl;
 	}
 
-	Process * proc;
-	if (inode == 0) {
+	Process * proc = NULL;
+	if (inode != 0)
+		proc = getProcess(inode, devicename);
+
+	if (proc == NULL) {
 		proc = new Process (0, "", connection->refpacket->gethashstring());
 		processes = new ProcList (proc, processes);
-	} 
-	else
-	{
-		proc = getProcess(inode, devicename);
 	}
 
 	proc->connections = new ConnList (connection, proc->connections);
