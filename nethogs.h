@@ -63,7 +63,7 @@
 
 #define PROGNAME_WIDTH 512
 
-void forceExit(const char *msg, ...);
+void forceExit(const char *msg, int errcode, ...);
 
 class local_addr {
 public:

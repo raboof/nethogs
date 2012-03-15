@@ -61,11 +61,11 @@ void getLocal (const char *device, bool tracemode)
 	struct sockaddr_in *saddr;
 
 	if((sock=socket(AF_INET, SOCK_RAW, htons(0x0806)))<0){
-		forceExit("creating socket failed while establishing local IP - are you root?");
+		forceExit("creating socket failed while establishing local IP - are you root?", -3);
 	}
 	strcpy(iFreq.ifr_name, device);
 	if(ioctl(sock, SIOCGIFADDR, &iFreq)<0){
-		forceExit("ioctl failed while establishing local IP for selected device %s. You may specify the device on the command line.", device);
+		forceExit("ioctl failed while establishing local IP for selected device %s. You may specify the device on the command line.", -4, device);
 	}
 	saddr=(struct sockaddr_in*)&iFreq.ifr_addr;
 	local_addrs = new local_addr (saddr->sin_addr.s_addr, local_addrs);

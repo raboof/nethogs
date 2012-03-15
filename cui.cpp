@@ -430,7 +430,7 @@ void do_refresh()
 			}
 			else
 			{
-				forceExit("Invalid viewmode");
+				forceExit("Invalid viewmode", -1);
 			}
 			uid_t uid = curproc->getVal()->getUid();
 #ifndef NDEBUG

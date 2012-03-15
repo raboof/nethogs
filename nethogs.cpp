@@ -222,7 +222,7 @@ void quit_cb (int /* i */)
 	exit(0);
 }
 
-void forceExit(const char *msg, ...)
+void forceExit(const char *msg, int errcode, ...)
 {
 	if ((!tracemode)&&(!DEBUG)){
 		exit_ui();
@@ -234,7 +234,7 @@ void forceExit(const char *msg, ...)
 	va_end(argp);
 	std::cerr << std::endl;
 
-    exit(0);
+    exit(errcode);
 }
 
 static void versiondisplay(void)
@@ -331,7 +331,7 @@ int main (int argc, char** argv)
 	}
 
 	if (NEEDROOT && (getuid() != 0))
-		forceExit("You need to be root to run NetHogs!");
+		forceExit("You need to be root to run NetHogs!", -2);
 
 	char errbuf[PCAP_ERRBUF_SIZE];
 
