@@ -276,7 +276,7 @@ Process * getProcess (Connection * connection, const char * devicename)
 		proc = getProcess(inode, devicename);
 
 	if (proc == NULL) {
-		proc = new Process (0, "", connection->refpacket->gethashstring());
+		proc = new Process (inode, "", connection->refpacket->gethashstring());
 		processes = new ProcList (proc, processes);
 	}
 

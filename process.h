@@ -66,12 +66,12 @@ class Process
 {
 public:
 	/* the process makes a copy of the name. the device name needs to be stable. */
-	Process (unsigned long m_inode, const char * m_devicename, const char * m_name = NULL)
+	Process (const unsigned long m_inode, const char * m_devicename, const char * m_name = NULL)
+		: inode (m_inode)
 	{
 		//std::cout << "ARN: Process created with dev " << m_devicename << std::endl;
 		if (DEBUG)
 			std::cout << "PROC: Process created at " << this << std::endl;
-		inode = m_inode;
 
 		if (m_name == NULL)
 			name = NULL;
@@ -99,7 +99,6 @@ public:
 	const char * devicename;
 	int pid;
 
-	unsigned long inode;
 	ConnList * connections;
 	uid_t getUid()
 	{
@@ -110,7 +109,13 @@ public:
 	{
 		uid = m_uid;
 	}
+
+	unsigned long getInode()
+	{
+		return inode;
+	}
 private:
+	const unsigned long inode;
 	uid_t uid;
 };
 
