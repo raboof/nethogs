@@ -91,7 +91,7 @@ std::string itoa(int i)
 std::string uid2username (uid_t uid)
 {
 	struct passwd * pwd = NULL;
-	errno = NULL;
+	errno = 0;
 
 	/* points to a static memory area, should not be freed */
 	pwd = getpwuid(uid);
