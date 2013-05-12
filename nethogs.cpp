@@ -66,8 +66,6 @@ int viewMode = VIEWMODE_KBPS;
 //dp_link_type linktype = dp_link_ethernet;
 const char version[] = " version " VERSION "." SUBVERSION "." MINORVERSION;
 
-const char * currentdevice = NULL;
-
 timeval curtime;
 
 bool local_addr::contains (const in_addr_t & n_addr) {
@@ -106,6 +104,7 @@ bool local_addr::contains(const struct in6_addr & n_addr) {
 }
 
 struct dpargs {
+	const char * device;
 	int sa_family;
 	in_addr ip_src;
 	in_addr ip_dst;
@@ -145,7 +144,7 @@ int process_tcp (u_char * userdata, const dp_header * header, const u_char * m_p
 	} else {
 		/* else: unknown connection, create new */
 		connection = new Connection (packet);
-		getProcess(connection, currentdevice);
+		getProcess(connection, args->device);
 	}
 	delete packet;
 
@@ -161,12 +160,10 @@ int process_tcp (u_char * userdata, const dp_header * header, const u_char * m_p
 
 int process_udp (u_char * userdata, const dp_header * header, const u_char * m_packet) {
 	struct dpargs * args = (struct dpargs *) userdata;
-	//struct tcphdr * tcp = (struct tcphdr *) m_packet;
 	struct udphdr * udp = (struct udphdr *) m_packet;
 
 	curtime = header->ts;
 
-	/* TODO get info from userdata, then call getPacket */
 	Packet * packet;
 	switch (args->sa_family)
 	{
@@ -190,7 +187,7 @@ int process_udp (u_char * userdata, const dp_header * header, const u_char * m_p
 	} else {
 		/* else: unknown connection, create new */
 		connection = new Connection (packet);
-		getProcess(connection, currentdevice);
+		getProcess(connection, args->device);
 	}
 	delete packet;
 

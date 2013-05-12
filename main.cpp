@@ -156,8 +156,8 @@ int main (int argc, char** argv)
 		handle * current_handle = handles;
 		while (current_handle != NULL)
 		{
+			userdata->device = current_handle->devicename;
 			userdata->sa_family = AF_UNSPEC;
-			currentdevice = current_handle->devicename;
 			int retval = dp_dispatch (current_handle->content, -1, (u_char *)userdata, sizeof (struct dpargs));
 			if (retval < 0)
 			{
