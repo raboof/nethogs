@@ -16,8 +16,8 @@ runtests: test
 	
 # nethogs_testsum
 
-CFLAGS=-Wall
-CXXFLAGS=-Wall
+CFLAGS=-Wall -Wextra
+CXXFLAGS=-Wall -Wextra
 
 OBJS=packet.o connection.o process.o refresh.o decpcap.o cui.o inode2prog.o conninode.o devices.o
 .PHONY: tgz
@@ -72,3 +72,4 @@ clean:
 	rm -f $(OBJS)
 	rm -f nethogs
 	rm -f test
+	rm -f decpcap_test
