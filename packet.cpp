@@ -169,12 +169,22 @@ Packet::Packet (in6_addr m_sip, unsigned short m_sport, in6_addr m_dip, unsigned
 	hashstring = NULL;
 }
 
-Packet * Packet::newInverted () {
-	/* TODO if this is a bottleneck, we can calculate the direction */
-	if (sa_family == AF_INET)
-		return new Packet (dip, dport, sip, sport, len, time, dir_unknown);
+direction invert(direction dir) {
+	if (dir == dir_incoming)
+		return dir_outgoing;
+	else if (dir == dir_outgoing)
+		return dir_incoming;
 	else
-		return new Packet (dip6, dport, sip6, sport, len, time, dir_unknown);
+		return dir_unknown;
+}
+
+Packet * Packet::newInverted () {
+	direction new_direction = invert(dir);
+
+	if (sa_family == AF_INET)
+		return new Packet (dip, dport, sip, sport, len, time, new_direction);
+	else
+		return new Packet (dip6, dport, sip6, sport, len, time, new_direction);
 }
 
 /* constructs returns a new Packet() structure with the same contents as this one */
