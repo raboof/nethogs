@@ -66,6 +66,7 @@ public:
 	}
 
 	void show (int row, unsigned int proglen);
+	void log ();
 
 	double sent_value;
 	double recv_value;
@@ -113,12 +114,6 @@ void Line::show (int row, unsigned int proglen)
 	// https://sourceforge.net/tracker/?func=detail&aid=3459408&group_id=110349&atid=656353
 	//assert (m_pid <= 100000);
 
-	if (DEBUG || tracemode)
-	{
-		std::cout << m_name << '/' << m_pid << '/' << m_uid << "\t" << sent_value << "\t" << recv_value << std::endl;
-		return;
-	}
-
 	if (m_pid == 0)
 		mvprintw (row, 0, "?");
 	else
@@ -155,6 +150,10 @@ void Line::show (int row, unsigned int proglen)
 	{
 		mvprintw (row, 6 + 9 + proglen + 2 + 6 + 9 + 3 + 11, "B     ");
 	}
+}
+
+void Line::log() {
+	std::cout << m_name << '/' << m_pid << '/' << m_uid << "\t" << sent_value << "\t" << recv_value << std::endl;
 }
 
 int GreatestFirst (const void * ma, const void * mb)
@@ -335,14 +334,36 @@ void gettotalb(Process * curproc, float * recvd, float * sent)
 	*recvd = sum_recv;
 }
 
-// Display all processes and relevant network traffic using show function
-void do_refresh()
-{
+void show_trace(Line * lines[], int nproc) {
+	std::cout << "\nRefreshing:\n";
+
+	/* print them */
+	for (int i=0; i<nproc; i++)
+	{
+		lines[i]->log();
+		delete lines[i];
+	}
+
+	/* print the 'unknown' connections, for debugging */
+	ConnList * curr_unknownconn = unknowntcp->connections;
+	while (curr_unknownconn != NULL) {
+		std::cout << "Unknown connection: " <<
+			curr_unknownconn->getVal()->refpacket->gethashstring() << std::endl;
+
+		curr_unknownconn = curr_unknownconn->getNext();
+	}
+}
+
+void show_ncurses(Line * lines[], int nproc) {
 	int rows; // number of terminal rows
 	int cols; // number of terminal columns
 	unsigned int proglen; // max length of the "PROGRAM" column
 
+	double sent_global = 0;
+	double recv_global = 0;
+
 	getmaxyx(stdscr, rows, cols);	 /* find the boundaries of the screeen */
+
 	if (cols < 60) {
 		clear();
 		mvprintw(0,0, "The terminal is too narrow! Please make it wider.\nI'll wait...");
@@ -353,28 +374,53 @@ void do_refresh()
 
 	proglen = cols - 53;
 
+	clear();
+	mvprintw (0, 0, "%s", caption->c_str());
+	attron(A_REVERSE);
+	mvprintw (2, 0, "  PID USER     %-*.*s  DEV        SENT      RECEIVED       ", proglen, proglen, "PROGRAM");
+	attroff(A_REVERSE);
+
+	/* print them */
+	int i;
+	for (i=0; i<nproc; i++)
+	{
+		if (i+3 < rows)
+			lines[i]->show(i+3, proglen);
+		recv_global += lines[i]->recv_value;
+		sent_global += lines[i]->sent_value;
+		delete lines[i];
+	}
+
+	attron(A_REVERSE);
+	int totalrow = std::min(rows-1, 3+1+i);
+	mvprintw (totalrow, 0, "  TOTAL        %-*.*s        %10.3f  %10.3f ", proglen, proglen, " ", sent_global, recv_global);
+	if (viewMode == VIEWMODE_KBPS)
+	{
+		mvprintw (3+1+i, cols - 7, "KB/sec ");
+	} else if (viewMode == VIEWMODE_TOTAL_B) {
+		mvprintw (3+1+i, cols - 7, "B      ");
+	} else if (viewMode == VIEWMODE_TOTAL_KB) {
+		mvprintw (3+1+i, cols - 7, "KB     ");
+	} else if (viewMode == VIEWMODE_TOTAL_MB) {
+		mvprintw (3+1+i, cols - 7, "MB     ");
+	}
+	attroff(A_REVERSE);
+	mvprintw (totalrow+1, 0, "");
+	refresh();
+}
+
+// Display all processes and relevant network traffic using show function
+void do_refresh()
+{
 	refreshconninode();
 	refreshcount++;
-	if (DEBUG || tracemode)
-	{
-		std::cout << "\nRefreshing:\n";
-	}
-	else
-	{
-		clear();
-		mvprintw (0, 0, "%s", caption->c_str());
-		attron(A_REVERSE);
-		mvprintw (2, 0, "  PID USER     %-*.*s  DEV        SENT      RECEIVED       ", proglen, proglen, "PROGRAM");
-		attroff(A_REVERSE);
-	}
+
 	ProcList * curproc = processes;
 	ProcList * previousproc = NULL;
 	int nproc = processes->size();
 	/* initialise to null pointers */
 	Line * lines [nproc];
-	int n = 0, i = 0;
-	double sent_global = 0;
-	double recv_global = 0;
+	int n = 0;
 
 #ifndef NDEBUG
 	// initialise to null pointers
@@ -473,44 +519,10 @@ void do_refresh()
 	/* sort the accumulated lines */
 	qsort (lines, nproc, sizeof(Line *), GreatestFirst);
 
-	/* print them */
-	for (i=0; i<nproc; i++)
-	{
-		if (i+3 < rows)
-			lines[i]->show(i+3, proglen);
-		recv_global += lines[i]->recv_value;
-		sent_global += lines[i]->sent_value;
-		delete lines[i];
-	}
-	if (tracemode || DEBUG) {
-		/* print the 'unknown' connections, for debugging */
-		ConnList * curr_unknownconn = unknowntcp->connections;
-		while (curr_unknownconn != NULL) {
-			std::cout << "Unknown connection: " <<
-				curr_unknownconn->getVal()->refpacket->gethashstring() << std::endl;
-
-			curr_unknownconn = curr_unknownconn->getNext();
-		}
-	}
-
-	if ((!tracemode) && (!DEBUG)){
-		attron(A_REVERSE);
-		int totalrow = std::min(rows-1, 3+1+i);
-		mvprintw (totalrow, 0, "  TOTAL        %-*.*s        %10.3f  %10.3f ", proglen, proglen, " ", sent_global, recv_global);
-		if (viewMode == VIEWMODE_KBPS)
-		{
-			mvprintw (3+1+i, cols - 7, "KB/sec ");
-		} else if (viewMode == VIEWMODE_TOTAL_B) {
-			mvprintw (3+1+i, cols - 7, "B      ");
-		} else if (viewMode == VIEWMODE_TOTAL_KB) {
-			mvprintw (3+1+i, cols - 7, "KB     ");
-		} else if (viewMode == VIEWMODE_TOTAL_MB) {
-			mvprintw (3+1+i, cols - 7, "MB     ");
-		}
-		attroff(A_REVERSE);
-		mvprintw (totalrow+1, 0, "");
-		refresh();
-	}
+	if (tracemode || DEBUG)
+		show_trace(lines, nproc);
+	else
+		show_ncurses(lines, nproc);
 
 	if (refreshlimit != 0 && refreshcount >= refreshlimit)
 		quit_cb(0);
