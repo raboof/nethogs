@@ -26,13 +26,13 @@
 #include <netinet/tcp.h>
 #include <netinet/in.h>
 #include <malloc.h>
-#include <assert.h>
+#include <cassert>
 #include <net/if.h>
 #include <net/ethernet.h>
 #include <netinet/ip.h>
 #include <netinet/ip6.h>
 #include <sys/ioctl.h>
-#include <stdio.h>
+#include <cstdio>
 // #include "inet6.c"
 
 local_addr * local_addrs = NULL;

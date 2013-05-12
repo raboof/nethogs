@@ -24,8 +24,8 @@
 #include <string>
 #include <pwd.h>
 #include <sys/types.h>
-#include <stdlib.h>
-#include <errno.h>
+#include <cstdlib>
+#include <cerrno>
 #include <cstdlib>
 #include <algorithm>
 

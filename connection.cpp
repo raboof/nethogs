@@ -21,7 +21,7 @@
 
 
 #include <iostream>
-#include <assert.h>
+#include <cassert>
 #include <malloc.h>
 #include "nethogs.h"
 #include "connection.h"

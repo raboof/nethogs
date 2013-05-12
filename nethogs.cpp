@@ -22,15 +22,15 @@
 #include "nethogs.h"
 
 #include <iostream>
-#include <stdio.h>
-#include <stdlib.h>
-#include <assert.h>
+#include <cstdio>
+#include <cstdlib>
+#include <cassert>
 #include <unistd.h>
-#include <signal.h>
+#include <csignal>
 #include <string>
-#include <string.h>
+#include <cstring>
 #include <getopt.h>
-#include <stdarg.h>
+#include <cstdarg>
 
 #include <netinet/ip.h>
 #include <netinet/ip6.h>

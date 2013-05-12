@@ -25,7 +25,7 @@
 #include <netinet/ip.h>
 #include <netinet/ip6.h>
 #include <netinet/tcp.h>
-#include <string.h> // for memcpy
+#include <cstring> // for memcpy
 #include <pcap.h>
 #include "decpcap.h"
 

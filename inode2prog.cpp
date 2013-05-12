@@ -21,20 +21,19 @@
 
 
 #include <sys/types.h>
-#include <errno.h>
-#include <string.h>
+#include <cerrno>
+#include <cstring>
 #include <dirent.h>
 #include <ctype.h>
 #include <cstdlib>
 #include <iostream>
-#include <stdio.h>
-#include <stdlib.h>
+#include <cstdio>
 #include <unistd.h>
 #include <string>
 #include <map>
 #include <sys/stat.h>
 #include <fcntl.h>
-#include <limits.h>
+#include <climits>
 
 #include "inode2prog.h"
 

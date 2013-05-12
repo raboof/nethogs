@@ -22,7 +22,7 @@
 
 #include <netinet/in.h>
 #include <map>
-#include <stdio.h>
+#include <cstdio>
 #include <stdlib.h>
 
 #include "nethogs.h"

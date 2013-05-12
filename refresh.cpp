@@ -21,7 +21,7 @@
 
 
 #include <iostream>
-#include <signal.h>
+#include <csignal>
 #include <unistd.h>
 #include "nethogs.h"
 

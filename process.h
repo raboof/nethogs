@@ -23,7 +23,7 @@
 #ifndef __PROCESS_H
 #define __PROCESS_H
 
-#include <assert.h>
+#include <cassert>
 #include "nethogs.h"
 #include "connection.h"
 
