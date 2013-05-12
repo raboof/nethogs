@@ -22,7 +22,9 @@ static void help(void)
 	std::cerr << std::endl;
 	std::cerr << "When nethogs is running, press:\n";
 	std::cerr << " q: quit\n";
-	std::cerr << " m: switch between total and kb/s mode\n";
+	std::cerr << " s: sort by SENT traffic\n";
+	std::cerr << " r: sort by RECEIVE traffic\n";
+	std::cerr << " m: switch between total (KB, B, MB) and KB/s mode\n";
 }
 
 int main (int argc, char** argv)
