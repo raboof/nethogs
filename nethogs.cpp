@@ -148,12 +148,6 @@ int process_tcp (u_char * userdata, const dp_header * header, const u_char * m_p
 	}
 	delete packet;
 
-	if (needrefresh)
-	{
-		do_refresh();
-		needrefresh = false;
-	}
-
 	/* we're done now. */
 	return true;
 }
@@ -190,12 +184,6 @@ int process_udp (u_char * userdata, const dp_header * header, const u_char * m_p
 		getProcess(connection, args->device);
 	}
 	delete packet;
-
-	if (needrefresh)
-	{
-		do_refresh();
-		needrefresh = false;
-	}
 
 	/* we're done now. */
 	return true;
