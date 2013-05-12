@@ -147,6 +147,7 @@ int main (int argc, char** argv)
 	alarm (refreshdelay);
 
 	fprintf(stderr, "Waiting for first packet to arrive (see sourceforge.net bug 1019381)\n");
+	struct dpargs * userdata = (dpargs *) malloc (sizeof (struct dpargs));
 
 	// Main loop:
 	//
@@ -159,19 +160,17 @@ int main (int argc, char** argv)
 		handle * current_handle = handles;
 		while (current_handle != NULL)
 		{
-			struct dpargs * userdata = (dpargs *) malloc (sizeof (struct dpargs));
 			userdata->sa_family = AF_UNSPEC;
 			currentdevice = current_handle->devicename;
 			int retval = dp_dispatch (current_handle->content, -1, (u_char *)userdata, sizeof (struct dpargs));
-			if (retval == -1 || retval == -2)
+			if (retval < 0)
 			{
-				std::cerr << "Error dispatching" << std::endl;
+				std::cerr << "Error dispatching: " << retval << std::endl;
 			}
 			else if (retval != 0)
 			{
 				packets_read = true;
 			}
-			free (userdata);
 			current_handle = current_handle->next;
 		}
 
