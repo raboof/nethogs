@@ -26,12 +26,11 @@
  * quickly, too :) */
 
 #include "nethogs.h"
-// #define PROGNAME_WIDTH 200
 
 struct prg_node {
     long inode;
-    int pid;
-    char name[PROGNAME_WIDTH];
+    pid_t pid;
+    char * name;
 };
 
 struct prg_node * findPID (unsigned long inode);

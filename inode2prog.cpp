@@ -72,16 +72,20 @@ int str2int (char * ptr) {
 	return retval;
 }
 
-char * getprogname (char * pid) {
-	int filenamelen = 14 + strlen(pid) + 1; 
+// Not sure, but assuming there's no more PID's than go into 64 unsigned bits..
+#define MAX_PID_LENGTH 20
+
+char * getprogname (pid_t pid) {
 	int bufsize = 80;
 	char buffer [bufsize];
-	char * filename = (char *) malloc (filenamelen);
-	snprintf (filename, filenamelen, "/proc/%s/cmdline", pid);
+
+	int maxfilenamelen = 14 + MAX_PID_LENGTH + 1; 
+	char filename[maxfilenamelen];
+
+	snprintf (filename, maxfilenamelen, "/proc/%d/cmdline", pid);
 	int fd = open(filename, O_RDONLY);
 	if (fd < 0) {
 		fprintf (stderr, "Error opening %s: %s\n", filename, strerror(errno));
-		free (filename);
 		exit(3);
 		return NULL;
 	}
@@ -90,68 +94,51 @@ char * getprogname (char * pid) {
 		std::cout << "Error closing file: " << strerror(errno) << std::endl;
 		exit(34);
 	}
-	free (filename);
 	if (length < bufsize - 1)
 		buffer[length]='\0';
 
-	char * retval = buffer;
-
-	/* this removed directory names, but that malfunctions
-	 * when the program name is like "sshd: arnouten@pts/8"
-	if ((retval = strrchr(buffer, '/')))
-		retval++;
-	else 
-		retval = buffer; 
-	*/
-	// truncating is now done where it should be, in cui.cpp
-
-	return strdup(retval);
+	return strdup(buffer);
 }
 
-void setnode (unsigned long inode, prg_node * newnode)
-{
-	if (inodeproc[inode] != NULL)
-		free (inodeproc[inode]);
-	inodeproc[inode] = newnode;
+void setnode (unsigned long inode, pid_t pid)
+{	
+	prg_node * current_value = inodeproc[inode];
+
+	if (current_value == NULL || current_value->pid != pid) {
+		prg_node * newnode = (prg_node *) malloc (sizeof (struct prg_node));
+		newnode->inode = inode;
+		newnode->pid   = pid;
+		newnode->name  = getprogname(pid);
+
+		inodeproc[inode] = newnode;
+		free(current_value);
+	}
 }
 
 void get_info_by_linkname (char * pid, char * linkname) {
 	if (strncmp(linkname, "socket:[", 8) == 0) {
-		char * ptr = linkname + 8;
-		unsigned long inode = str2ulong(ptr);
-
-		char * progname = getprogname (pid);
-
-		//std::cout << "Found socket with inode " << inode << " and pid " << pid << " and progname " << progname << "\n";
-		prg_node * newnode = (prg_node *) malloc (sizeof (struct prg_node));
-		newnode->inode = inode;
-		newnode->pid = str2int(pid);
-		// TODO progname could be more memory-efficient
-		strncpy (newnode->name, progname, PROGNAME_WIDTH);
-		free (progname);
-		setnode (inode, newnode);
-	} else {
-		//std::cout << "Linkname looked like: " << linkname << endl;
+		setnode(str2ulong(linkname + 8), str2int(pid));
 	}
 }
+
+// Max length of filenames in /proc/<pid>/fd/*. These are numeric, so 10 digits seems like a safe assumption.
+#define MAX_FDLINK 10
 
 /* updates the `inodeproc' inode-to-prg_node 
  * for all inodes belonging to this PID 
  * (/proc/pid/fd/42)
  * */
 void get_info_for_pid(char * pid) {
-	size_t dirlen = 10 + strlen(pid);
-	char * dirname = (char *) malloc (dirlen * sizeof(char));
-	snprintf(dirname, dirlen, "/proc/%s/fd", pid);
+	char dirname[10 + MAX_PID_LENGTH];
 
-	//std::cout << "Getting info for pid " << pid << std::endl;
+	size_t dirlen = 10 + strlen(pid);
+	snprintf(dirname, dirlen, "/proc/%s/fd", pid);
 
 	DIR * dir = opendir(dirname);
 
 	if (!dir)
 	{
 		std::cout << "Couldn't open dir " << dirname << ": " << strerror(errno) << "\n";
-		free (dirname);
 		return;
 	}
 
@@ -162,8 +149,8 @@ void get_info_for_pid(char * pid) {
 			continue;
 		//std::cout << "Looking at: " << entry->d_name << std::endl;
 
-		int fromlen = dirlen + strlen(entry->d_name) + 1;
-		char * fromname = (char *) malloc (fromlen * sizeof(char));
+		size_t fromlen = dirlen + strlen(entry->d_name) + 1;
+		char fromname[10 + MAX_PID_LENGTH + 1 + MAX_FDLINK];
 		snprintf (fromname, fromlen, "%s/%s", dirname, entry->d_name);
 
 		//std::cout << "Linking from: " << fromname << std::endl;
@@ -173,17 +160,13 @@ void get_info_for_pid(char * pid) {
 		int usedlen = readlink(fromname, linkname, linklen-1);
 		if (usedlen == -1)
 		{
-			free (fromname);
 			continue;
 		}
 		assert (usedlen < linklen);
 		linkname[usedlen] = '\0';
-		//std::cout << "Linking to: " << linkname << std::endl;
 		get_info_by_linkname (pid, linkname);
-		free (fromname);
 	}
 	closedir(dir);
-	free (dirname);
 }
 
 /* updates the `inodeproc' inode-to-prg_node mapping 
@@ -203,10 +186,8 @@ void reread_mapping () {
 
 		if (! is_number (entry->d_name)) continue;
 
-		//std::cout << "Getting info for " << entry->d_name << std::endl;
 		get_info_for_pid(entry->d_name);
 	}
-	//std::cout << "End...\n";
 	closedir(proc);
 }
 
