@@ -170,14 +170,14 @@ int main (int argc, char** argv)
 			current_handle = current_handle->next;
 		}
 
-		if ((!DEBUG)&&(!tracemode))
-		{
-			// handle user input
-			ui_tick();
-		}
 
 		if (needrefresh)
 		{
+			if ((!DEBUG)&&(!tracemode))
+			{
+				// handle user input
+				ui_tick();
+			}
 			do_refresh();
 			needrefresh = false;
 		}
