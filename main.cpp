@@ -109,10 +109,6 @@ int main (int argc, char** argv)
 	device * current_dev = devices;
 	while (current_dev != NULL) {
 		getLocal(current_dev->name, tracemode);
-		if ((!tracemode) && (!DEBUG)){
-			//caption->append(current_dev->name);
-			//caption->append(" ");
-		}
 
 		dp_handle * newhandle = dp_open_live(current_dev->name, BUFSIZ, promisc, 100, errbuf);
 		if (newhandle != NULL)
