@@ -42,7 +42,7 @@ extern bool bughuntmode;
 /* maps from inode to program-struct */
 std::map <unsigned long, prg_node *> inodeproc;
 
-bool is_number (char * string) {
+bool is_number (const char * string) {
 	while (*string) {
 		if (!isdigit (*string))
 			return false;
@@ -51,7 +51,7 @@ bool is_number (char * string) {
 	return true;
 }
 
-unsigned long str2ulong (char * ptr) {
+unsigned long str2ulong (const char * ptr) {
 	unsigned long retval = 0;
 
 	while ((*ptr >= '0') && (*ptr <= '9')) {
@@ -61,7 +61,8 @@ unsigned long str2ulong (char * ptr) {
 	}
 	return retval;
 }
-int str2int (char * ptr) {
+
+int str2int (const char * ptr) {
 	int retval = 0;
 
 	while ((*ptr >= '0') && (*ptr <= '9')) {
@@ -115,7 +116,7 @@ void setnode (unsigned long inode, pid_t pid)
 	}
 }
 
-void get_info_by_linkname (char * pid, char * linkname) {
+void get_info_by_linkname (const char * pid, const char * linkname) {
 	if (strncmp(linkname, "socket:[", 8) == 0) {
 		setnode(str2ulong(linkname + 8), str2int(pid));
 	}
@@ -128,7 +129,7 @@ void get_info_by_linkname (char * pid, char * linkname) {
  * for all inodes belonging to this PID 
  * (/proc/pid/fd/42)
  * */
-void get_info_for_pid(char * pid) {
+void get_info_for_pid(const char * pid) {
 	char dirname[10 + MAX_PID_LENGTH];
 
 	size_t dirlen = 10 + strlen(pid);
