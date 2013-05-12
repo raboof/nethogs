@@ -74,6 +74,7 @@ public:
 	bool Outgoing ();
 
 	bool match (Packet * other);
+	bool matchSource (Packet * other);
 	/* returns '1.2.3.4:5-1.2.3.4:6'-style string */
 	char * gethashstring();
 private:

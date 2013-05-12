@@ -231,11 +231,12 @@ bool Packet::Outgoing () {
 		  	dir = dir_outgoing;
 		  	return true;
 		} else {
-		  	/*if (DEBUG) {
+		  	if (DEBUG) {
 				if (sa_family == AF_INET)
 					islocal = local_addrs->contains(dip.s_addr);
 				else
 					islocal = local_addrs->contains(dip6);
+
 				if (!islocal) {
 					std::cerr << "Neither dip nor sip are local: ";
 					char addy [50];
@@ -246,7 +247,7 @@ bool Packet::Outgoing () {
 
 					return false;
 				}
-		  	}*/
+		  	}
 		  	dir = dir_incoming;
 		  	return false;
 		}
@@ -273,7 +274,7 @@ char * Packet::gethashstring ()
 		inet_ntop(sa_family, &dip, remote_string, 49);
 	} else {
 		inet_ntop(sa_family, &sip6, local_string,  49);
-		inet_ntop(sa_family, &dip6, remote_string, 49);
+inet_ntop(sa_family, &dip6, remote_string, 49);
 	}
 	if (Outgoing()) {
 		snprintf(hashstring, HASHKEYSIZE * sizeof(char), "%s:%d-%s:%d", local_string, sport, remote_string, dport);
@@ -293,4 +294,9 @@ bool Packet::match (Packet * other)
 {
 	return (sport == other->sport) && (dport == other->dport)
 		&& (sameinaddr(sip, other->sip)) && (sameinaddr(dip, other->dip));
+}
+
+bool Packet::matchSource (Packet * other)
+{
+	return (sport == other->sport) && (sameinaddr(sip, other->sip)); 
 }

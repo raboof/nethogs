@@ -165,13 +165,24 @@ void Connection::add (Packet * packet)
 	}
 }
 
-/* 
- * finds connection to which this packet belongs.
- * a packet belongs to a connection if it matches
- * to its reference packet 
- */
-Connection * findConnection (Packet * packet)
-{
+Connection * findConnectionWithMatchingSource(Packet * packet) {
+	assert(packet->Outgoing());
+
+	ConnList * current = connections;
+	while (current != NULL)
+	{
+		/* the reference packet is always outgoing */
+		if (packet->matchSource(current->getVal()->refpacket))
+		{
+			return current->getVal();
+		}
+
+		current = current->getNext();
+	}
+	return NULL;
+}
+
+Connection * findConnectionWithMatchingRefpacketOrSource(Packet * packet) {
 	ConnList * current = connections;
 	while (current != NULL)
 	{
@@ -183,25 +194,26 @@ Connection * findConnection (Packet * packet)
 
 		current = current->getNext();
 	}
+	return findConnectionWithMatchingSource(packet);
+}
 
-	// Try again, now with the packet inverted:
-	current = connections;
-	Packet * invertedPacket = packet->newInverted();
-
-	while (current != NULL)
+/* 
+ * finds connection to which this packet belongs.
+ * a packet belongs to a connection if it matches
+ * to its reference packet 
+ */
+Connection * findConnection (Packet * packet)
+{
+	if (packet->Outgoing())
+		return findConnectionWithMatchingRefpacketOrSource(packet);
+	else
 	{
-		/* the reference packet is always *outgoing* */
-		if (invertedPacket->match(current->getVal()->refpacket))
-		{
-			delete invertedPacket;
-			return current->getVal();
-		}
+		Packet * invertedPacket = packet->newInverted();
+		Connection * result = findConnectionWithMatchingRefpacketOrSource(invertedPacket);
 
-		current = current->getNext();
+		delete invertedPacket;
+		return result;
 	}
-
-	delete invertedPacket;
-	return NULL;
 }
 
 /*
