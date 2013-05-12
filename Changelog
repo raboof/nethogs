@@ -1,5 +1,15 @@
 Changelog
 
+12/05/13 (muzso)
+- added new command line switches:
+  -s  Sorts output by the sent column.
+  -c  Limits the number of updates (useful for tracemode and scripting the
+      output).
+  -v  Sets view mode (0 = KB/s, 1 = total KB, 2 = total B, 3 = total MB)
+- changed needrefresh default value from true to false
+  (upon startup there's no useful info on network usage, so displaying
+   any results has no use for the user)
+
 31/08/10 (Arnout)
 - support for screens wider than 80 characters, thanks to Shock
   at https://bugs.launchpad.net/ubuntu/+source/nethogs/+bug/627626

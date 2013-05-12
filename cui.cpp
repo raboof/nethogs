@@ -43,15 +43,12 @@ extern Process * unknowntcp;
 extern Process * unknownudp;
 extern Process * unknownip;
 
-// sort on sent or received?
-bool sortRecv = true;
-// viewMode: kb/s or total
-int VIEWMODE_KBPS = 0;
-int VIEWMODE_TOTAL_KB = 1;
-int VIEWMODE_TOTAL_B = 2;
-int VIEWMODE_TOTAL_MB = 3;
-int viewMode = VIEWMODE_KBPS;
-int nViewModes = 4;
+extern bool sortRecv;
+
+extern int viewMode;
+
+extern unsigned refreshlimit;
+extern unsigned refreshcount;
 
 class Line
 {
@@ -233,7 +230,7 @@ void ui_tick ()
 			break;
 		case 'm':
 			/* switch mode: total vs kb/s */
-			viewMode = (viewMode + 1) % nViewModes;
+			viewMode = (viewMode + 1) % VIEWMODE_COUNT;
 			break;
 	}
 }
@@ -357,6 +354,7 @@ void do_refresh()
 	proglen = cols - 53;
 
 	refreshconninode();
+	refreshcount++;
 	if (DEBUG || tracemode)
 	{
 		std::cout << "\nRefreshing:\n";
@@ -513,6 +511,7 @@ void do_refresh()
 		mvprintw (totalrow+1, 0, "");
 		refresh();
 	}
+
+	if (refreshlimit != 0 && refreshcount >= refreshlimit)
+		quit_cb(0);
 }
-
-

@@ -6,22 +6,31 @@ nethogs \- Net top tool grouping bandwidth per process
 .SH SYNOPSIS
 .ft B
 .B nethogs
-.RB [ "\-d" ]
 .RB [ "\-h" ]
-.RB [ "\-p" ]
-.RB [ "\-t" ]
 .RB [ "\-V" ] 
+.RB [ "\-d" ]
+.RB [ "\-v" ]
+.RB [ "\-t" ]
+.RB [ "\-c" ]
+.RB [ "\-p" ]
+.RB [ "\-s" ]
 .RI [device(s)]
 .SH DESCRIPTION
 NetHogs is a small 'net top' tool. Instead of breaking the traffic down per protocol or per subnet, like most such tools do, it groups bandwidth by process - and does not rely on a special kernel module to be loaded. So if there's suddenly a lot of network traffic, you can fire up NetHogs and immediately see which PID is causing this, and if it's some kind of spinning process, kill it. 
 
 .SS Options
 .TP
+\fB-h\fP
+display available commands usage.
+.TP
+\fB-V\fP
+prints Version info.
+.TP
 \fB-d\fP
 delay for refresh rate.
 .TP
-\fB-h\fP
-display available commands usage.
+\fB-v\fP
+select view mode
 .TP
 \fB-p\fP
 sniff in promiscious mode (not recommended).
@@ -29,8 +38,11 @@ sniff in promiscious mode (not recommended).
 \fB-t\fP
 tracemode.
 .TP
-\fB-V\fP
-prints Version info.
+\fB-c\fP
+limit number of refreshes
+.TP
+\fB-s\fP
+sort by traffic sent
 .PP
 .I device(s)
 to monitor. By default eth0 is being used.

@@ -63,6 +63,13 @@
 
 #define PROGNAME_WIDTH 512
 
+// viewMode: how to represent numbers
+#define VIEWMODE_KBPS     0
+#define VIEWMODE_TOTAL_KB 1
+#define VIEWMODE_TOTAL_B  2
+#define VIEWMODE_TOTAL_MB 3
+#define VIEWMODE_COUNT    4
+ 
 #define NORETURN __attribute__ ((__noreturn__))
 
 void forceExit(bool success, const char *msg, ...) NORETURN;

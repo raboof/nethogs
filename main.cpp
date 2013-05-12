@@ -8,13 +8,16 @@ static void versiondisplay(void)
 static void help(void)
 {
 	//std::cerr << "usage: nethogs [-V] [-b] [-d seconds] [-t] [-p] [-f (eth|ppp))] [device [device [device ...]]]\n";
-	std::cerr << "usage: nethogs [-V] [-b] [-d seconds] [-t] [-p] [device [device [device ...]]]\n";
+	std::cerr << "usage: nethogs [-V] [-b] [-d seconds] [-v mode] [-c count] [-t] [-p] [-s] [device [device [device ...]]]\n";
 	std::cerr << "		-V : prints version.\n";
+	std::cerr << "		-b : bughunt mode - implies tracemode.\n";
 	std::cerr << "		-d : delay for update refresh rate in seconds. default is 1.\n";
+	std::cerr << "		-v : view mode (0 = KB/s, 1 = total KB, 2 = total B, 3 = total MB). default is 0.\n";
+	std::cerr << "		-c : number of updates. default is 0 (unlimited).\n";
 	std::cerr << "		-t : tracemode.\n";
 	//std::cerr << "		-f : format of packets on interface, default is eth.\n";
-	std::cerr << "		-b : bughunt mode - implies tracemode.\n";
 	std::cerr << "		-p : sniff in promiscious mode (not recommended).\n";
+	std::cerr << "		-s : sort output by sent column.\n";
 	std::cerr << "		device : device(s) to monitor. default is eth0\n";
 	std::cerr << std::endl;
 	std::cerr << "When nethogs is running, press:\n";
@@ -31,7 +34,7 @@ int main (int argc, char** argv)
 	int promisc = 0;
 
 	int opt;
-	while ((opt = getopt(argc, argv, "Vhbtpd:")) != -1) {
+	while ((opt = getopt(argc, argv, "Vhbtpd:v:c:s")) != -1) {
 		switch(opt) {
 			case 'V':
 				versiondisplay();
@@ -49,8 +52,17 @@ int main (int argc, char** argv)
 			case 'p':
 				promisc = 1;
 				break;
+			case 's':
+				sortRecv = false;
+				break;
 			case 'd':
-				refreshdelay=atoi(optarg);
+				refreshdelay = atoi(optarg);
+				break;
+			case 'v':
+				viewMode = atoi(optarg) % VIEWMODE_COUNT;
+				break;
+			case 'c':
+				refreshlimit = atoi(optarg);
 				break;
 			/*
 			case 'f':
@@ -81,7 +93,7 @@ int main (int argc, char** argv)
 		init_ui();
 	}
 
-	if (NEEDROOT && (getuid() != 0))
+	if (NEEDROOT && (geteuid() != 0))
 		forceExit(false, "You need to be root to run NetHogs!");
 
 	char errbuf[PCAP_ERRBUF_SIZE];

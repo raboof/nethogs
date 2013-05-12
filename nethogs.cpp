@@ -52,9 +52,16 @@ extern "C" {
 extern Process * unknownudp;
 
 unsigned refreshdelay = 1;
+unsigned refreshlimit = 0;
+unsigned refreshcount = 0;
+unsigned processlimit = 0;
 bool tracemode = false;
 bool bughuntmode = false;
-bool needrefresh = true;
+bool needrefresh = false;
+// sort on sent or received?
+bool sortRecv = true;
+// viewMode: kb/s or total
+int viewMode = VIEWMODE_KBPS;
 //packet_type packettype = packet_ethernet;
 //dp_link_type linktype = dp_link_ethernet;
 const char version[] = " version " VERSION "." SUBVERSION "." MINORVERSION;
