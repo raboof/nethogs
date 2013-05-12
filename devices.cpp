@@ -19,11 +19,58 @@
  *
  */
 
-
 #include "devices.h"
 
-device * determine_default_device()
+#include <iostream>
+#include <cstring>
+
+#include <sys/socket.h>
+#include <net/if.h>
+#include <ifaddrs.h>
+
+device * get_default_devices()
 {
-	return new device("eth0");
+	struct ifaddrs *ifaddr, *ifa;
+
+	if (getifaddrs(&ifaddr) == -1) 
+	{
+		std::cerr << "Fail to get interface addresses" << std::endl;
+		// perror("getifaddrs");
+		return NULL;
+	}
+
+	device* devices = NULL;
+	for (ifa = ifaddr; ifa != NULL; ifa = ifa->ifa_next) 
+	{
+		if (ifa->ifa_addr == NULL)  
+			continue;  
+
+		// The interface is up, not a loopback and running ?
+		if ( !(ifa->ifa_flags & IFF_LOOPBACK) && 
+			 (ifa->ifa_flags & IFF_UP) &&
+			 (ifa->ifa_flags & IFF_RUNNING) )
+		{
+			// Check if the interface is already known by going through all the devices
+			bool found = false;
+			device* pIter = devices;
+			while(pIter != NULL)
+			{
+				if ( strcmp(ifa->ifa_name,pIter->name) == 0 )
+				{
+					found = true;
+				}
+				pIter = pIter->next;
+			}
+
+			// We found a new interface, let's add it
+			if ( found == false )
+			{
+				devices = new device(strdup(ifa->ifa_name),devices);
+			}
+		}
+	}
+
+	freeifaddrs(ifaddr);
+	return devices;
 }
 

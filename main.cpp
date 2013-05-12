@@ -18,7 +18,7 @@ static void help(void)
 	//std::cerr << "		-f : format of packets on interface, default is eth.\n";
 	std::cerr << "		-p : sniff in promiscious mode (not recommended).\n";
 	std::cerr << "		-s : sort output by sent column.\n";
-	std::cerr << "		device : device(s) to monitor. default is eth0\n";
+	std::cerr << "		device : device(s) to monitor. default is all interfaces up and running excluding loopback\n";
 	std::cerr << std::endl;
 	std::cerr << "When nethogs is running, press:\n";
 	std::cerr << " q: quit\n";
@@ -88,7 +88,12 @@ int main (int argc, char** argv)
 
 	if (devices == NULL)
 	{
-		devices = determine_default_device();
+		devices = get_default_devices();
+        if ( devices == NULL )
+        {
+            std::cerr << "Not devices to monitor" << std::endl;
+            return 0;
+        }
 	}
 
 	if ((!tracemode) && (!DEBUG)){

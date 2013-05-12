@@ -34,6 +34,10 @@ public:
 	device * next;
 };
 
-device * determine_default_device();
+/**
+ * This function can return null, if no good interface is found
+ * The function avoids loopback interface and down/not running interfaces
+ */
+device * get_default_devices();
 
 #endif
