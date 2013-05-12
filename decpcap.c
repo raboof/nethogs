@@ -22,6 +22,7 @@
 
 #include <net/ethernet.h>
 #include <net/if.h>
+#include <netinet/in.h>
 #include <netinet/ip.h>
 #include <netinet/ip6.h>
 #include <netinet/tcp.h>
@@ -131,7 +132,7 @@ void dp_parse_ip (struct dp_handle * handle, const dp_header * header, const u_c
 	}
 	switch (ip->ip_p)
 	{
-		case (6):
+		case IPPROTO_TCP:
 			dp_parse_tcp (handle, header, payload);
 			break;
 		default:
@@ -154,7 +155,7 @@ void dp_parse_ip6 (struct dp_handle * handle, const dp_header * header, const u_
 	}
 	switch ((ip6->ip6_ctlun).ip6_un1.ip6_un1_nxt)
 	{
-		case (6):
+		case IPPROTO_TCP:
 			dp_parse_tcp (handle, header, payload);
 			break;
 		default:
@@ -167,6 +168,7 @@ void dp_parse_ethernet (struct dp_handle * handle, const dp_header * header, con
 {
 	const struct ether_header * ethernet = (struct ether_header *)packet;
 	u_char * payload = (u_char *) packet + sizeof (struct ether_header);
+    u_int16_t protocol = 0;
 
 	/* call handle if it exists */
 	if (handle->callback[dp_packet_ethernet] != NULL)
@@ -180,12 +182,13 @@ void dp_parse_ethernet (struct dp_handle * handle, const dp_header * header, con
 	}
 
 	/* parse payload */
-	switch (ethernet->ether_type)
+    protocol = ntohs(ethernet->ether_type);
+	switch (protocol)
 	{
-		case (0x0008):
+		case ETHERTYPE_IP:
 			dp_parse_ip (handle, header, payload);
 			break;
-		case (0xDD86):
+		case ETHERTYPE_IPV6:
 			dp_parse_ip6 (handle, header, payload);
 			break;
 		default:
@@ -213,6 +216,7 @@ void dp_parse_ppp (struct dp_handle * handle, const dp_header * header, const u_
 {
 	const struct ppp_header * ppp = (struct ppp_header *) packet;
 	u_char * payload = (u_char *) packet + sizeof (struct ppp_header);
+    u_int16_t protocol = 0;
 
 	/* call handle if it exists */
 	if (handle->callback[dp_packet_ppp] != NULL)
@@ -226,12 +230,13 @@ void dp_parse_ppp (struct dp_handle * handle, const dp_header * header, const u_
 	}
 
 	/* parse payload */
-	switch (ppp->packettype)
+    protocol = ntohs(ppp->packettype);
+	switch (protocol)
 	{
-		case (0x0008):
+		case ETHERTYPE_IP:
 			dp_parse_ip (handle, header, payload);
 			break;
-		case (0xDD86):
+		case ETHERTYPE_IPV6:
 			dp_parse_ip6 (handle, header, payload);
 			break;
 		default:
@@ -255,6 +260,7 @@ void dp_parse_linux_cooked (struct dp_handle * handle, const dp_header * header,
 {
 	const struct sll_header * sll = (struct sll_header *) packet;
 	u_char * payload = (u_char *) packet + sizeof (struct sll_header);
+    u_int16_t protocol = 0;
 
 	/* call handle if it exists */
 	if (handle->callback[dp_packet_sll] != NULL)
@@ -268,12 +274,13 @@ void dp_parse_linux_cooked (struct dp_handle * handle, const dp_header * header,
 	}
 
 	/* parse payload */
-	switch (sll->sll_protocol)
+    protocol = ntohs(sll->sll_protocol);
+	switch (protocol)
 	{
-		case (0x0008):
+		case ETHERTYPE_IP:
 			dp_parse_ip (handle, header, payload);
 			break;
-		case (0xDD86):
+		case ETHERTYPE_IPV6:
 			dp_parse_ip6 (handle, header, payload);
 			break;
 		default:
