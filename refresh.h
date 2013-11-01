@@ -21,3 +21,4 @@
 
 
 void alarm_cb (int i);
+void manual_refresh_cb (int i);

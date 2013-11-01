@@ -37,3 +37,9 @@ void alarm_cb (int /*i*/)
     alarm(refreshdelay);
 }
 
+void manual_refresh_cb (int /*i*/)
+{
+    needrefresh = true;
+
+    signal (SIGUSR1, &manual_refresh_cb);
+}

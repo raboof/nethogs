@@ -11,7 +11,7 @@ static void help(void)
 	std::cerr << "usage: nethogs [-V] [-b] [-d seconds] [-v mode] [-c count] [-t] [-p] [-s] [device [device [device ...]]]\n";
 	std::cerr << "		-V : prints version.\n";
 	std::cerr << "		-b : bughunt mode - implies tracemode.\n";
-	std::cerr << "		-d : delay for update refresh rate in seconds. default is 1.\n";
+	std::cerr << "		-d : delay for update refresh rate in seconds. default is 1. 0 means never refresh automatically.\n";
 	std::cerr << "		-v : view mode (0 = KB/s, 1 = total KB, 2 = total B, 3 = total MB). default is 0.\n";
 	std::cerr << "		-c : number of updates. default is 0 (unlimited).\n";
 	std::cerr << "		-t : tracemode.\n";
@@ -138,9 +138,14 @@ int main (int argc, char** argv)
 		current_dev = current_dev->next;
 	}
 
-	signal (SIGALRM, &alarm_cb);
+	signal (SIGUSR1, &manual_refresh_cb);
 	signal (SIGINT, &quit_cb);
-	alarm (refreshdelay);
+
+	if (refreshdelay != 0)
+	{
+		signal (SIGALRM, &alarm_cb);
+		alarm (refreshdelay);
+	}
 
 	fprintf(stderr, "Waiting for first packet to arrive (see sourceforge.net bug 1019381)\n");
 	struct dpargs * userdata = (dpargs *) malloc (sizeof (struct dpargs));
