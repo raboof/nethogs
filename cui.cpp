@@ -50,12 +50,15 @@ extern int viewMode;
 extern unsigned refreshlimit;
 extern unsigned refreshcount;
 
+#define PID_MAX 4194303
+
 class Line
 {
 public:
 	Line (const char * name, double n_recv_value, double n_sent_value, pid_t pid, uid_t uid, const char * n_devicename)
 	{
 		assert (pid >= 0);
+		assert (pid <= PID_MAX);
 		m_name = name;
 		sent_value = n_sent_value;
 		recv_value = n_recv_value;
@@ -110,45 +113,43 @@ std::string uid2username (uid_t uid)
 void Line::show (int row, unsigned int proglen)
 {
 	assert (m_pid >= 0);
-	// actually m_pid can be bigger than this..
-	// https://sourceforge.net/tracker/?func=detail&aid=3459408&group_id=110349&atid=656353
-	//assert (m_pid <= 100000);
+	assert (m_pid <= PID_MAX);
 
 	if (m_pid == 0)
-		mvprintw (row, 0, "?");
+		mvprintw (row, 6, "?");
 	else
-		mvprintw (row, 0, "%d", m_pid);
+		mvprintw (row, 0, "%7d", m_pid);
 	std::string username = uid2username(m_uid);
-	mvprintw (row, 6, "%s", username.c_str());
+	mvprintw (row, 8, "%s", username.c_str());
 	if (strlen (m_name) > proglen) {
 		// truncate oversized names
 		char * tmp = strdup(m_name);
 		char * start = tmp + strlen (m_name) - proglen;
 		start[0] = '.';
 		start[1] = '.';
-		mvprintw (row, 6 + 9, "%s", start);
+		mvprintw (row, 8 + 9, "%s", start);
 		free (tmp);
 	} else {
-		mvprintw (row, 6 + 9, "%s", m_name);
+		mvprintw (row, 8 + 9, "%s", m_name);
 	}
-	mvprintw (row, 6 + 9 + proglen + 2, "%s", devicename);
-	mvprintw (row, 6 + 9 + proglen + 2 + 6, "%10.3f", sent_value);
-	mvprintw (row, 6 + 9 + proglen + 2 + 6 + 9 + 3, "%10.3f", recv_value);
+	mvprintw (row, 8 + 9 + proglen + 2, "%s", devicename);
+	mvprintw (row, 8 + 9 + proglen + 2 + 6, "%10.3f", sent_value);
+	mvprintw (row, 8 + 9 + proglen + 2 + 6 + 9 + 3, "%10.3f", recv_value);
 	if (viewMode == VIEWMODE_KBPS)
 	{
-		mvprintw (row, 6 + 9 + proglen + 2 + 6 + 9 + 3 + 11, "KB/sec");
+		mvprintw (row, 8 + 9 + proglen + 2 + 6 + 9 + 3 + 11, "KB/sec");
 	}
 	else if (viewMode == VIEWMODE_TOTAL_MB)
 	{
-		mvprintw (row, 6 + 9 + proglen + 2 + 6 + 9 + 3 + 11, "MB    ");
+		mvprintw (row, 8 + 9 + proglen + 2 + 6 + 9 + 3 + 11, "MB    ");
 	}
 	else if (viewMode == VIEWMODE_TOTAL_KB)
 	{
-		mvprintw (row, 6 + 9 + proglen + 2 + 6 + 9 + 3 + 11, "KB    ");
+		mvprintw (row, 8 + 9 + proglen + 2 + 6 + 9 + 3 + 11, "KB    ");
 	}
 	else if (viewMode == VIEWMODE_TOTAL_B)
 	{
-		mvprintw (row, 6 + 9 + proglen + 2 + 6 + 9 + 3 + 11, "B     ");
+		mvprintw (row, 8 + 9 + proglen + 2 + 6 + 9 + 3 + 11, "B     ");
 	}
 }
 
@@ -364,7 +365,7 @@ void show_ncurses(Line * lines[], int nproc) {
 
 	getmaxyx(stdscr, rows, cols);	 /* find the boundaries of the screeen */
 
-	if (cols < 60) {
+	if (cols < 62) {
 		clear();
 		mvprintw(0,0, "The terminal is too narrow! Please make it wider.\nI'll wait...");
 		return;
@@ -372,12 +373,12 @@ void show_ncurses(Line * lines[], int nproc) {
 
 	if (cols > PROGNAME_WIDTH) cols = PROGNAME_WIDTH;
 
-	proglen = cols - 53;
+	proglen = cols - 55;
 
 	clear();
 	mvprintw (0, 0, "%s", caption->c_str());
 	attron(A_REVERSE);
-	mvprintw (2, 0, "  PID USER     %-*.*s  DEV        SENT      RECEIVED       ", proglen, proglen, "PROGRAM");
+	mvprintw (2, 0, "    PID USER     %-*.*s  DEV        SENT      RECEIVED       ", proglen, proglen, "PROGRAM");
 	attroff(A_REVERSE);
 
 	/* print them */
@@ -393,7 +394,7 @@ void show_ncurses(Line * lines[], int nproc) {
 
 	attron(A_REVERSE);
 	int totalrow = std::min(rows-1, 3+1+i);
-	mvprintw (totalrow, 0, "  TOTAL        %-*.*s        %10.3f  %10.3f ", proglen, proglen, " ", sent_global, recv_global);
+	mvprintw (totalrow, 0, "  TOTAL        %-*.*s          %10.3f  %10.3f ", proglen, proglen, " ", sent_global, recv_global);
 	if (viewMode == VIEWMODE_KBPS)
 	{
 		mvprintw (3+1+i, cols - 7, "KB/sec ");
