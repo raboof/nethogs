@@ -29,6 +29,7 @@
 
 extern bool tracemode;
 extern bool bughuntmode;
+extern bool stats;
 
 void check_all_procs ();
 
