@@ -182,6 +182,7 @@ int main (int argc, char** argv)
 			needrefresh = false;
 		}
 
+		//!@todo no periodic sleeping! Use a wakeup event.
 		// If no packets were read at all this iteration, pause to prevent 100%
 		// CPU utilisation;
 		if (!packets_read)
