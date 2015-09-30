@@ -171,23 +171,15 @@ int main (int argc, char** argv)
 		}
 
 
+		if ((!DEBUG)&&(!tracemode))
+		{
+		    // handle user input
+		    ui_tick();
+		}
 		if (needrefresh)
 		{
-			if ((!DEBUG)&&(!tracemode))
-			{
-				// handle user input
-				ui_tick();
-			}
 			do_refresh();
 			needrefresh = false;
-		}
-
-		//!@todo no periodic sleeping! Use a wakeup event.
-		// If no packets were read at all this iteration, pause to prevent 100%
-		// CPU utilisation;
-		if (!packets_read)
-		{
-			usleep(100);
 		}
 	}
 }

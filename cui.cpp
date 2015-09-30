@@ -35,6 +35,7 @@
 
 
 std::string * caption;
+extern bool needrefresh;
 extern const char version[];
 extern ProcList * processes;
 extern timeval curtime;
@@ -215,6 +216,18 @@ void exit_ui ()
 
 void ui_tick ()
 {
+	fd_set fds;
+	
+	int maxfd = 0; // stdin
+
+	FD_ZERO(&fds);
+	FD_SET(0, &fds);
+	int status = select(maxfd + 1, &fds, 0, 0, 0);
+	
+	if(status == -1){
+	  std::cerr << "select error: " << strerror(errno) << std::endl;
+	}
+
 	switch (getch()) {
 		case 'q':
 			/* quit */
@@ -223,14 +236,17 @@ void ui_tick ()
 		case 's':
 			/* sort on 'sent' */
 			sortRecv = false;
+			needrefresh = true;
 			break;
 		case 'r':
 			/* sort on 'received' */
 			sortRecv = true;
+			needrefresh = true;
 			break;
 		case 'm':
 			/* switch mode: total vs kb/s */
 			viewMode = (viewMode + 1) % VIEWMODE_COUNT;
+			needrefresh = true;
 			break;
 	}
 }
