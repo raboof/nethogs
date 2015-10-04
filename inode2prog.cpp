@@ -1,4 +1,4 @@
-/* 
+/*
  * inode2prog.cpp
  *
  * Copyright (c) 2005,2006,2008,2009 Arnout Engelen
@@ -39,6 +39,12 @@
 
 extern bool bughuntmode;
 
+// Not sure, but assuming there's no more PID's than go into 64 unsigned bits..
+const int MAX_PID_LENGTH = 20;
+
+// Max length of filenames in /proc/<pid>/fd/*. These are numeric, so 10 digits seems like a safe assumption.
+const int MAX_FDLINK = 10;
+
 /* maps from inode to program-struct */
 std::map <unsigned long, prg_node *> inodeproc;
 
@@ -73,46 +79,59 @@ int str2int (const char * ptr) {
 	return retval;
 }
 
-// Not sure, but assuming there's no more PID's than go into 64 unsigned bits..
-#define MAX_PID_LENGTH 20
+static std::string read_file (int fd) {
+	char buf[255];
+	std::string content;
 
-char * getprogname (pid_t pid) {
-	int bufsize = 80;
-	char buffer [bufsize];
-
-	int maxfilenamelen = 14 + MAX_PID_LENGTH + 1; 
-	char filename[maxfilenamelen];
-
-	snprintf (filename, maxfilenamelen, "/proc/%d/cmdline", pid);
-	int fd = open(filename, O_RDONLY);
-	if (fd < 0) {
-		fprintf (stderr, "Error opening %s: %s\n", filename, strerror(errno));
-		exit(3);
-		return NULL;
+	for (int length; (length = read(fd, buf, sizeof(buf))) > 0;) {
+		if (length < 0) {
+			std::fprintf(stderr, "Error reading file: %s\n", std::strerror(errno));
+			std::exit(34);
+		}
+		content.append(buf, length);
 	}
-	int length = read (fd, buffer, bufsize);
-	if (close (fd)) {
-		std::cout << "Error closing file: " << strerror(errno) << std::endl;
-		exit(34);
-	}
-	if (length < bufsize - 1)
-		buffer[length]='\0';
 
-	return strdup(buffer);
+	return content;
 }
 
-void setnode (unsigned long inode, pid_t pid)
-{	
+static std::string read_file (const char* filepath) {
+	int fd = open(filepath, O_RDONLY);
+
+	if (fd < 0) {
+		std::fprintf(stderr, "Error opening %s: %s\n", filepath, std::strerror(errno));
+		std::exit(3);
+		return NULL;
+	}
+
+	std::string contents = read_file(fd);
+
+	if (close(fd)) {
+		std::fprintf(stderr, "Error opening %s: %s\n", filepath, std::strerror(errno));
+		std::exit(34);
+	}
+
+	return contents;
+}
+
+std::string getprogname (pid_t pid) {
+	const int maxfilenamelen = 14 + MAX_PID_LENGTH + 1;
+	char filename[maxfilenamelen];
+
+	std::snprintf(filename, maxfilenamelen, "/proc/%d/cmdline", pid);
+	return read_file(filename);
+}
+
+void setnode (unsigned long inode, pid_t pid) {
 	prg_node * current_value = inodeproc[inode];
 
 	if (current_value == NULL || current_value->pid != pid) {
-		prg_node * newnode = (prg_node *) malloc (sizeof (struct prg_node));
+		prg_node * newnode = new prg_node;
 		newnode->inode = inode;
 		newnode->pid   = pid;
 		newnode->name  = getprogname(pid);
 
 		inodeproc[inode] = newnode;
-		free(current_value);
+		delete current_value;
 	}
 }
 
@@ -122,11 +141,8 @@ void get_info_by_linkname (const char * pid, const char * linkname) {
 	}
 }
 
-// Max length of filenames in /proc/<pid>/fd/*. These are numeric, so 10 digits seems like a safe assumption.
-#define MAX_FDLINK 10
-
-/* updates the `inodeproc' inode-to-prg_node 
- * for all inodes belonging to this PID 
+/* updates the `inodeproc' inode-to-prg_node
+ * for all inodes belonging to this PID
  * (/proc/pid/fd/42)
  * */
 void get_info_for_pid(const char * pid) {
@@ -170,7 +186,7 @@ void get_info_for_pid(const char * pid) {
 	closedir(dir);
 }
 
-/* updates the `inodeproc' inode-to-prg_node mapping 
+/* updates the `inodeproc' inode-to-prg_node mapping
  * for all processes in /proc */
 void reread_mapping () {
 	DIR * proc = opendir ("/proc");
@@ -196,7 +212,7 @@ struct prg_node * findPID (unsigned long inode)
 {
 	/* we first look in inodeproc */
 	struct prg_node * node = inodeproc[inode];
-	
+
 	if (node != NULL)
 	{
 		if (bughuntmode)
@@ -207,7 +223,7 @@ struct prg_node * findPID (unsigned long inode)
 	}
 
 	reread_mapping();
-	
+
 	struct prg_node * retval = inodeproc[inode];
 	if (bughuntmode)
 	{

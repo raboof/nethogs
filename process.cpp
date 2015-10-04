@@ -165,7 +165,7 @@ Process * getProcess (unsigned long inode, const char * devicename)
 	if (proc != NULL)
 		return proc;
 
-	Process * newproc = new Process (inode, devicename, node->name);
+	Process * newproc = new Process (inode, devicename, node->name.c_str());
 	newproc->pid = node->pid;
 
 	char procdir [100];
