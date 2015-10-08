@@ -66,6 +66,8 @@ int viewMode = VIEWMODE_KBPS;
 //dp_link_type linktype = dp_link_ethernet;
 const char version[] = " version " VERSION "." SUBVERSION "." MINORVERSION;
 
+bool stats = false;
+
 timeval curtime;
 
 bool local_addr::contains (const in_addr_t & n_addr) {

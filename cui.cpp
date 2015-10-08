@@ -73,8 +73,10 @@ public:
 
 	double sent_value;
 	double recv_value;
-private:
+	//Made it public, best idea?
 	const char * m_name;
+private:
+
 	const char * devicename;
 	pid_t m_pid;
 	uid_t m_uid;
@@ -153,8 +155,84 @@ void Line::show (int row, unsigned int proglen)
 	}
 }
 
+//Match process with same name in the same position
+int getPosition(Line actual, Line* new_lines[], int nproc){
+	
+	for (int i = 0; i<nproc; i++){
+		if ( new_lines[i] != NULL && !strcmp(new_lines[i]->m_name,actual.m_name) ){
+			return i;
+		}
+	}
+
+	return -1;
+}
+
+//Instead overriding values, we add them
+/*TODO: Combine differents devices
+firefox eth0 100 0
+firefox tun0 10 10
+*/
+void show_stats(Line * lines[], int nproc){
+	std::cout << "\nStats:\n";
+	
+	Line * new_lines[nproc];
+	int lastProc = 0;
+	
+	for (int i=0; i<nproc; i++)
+		new_lines[i] = NULL;
+	
+	for (int i=0; i<nproc; i++)
+	{
+		int position = getPosition(*lines[i], new_lines, nproc);
+		//std::cout << "\nGot position for: "<< lines[i]->m_name << " is "<< position << std::endl;
+		if (position == -1) {
+			position = lastProc;
+			lastProc++;
+			
+			new_lines[position] = lines[i];
+		}	
+		else{
+			new_lines[position]->sent_value += lines[i]->sent_value;
+			new_lines[position]->recv_value += lines[i]->recv_value;
+		}
+		//std::cout << "\nFinal position: "<< lines[i]->m_name << " is "<< position << std::endl;
+		//Here we have in new_lines[position] the connection with m_name
+		
+	}
+	
+	/* print only with useful information*/
+	for (int i=0; i<lastProc; i++)
+	{
+		new_lines[i]->log();
+	}
+	
+	/* Erase everything with duplicated/old info */
+	for (int i=0; i<nproc; i++)
+	{
+		delete lines[i];
+	}
+	
+	/* print the 'unknown' connections, for debugging */
+	ConnList * curr_unknownconn = unknowntcp->connections;
+	while (curr_unknownconn != NULL) {
+		std::cout << "Unknown connection: " <<
+			curr_unknownconn->getVal()->refpacket->gethashstring() << std::endl;
+
+		curr_unknownconn = curr_unknownconn->getNext();
+	}
+	
+}
+
 void Line::log() {
-	std::cout << m_name << '/' << m_pid << '/' << m_uid << "\t" << sent_value << "\t" << recv_value << std::endl;
+	if ( stats ){
+		std::string str(this->m_name);
+		size_t lastSlash = str.find_last_of("/");
+		str = str.substr(lastSlash+1);
+		
+		std::cout << str << "\t" << sent_value << "\t" << recv_value << std::endl;
+	}
+	else
+		std::cout << m_name << '/' << m_pid << '/' << m_uid << "\t" << sent_value << "\t" << recv_value << std::endl;
 }
 
 int GreatestFirst (const void * ma, const void * mb)
@@ -439,7 +517,14 @@ void do_refresh()
 		assert (nproc == processes->size());
 
 		/* remove timed-out processes (unless it's one of the the unknown process) */
-		if ((curproc->getVal()->getLastPacket() + PROCESSTIMEOUT <= curtime.tv_sec)
+		
+		/*if ( stats == true ){
+			std::cout << "stats activated, not deleting entries" << std::endl;
+		}*/
+		
+		//Collecting stats we do not want to remove anything
+		if ( (!stats)
+				&& (curproc->getVal()->getLastPacket() + PROCESSTIMEOUT <= curtime.tv_sec)
 				&& (curproc->getVal() != unknowntcp)
 				&& (curproc->getVal() != unknownudp)
 				&& (curproc->getVal() != unknownip))
@@ -518,9 +603,12 @@ void do_refresh()
 	}
 
 	/* sort the accumulated lines */
+	//In stats-mode this is not necessary
 	qsort (lines, nproc, sizeof(Line *), GreatestFirst);
 
-	if (tracemode || DEBUG)
+	if (stats)
+		show_stats(lines,nproc);
+	else if (tracemode || DEBUG)
 		show_trace(lines, nproc);
 	else
 		show_ncurses(lines, nproc);

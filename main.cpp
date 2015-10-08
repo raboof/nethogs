@@ -36,7 +36,7 @@ int main (int argc, char** argv)
 	int promisc = 0;
 
 	int opt;
-	while ((opt = getopt(argc, argv, "Vhbtpd:v:c:s")) != -1) {
+	while ((opt = getopt(argc, argv, "Vhbtpd:v:c:s:z")) != -1) {
 		switch(opt) {
 			case 'V':
 				versiondisplay();
@@ -65,6 +65,9 @@ int main (int argc, char** argv)
 				break;
 			case 'c':
 				refreshlimit = atoi(optarg);
+				break;
+			case 'z':
+				stats = true;
 				break;
 			/*
 			case 'f':
@@ -96,8 +99,9 @@ int main (int argc, char** argv)
         }
 	}
 
-	if ((!tracemode) && (!DEBUG)){
+	if ((!tracemode) && (!DEBUG) && (!stats) ){
 		init_ui();
+		tracemode = stats;
 	}
 
 	if (NEEDROOT && (geteuid() != 0))
@@ -109,7 +113,8 @@ int main (int argc, char** argv)
 	device * current_dev = devices;
 	while (current_dev != NULL) {
 		getLocal(current_dev->name, tracemode);
-
+		getLocal(current_dev->name, stats);
+		
 		dp_handle * newhandle = dp_open_live(current_dev->name, BUFSIZ, promisc, 100, errbuf);
 		if (newhandle != NULL)
 		{
@@ -173,7 +178,7 @@ int main (int argc, char** argv)
 
 		if (needrefresh)
 		{
-			if ((!DEBUG)&&(!tracemode))
+			if ((!DEBUG)&&(!tracemode)&&(!stats))
 			{
 				// handle user input
 				ui_tick();
