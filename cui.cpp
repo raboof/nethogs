@@ -222,7 +222,7 @@ static void wait_for_input(){
 
 	FD_ZERO(&fds);
 	FD_SET(STDIN_FILENO, &fds);
-	int status = select(maxfd + 1, &fds, 0, 0, 0);
+	int status = select(maxfd + 1, &fds, NULL, NULL, NULL);
 
 	if(status == -1){
 	  switch (errno) {
