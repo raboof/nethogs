@@ -1,4 +1,4 @@
-/* 
+/*
  * inode2prog.h
  *
  * Copyright (c) 2005,2008 Arnout Engelen
@@ -30,13 +30,13 @@
 struct prg_node {
     long inode;
     pid_t pid;
-    char * name;
+    std::string name;
 };
 
 struct prg_node * findPID (unsigned long inode);
 
 void prg_cache_clear();
- 
+
 // reread the inode-to-prg_node-mapping
 void reread_mapping ();
 
