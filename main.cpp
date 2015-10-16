@@ -151,8 +151,6 @@ int main (int argc, char** argv)
 	//  This causes the CPU utilisation to go up to 100%. This is tricky:
 	while (1)
 	{
-		bool packets_read = false;
-
 		handle * current_handle = handles;
 		while (current_handle != NULL)
 		{
@@ -162,10 +160,6 @@ int main (int argc, char** argv)
 			if (retval < 0)
 			{
 				std::cerr << "Error dispatching: " << retval << std::endl;
-			}
-			else if (retval != 0)
-			{
-				packets_read = true;
 			}
 			current_handle = current_handle->next;
 		}
