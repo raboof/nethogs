@@ -1,3 +1,5 @@
-*.o
-decpcap_test
 nethogs
+decpcap_test
+TAGS
+*.o
+*~
