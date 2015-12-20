@@ -1,6 +1,6 @@
 VERSION      := 0
 SUBVERSION   := 8
-MINORVERSION := 1-SNAPSHOT
+MINORVERSION := 1
 
 #prefix := /usr
 prefix := /usr/local
