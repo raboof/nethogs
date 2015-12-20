@@ -18,6 +18,10 @@ Ideas/ToDo for new releases:
 * Make it work correctly on machines with multiple IP addresses
 * Integrate into another tool?? 
 
+== BUGS ==
+
+Please report bugs to github at https://github.com/raboof/nethogs/issues
+
 == CODING STANDARDS ==
 
 Can anyone recommend a sensible set? :)
