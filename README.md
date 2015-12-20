@@ -26,18 +26,18 @@ Can anyone recommend a sensible set? :)
 
 For now:
 * '{' 
-** on a new line for function definitions
-** on a new line for enums
-** on the same line for conditionals/loops 
-** omitted when possible
+ * on a new line for function definitions
+ * on a new line for enums
+ * on the same line for conditionals/loops 
+ * omitted when possible
 * use tab for indentation
 * use doxygen/javadoc-style comments.
-  * for multiline doxygen docs, add a newline after '/**'
+ * for multiline doxygen docs, add a newline after '/**'
 * case
-** classes: camelcased, start uppercase
-** enums: camelcased, start uppercase
-** functions: camelcased, start lowercase
-** local variables: camelcased, start lowercase
+ * classes: camelcased, start uppercase
+ * enums: camelcased, start uppercase
+ * functions: camelcased, start lowercase
+ * local variables: camelcased, start lowercase
 
 License
 -------
