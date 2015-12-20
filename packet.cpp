@@ -92,6 +92,9 @@ void getLocal (const char *device, bool tracemode)
 				if (strcmp (stripspaces(ifname), device) == 0)
 				{
 					local_addrs = new local_addr (address, local_addrs);
+					if (tracemode || DEBUG) {
+						printf ("Adding local address: %s\n", address);
+					}
 				}
 #if DEBUG
 				else
