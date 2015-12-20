@@ -1,5 +1,8 @@
 language: cpp
 
-install: apt-get install libpcap0.8-dev
+addons:
+  apt:
+    packages:
+    - libpcap0.8-dev
 
 script: make
