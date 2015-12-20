@@ -1,30 +1,26 @@
-= NETHOGS =
+Nethogs
+=======
 
 [![Build Status](https://travis-ci.org/raboof/nethogs.svg?branch=master)](https://travis-ci.org/raboof/nethogs)
 
 http://nethogs.sf.net
 
-== INTRODUCTION ==
+Introduction
+------------
 
 NetHogs is a small 'net top' tool. Instead of breaking the traffic down per protocol or per subnet, like most tools do, it groups bandwidth by process. NetHogs does not rely on a special kernel module to be loaded. If there's suddenly a lot of network traffic, you can fire up NetHogs and immediately see which PID is causing this. This makes it easy to indentify programs that have gone wild and are suddenly taking up your bandwidth.
 
 Since NetHogs heavily relies on /proc, it currently runs on Linux only. 
 
-== STATUS ==
+Status
+------
 
-Ideas/ToDo for new releases:
+Nethogs is a mature piece of software included in most Linux distributions.
 
-* Only IPv4 TCP is currently supported
-* Sort the output by other values than network usage
-* Monitor specific processes
-* Make it work correctly on machines with multiple IP addresses
-* Integrate into another tool?? 
+Ideas for features, as well as open bugs, can be found at https://github.com/raboof/nethogs/issues
 
-== BUGS ==
-
-Please report bugs to github at https://github.com/raboof/nethogs/issues
-
-== CODING STANDARDS ==
+Coding standards
+----------------
 
 Can anyone recommend a sensible set? :)
 
@@ -43,9 +39,9 @@ For now:
 ** functions: camelcased, start lowercase
 ** local variables: camelcased, start lowercase
 
+License
+-------
 
-== LICENSE ==
-
-Copyright 2004-2005, 2008, 2010-2012 Arnout Engelen <arnouten@bzzt.net>
+Copyright 2004-2005, 2008, 2010-2012, 2015 Arnout Engelen <arnouten@bzzt.net>
 License: nethogs may be redistributed under the terms of the GPLv2 or any 
 later version. See the COPYING file for the license text.
