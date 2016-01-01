@@ -43,7 +43,7 @@
 
 <h2>
 <a id="introduction" class="anchor" href="#introduction" aria-hidden="true"><span class="octicon octicon-link"></span></a>Introduction</h2>
-
+<img src="nethogstmb.png" align="right">
 <p>NetHogs is a small 'net top' tool. Instead of breaking the traffic down per protocol or per subnet, like most tools do, it groups bandwidth by process. NetHogs does not rely on a special kernel module to be loaded. </p>
 
 <p>If there's suddenly a lot of network traffic, you can fire up NetHogs and immediately see which PID is causing this. This makes it easy to indentify programs that have gone wild and are suddenly taking up your bandwidth.</p>
@@ -79,10 +79,9 @@
 <p>Nethogs requires libpcap and ncurses. On Debian, <code>apt-get install libncurses5-dev libpcap0.8-dev</code>.</p>
 
 <ul>
-<li>Sources are in this github repo.</li>
-<li>SuSE RPM's can be found at Guru's RPM Site and in the main APT[4rpm] repository.</li>
-<li>Debian packages are in unstable thanks to the great work by Bart Martens and</li>
-<li>Gentoo Ebuild here</li>
+<li>SuSE RPM's can be found at <a href="http://linux01.gwdg.de/~pbleser/rpm-navigation.php?cat=Network/nethogs">Guru's RPM Site</a> and in the main APT[4rpm] repository.
+<li>Debian packages are <a href="http://packages.debian.org/nethogs">in unstable</a> thanks to the great work by Bart Martens and
+<li>Gentoo Ebuild <a href="http://packages.gentoo.org/packages/?category=net-analyzer;name=nethogs">here</a>
 </ul>
 
 <h2>
@@ -91,12 +90,12 @@
 <p>Nethogs monitors traffic going to/from a machine, per process. Other tools rather monitor what kind of traffic travels to, from or through a machine, etcetera. I'll try to link to such tools here. By all means open an issue/PR if you know another.</p>
 
 <ul>
-<li>nettop shows packet types, sorts by either size or number of packets.</li>
-<li>ettercap is a network sniffer/interceptor/logger for ethernet</li>
-<li>darkstat breaks down traffic by host, protocol, etc. Geared towards analysing traffic gathered over a longer period, * rather than `live' viewing.</li>
-<li>iftop shows network traffic by service and host</li>
-<li>ifstat shows network traffic by interface in a vmstat/iostat-like manner</li>
-<li>BusyTasks KDE Plasmoid script using nethogs as a backend</li>
+<li><a href="http://srparish.net/scripts/">nettop</a> shows packet types, sorts by either size or number of packets.
+<li><a href="http://ettercap.sf.net">ettercap</a> is a network sniffer/interceptor/logger for ethernet
+<li><a href="http://purl.org/net/darkstat/">darkstat</a> breaks down traffic by host, protocol, etc. Geared towards analysing traffic gathered over a longer period, rather than `live' viewing.
+<li><a href="http://ex-parrot.com/~pdw/iftop/">iftop</a> shows network traffic by service and host
+<li><a href="http://gael.roualland.free.fr/ifstat/">ifstat</a> shows network traffic by interface in a vmstat/iostat-like manner
+<li><a href="http://kde-apps.org/content/show.php?content=143833">BusyTasks</a> KDE Plasmoid script using nethogs as a backend
 </ul>
 
 <p>NetHogs was written by Arnout 'raboof' Engelen. It is released as Free Software under the GNU General Public License (GPL).</p>
@@ -104,6 +103,5 @@
 
     </div>
     <!--[if !IE]><script>fixScale(document);</script><![endif]-->
-    
   </body>
 </html>
