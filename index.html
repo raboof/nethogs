@@ -1,0 +1,109 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>Nethogs by raboof</title>
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/github-dark.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+    <script src="javascripts/respond.js"></script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <!--[if lt IE 8]>
+    <link rel="stylesheet" href="stylesheets/ie.css">
+    <![endif]-->
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+
+  </head>
+  <body>
+      <div id="header">
+        <nav>
+          <li class="fork"><a href="https://github.com/raboof/nethogs">View On GitHub</a></li>
+          <li class="downloads"><a href="https://github.com/raboof/nethogs/zipball/master">ZIP</a></li>
+          <li class="downloads"><a href="https://github.com/raboof/nethogs/tarball/master">TAR</a></li>
+          <li class="title">DOWNLOADS</li>
+        </nav>
+      </div><!-- end header -->
+
+    <div class="wrapper">
+
+      <section>
+        <div id="title">
+          <h1>Nethogs</h1>
+          <p>Linux &#39;net top&#39; tool</p>
+          <hr>
+          <span class="credits left">Project maintained by <a href="https://github.com/raboof">raboof</a></span>
+          <span class="credits right">Hosted on GitHub Pages &mdash; Theme by <a href="https://twitter.com/michigangraham">mattgraham</a></span>
+        </div>
+
+        <h3>
+<a id="nethogs" class="anchor" href="#nethogs" aria-hidden="true"><span class="octicon octicon-link"></span></a>NetHogs</h3>
+
+<h2>
+<a id="introduction" class="anchor" href="#introduction" aria-hidden="true"><span class="octicon octicon-link"></span></a>Introduction</h2>
+
+<p>NetHogs is a small 'net top' tool. Instead of breaking the traffic down per protocol or per subnet, like most tools do, it groups bandwidth by process. NetHogs does not rely on a special kernel module to be loaded. </p>
+
+<p>If there's suddenly a lot of network traffic, you can fire up NetHogs and immediately see which PID is causing this. This makes it easy to indentify programs that have gone wild and are suddenly taking up your bandwidth.</p>
+
+<p>Since NetHogs heavily relies on /proc, it currently runs on Linux only.</p>
+
+<h2>
+<a id="status" class="anchor" href="#status" aria-hidden="true"><span class="octicon octicon-link"></span></a>Status</h2>
+
+<p>Now supported:</p>
+
+<ul>
+<li>Shows TCP download- and upload-speed per process</li>
+<li>Supports both IPv4 and IPv6</li>
+<li>Supports both Ethernet and PPP</li>
+</ul>
+
+<p>Ideas for new releases:</p>
+
+<ul>
+<li>Incoming UDP packets?</li>
+<li>Sort the output by other values than network usage</li>
+<li>Monitor specific processes</li>
+<li>Make it work correctly on machines with multiple IP addresses</li>
+<li>Integrate into another tool?</li>
+<li>gui?</li>
+<li><a href="https://github.com/raboof/nethogs/issues">https://github.com/raboof/nethogs/issues</a></li>
+</ul>
+
+<h2>
+<a id="download" class="anchor" href="#download" aria-hidden="true"><span class="octicon octicon-link"></span></a>Download</h2>
+
+<p>Nethogs requires libpcap and ncurses. On Debian, <code>apt-get install libncurses5-dev libpcap0.8-dev</code>.</p>
+
+<ul>
+<li>Sources are in this github repo.</li>
+<li>SuSE RPM's can be found at Guru's RPM Site and in the main APT[4rpm] repository.</li>
+<li>Debian packages are in unstable thanks to the great work by Bart Martens and</li>
+<li>Gentoo Ebuild here</li>
+</ul>
+
+<h2>
+<a id="links" class="anchor" href="#links" aria-hidden="true"><span class="octicon octicon-link"></span></a>Links</h2>
+
+<p>Nethogs monitors traffic going to/from a machine, per process. Other tools rather monitor what kind of traffic travels to, from or through a machine, etcetera. I'll try to link to such tools here. By all means open an issue/PR if you know another.</p>
+
+<ul>
+<li>nettop shows packet types, sorts by either size or number of packets.</li>
+<li>ettercap is a network sniffer/interceptor/logger for ethernet</li>
+<li>darkstat breaks down traffic by host, protocol, etc. Geared towards analysing traffic gathered over a longer period, * rather than `live' viewing.</li>
+<li>iftop shows network traffic by service and host</li>
+<li>ifstat shows network traffic by interface in a vmstat/iostat-like manner</li>
+<li>BusyTasks KDE Plasmoid script using nethogs as a backend</li>
+</ul>
+
+<p>NetHogs was written by Arnout 'raboof' Engelen. It is released as Free Software under the GNU General Public License (GPL).</p>
+      </section>
+
+    </div>
+    <!--[if !IE]><script>fixScale(document);</script><![endif]-->
+    
+  </body>
+</html>
