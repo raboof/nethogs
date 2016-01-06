@@ -155,7 +155,10 @@ void get_info_for_pid(const char * pid) {
 
 	if (!dir)
 	{
-		std::cout << "Couldn't open dir " << dirname << ": " << strerror(errno) << "\n";
+		if (bughuntmode)
+		{
+			std::cout << "Couldn't open dir " << dirname << ": " << strerror(errno) << "\n";
+		}
 		return;
 	}
 
