@@ -6,7 +6,7 @@ MINORVERSION := 2-SNAPSHOT
 prefix := /usr/local
 
 sbin := $(prefix)/sbin
-man8 := $(prefix)/share/man/man8/
+man8 := $(prefix)/share/man/man8
 
 all: nethogs decpcap_test
 
@@ -28,7 +28,7 @@ NCURSES_LIBS?=-lncurses
 tgz: clean
 	cd .. ; tar czvf nethogs-$(VERSION).$(SUBVERSION).$(MINORVERSION).tar.gz --exclude-vcs nethogs/*
 
-.PHONY: check
+.PHONY: check uninstall
 check:
 	echo "Not implemented"
 
@@ -37,6 +37,10 @@ install: nethogs nethogs.8
 	install -m 755 nethogs $(DESTDIR)$(sbin)
 	install -d -m 755 $(DESTDIR)$(man8)
 	install -m 644 nethogs.8 $(DESTDIR)$(man8)
+
+uninstall:
+	rm $(DESTDIR)$(sbin)/nethogs
+	rm $(DESTDIR)$(man8)/nethogs.8
 
 test: test.cpp 
 	$(CXX) $(CXXFLAGS) $(LDFLAGS) test.cpp -o test -lpcap -lm ${NCURSES_LIBS} -DVERSION=\"$(VERSION)\" -DSUBVERSION=\"$(SUBVERSION)\" -DMINORVERSION=\"$(MINORVERSION)\"
