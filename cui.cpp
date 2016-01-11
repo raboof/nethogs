@@ -492,13 +492,6 @@ void do_refresh()
 				forceExit(false, "Invalid viewMode: %d", viewMode);
 			}
 			uid_t uid = curproc->getVal()->getUid();
-#ifndef NDEBUG
-			struct passwd * pwuid = getpwuid(uid);
-			assert (pwuid != NULL);
-			// value returned by pwuid should not be freed, according to
-			// Petr Uzel.
-			//free (pwuid);
-#endif
 			assert (curproc->getVal()->pid >= 0);
 			assert (n < nproc);
 
