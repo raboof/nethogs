@@ -30,13 +30,17 @@ tgz: clean
 
 .PHONY: check uninstall
 check:
-	echo "Not implemented"
+	@echo "Not implemented"
 
 install: nethogs nethogs.8
 	install -d -m 755 $(DESTDIR)$(sbin)
 	install -m 755 nethogs $(DESTDIR)$(sbin)
 	install -d -m 755 $(DESTDIR)$(man8)
 	install -m 644 nethogs.8 $(DESTDIR)$(man8)
+	@echo
+	@echo "Installed nethogs to $(DESTDIR)$(sbin)"
+	@echo
+	@echo "You might have to add this directory to your PATH and/or refresh your shells' path cache with a command like 'hash -r'."
 
 uninstall:
 	rm $(DESTDIR)$(sbin)/nethogs
