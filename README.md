@@ -19,6 +19,14 @@ Nethogs is a mature piece of software included in most Linux distributions.
 
 Ideas for features, as well as open bugs, can be found at https://github.com/raboof/nethogs/issues
 
+### Building from source
+
+Nethogs depends on ncurses, so you need to install the ncurses development
+libraries before building nethogs. For example on Debian, 'apt-get install
+libncurses5-dev'.
+
+After that, simply 'make && sudo make install'
+
 Coding standards
 ----------------
 
