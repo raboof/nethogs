@@ -28,11 +28,17 @@
 #include "nethogs.h"
 #include "conninode.h"
 
+#if defined __APPLE__
+	#ifndef s6_addr32
+		#define s6_addr32 __u6_addr.__u6_addr32
+	#endif
+#endif
+
 extern local_addr * local_addrs;
 
-/* 
+/*
  * connection-inode table. takes information from /proc/net/tcp.
- * key contains source ip, source port, destination ip, destination 
+ * key contains source ip, source port, destination ip, destination
  * port in format: '1.2.3.4:5-1.2.3.4:5'
  */
 std::map <std::string, unsigned long> conninode;
@@ -179,12 +185,16 @@ void refreshconninode ()
 	//delete conninode;
 	//conninode = new HashTable (256);
 
-	if (! addprocinfo ("/proc/net/tcp"))
-	{
-		std::cout << "Error: couldn't open /proc/net/tcp\n";
-		exit(0);
-	}
-	addprocinfo ("/proc/net/tcp6");
+	#if defined(__APPLE__)
+		addprocinfo("net.inet.tcp.pcblist");
+	#else
+		if (! addprocinfo ("/proc/net/tcp"))
+		{
+			std::cout << "Error: couldn't open /proc/net/tcp\n";
+			exit(0);
+		}
+		addprocinfo ("/proc/net/tcp6");
+	#endif
 
 	//if (DEBUG)
 	//	reviewUnknown();
