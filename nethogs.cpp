@@ -128,10 +128,10 @@ int process_tcp (u_char * userdata, const dp_header * header, const u_char * m_p
 	switch (args->sa_family)
 	{
 		case (AF_INET):
-			packet = new Packet (args->ip_src, ntohs(tcp->source), args->ip_dst, ntohs(tcp->dest), header->len, header->ts);
+			packet = new Packet (args->ip_src, ntohs(tcp->th_sport), args->ip_dst, ntohs(tcp->th_dport), header->len, header->ts);
 			break;
 		case (AF_INET6):
-			packet = new Packet (args->ip6_src, ntohs(tcp->source), args->ip6_dst, ntohs(tcp->dest), header->len, header->ts);
+			packet = new Packet (args->ip6_src, ntohs(tcp->th_sport), args->ip6_dst, ntohs(tcp->th_dport), header->len, header->ts);
 			break;
 	}
 
@@ -162,10 +162,10 @@ int process_udp (u_char * userdata, const dp_header * header, const u_char * m_p
 	switch (args->sa_family)
 	{
 		case (AF_INET):
-			packet = new Packet (args->ip_src, ntohs(udp->source), args->ip_dst, ntohs(udp->dest), header->len, header->ts);
+			packet = new Packet (args->ip_src, ntohs(udp->uh_sport), args->ip_dst, ntohs(udp->uh_dport), header->len, header->ts);
 			break;
 		case (AF_INET6):
-			packet = new Packet (args->ip6_src, ntohs(udp->source), args->ip6_dst, ntohs(udp->dest), header->len, header->ts);
+			packet = new Packet (args->ip6_src, ntohs(udp->uh_sport), args->ip6_dst, ntohs(udp->uh_dport), header->len, header->ts);
 			break;
 	}
 

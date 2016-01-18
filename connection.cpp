@@ -22,7 +22,11 @@
 
 #include <iostream>
 #include <cassert>
-#include <malloc.h>
+#ifdef __APPLE__
+	#include <sys/malloc.h>
+#else
+	#include <malloc.h>
+#endif
 #include "nethogs.h"
 #include "connection.h"
 #include "process.h"

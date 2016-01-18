@@ -225,7 +225,9 @@ struct prg_node * findPID (unsigned long inode)
 		return node;
 	}
 
-	reread_mapping();
+	#ifndef __APPLE__
+		reread_mapping();
+	#endif
 
 	struct prg_node * retval = inodeproc[inode];
 	if (bughuntmode)
