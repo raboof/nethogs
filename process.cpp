@@ -24,7 +24,9 @@
 #include <strings.h>
 #include <string>
 #include <ncurses.h>
-#include <asm/types.h>
+#ifndef __APPLE__
+	#include <asm/types.h>
+#endif
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -215,34 +217,36 @@ Process * getProcess (Connection * connection, const char * devicename)
 		// no? refresh and check conn/inode table
 		if (bughuntmode)
 		{
-			std::cout << "?  new connection not in connection-to-inode table before refresh.\n"; 
+			std::cout << "?  new connection not in connection-to-inode table before refresh.\n";
 		}
-		// refresh the inode->pid table first. Presumably processing the renewed connection->inode table 
+		// refresh the inode->pid table first. Presumably processing the renewed connection->inode table
 		// is slow, making this worthwhile.
-		// We take the fact for granted that we might already know the inode->pid (unlikely anyway if we 
+		// We take the fact for granted that we might already know the inode->pid (unlikely anyway if we
 		// haven't seen the connection->inode yet though).
-		reread_mapping();
+		#ifndef __APPLE__
+			reread_mapping();
+		#endif
 		refreshconninode();
 		inode = conninode[connection->refpacket->gethashstring()];
 		if (bughuntmode)
 		{
 			if (inode == 0)
 			{
-				std::cout << ":( inode for connection not found after refresh.\n"; 
+				std::cout << ":( inode for connection not found after refresh.\n";
 			}
 			else
 			{
-				std::cout << ":) inode for connection found after refresh.\n"; 
+				std::cout << ":) inode for connection found after refresh.\n";
 			}
 		}
 #if REVERSEHACK
 		if (inode == 0)
 		{
-			/* HACK: the following is a hack for cases where the 
-			 * 'local' addresses aren't properly recognised, as is 
+			/* HACK: the following is a hack for cases where the
+			 * 'local' addresses aren't properly recognised, as is
 			 * currently the case for IPv6 */
 
-		 	/* we reverse the direction of the stream if 
+		 	/* we reverse the direction of the stream if
 			 * successful. */
 			Packet * reversepacket = connection->refpacket->newInverted();
 			inode = conninode[reversepacket->gethashstring()];

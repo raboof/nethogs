@@ -29,7 +29,11 @@
 #include <arpa/inet.h>
 #include <cassert>
 #include <cstring>
-#include <malloc.h>
+#ifdef __APPLE__
+	#include <sys/malloc.h>
+#else
+	#include <malloc.h>
+#endif
 #include <iostream>
 
 #define _BSD_SOURCE 1

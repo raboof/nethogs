@@ -25,7 +25,11 @@
 #include "packet.h"
 #include <netinet/tcp.h>
 #include <netinet/in.h>
-#include <malloc.h>
+#ifdef __APPLE__
+	#include <sys/malloc.h>
+#else
+	#include <malloc.h>
+#endif
 #include <cassert>
 #include <net/if.h>
 #include <net/ethernet.h>
