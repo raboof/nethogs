@@ -8,9 +8,9 @@ http://nethogs.sf.net
 Introduction
 ------------
 
-NetHogs is a small 'net top' tool. Instead of breaking the traffic down per protocol or per subnet, like most tools do, it groups bandwidth by process. NetHogs does not rely on a special kernel module to be loaded. If there's suddenly a lot of network traffic, you can fire up NetHogs and immediately see which PID is causing this. This makes it easy to indentify programs that have gone wild and are suddenly taking up your bandwidth.
+NetHogs is a small 'net top' tool. Instead of breaking the traffic down per protocol or per subnet, like most tools do, **it groups bandwidth by process**. NetHogs does not rely on a special kernel module to be loaded. If there's suddenly a lot of network traffic, you can fire up NetHogs and immediately see which PID is causing this. This makes it easy to indentify programs that have gone wild and are suddenly taking up your bandwidth.
 
-Since NetHogs heavily relies on /proc, some functionalities are only available on Linux.
+Since NetHogs heavily relies on `/proc`, some functionalities are only available on Linux.
 NetHogs can be built on Mac OS X, but it will only show connections, not processes.
 
 Status
@@ -18,15 +18,20 @@ Status
 
 Nethogs is a mature piece of software included in most Linux distributions.
 
-Ideas for features, as well as open bugs, can be found at https://github.com/raboof/nethogs/issues
+Ideas for features, as well as open bugs, can be found on  [issues' label:enhancement](https://github.com/raboof/nethogs/issues?q=is%3Aopen+is%3Aissue+label%3Aenhancement).
 
 ### Building from source
 
-Nethogs depends on ncurses, so you need to install the ncurses development
-libraries before building nethogs. For example on Debian, 'apt-get install
-libncurses5-dev'.
+Nethogs depends on `ncurses`, so you need to install the ncurses development
+libraries before building nethogs. 
 
-After that, simply 'make && sudo make install'
+#### Debian/Ubuntu
+
+    apt-get install libncurses5-dev
+
+After that, simply 
+
+    make && sudo make install
 
 Coding standards
 ----------------
