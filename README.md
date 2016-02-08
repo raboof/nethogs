@@ -25,8 +25,7 @@ Ideas for features, as well as open bugs, can be found on  [issues' label:enhanc
 
 ### Building from source
 
-Nethogs depends on `ncurses`, so you need to install the ncurses development
-libraries before building nethogs. 
+Nethogs depends on `ncurses` for the text-based interface and `libpcap` for user-level packet capture. So you need to install both **development libraries** before building nethogs. 
 
 #### Debian/Ubuntu
 
