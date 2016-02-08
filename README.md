@@ -21,7 +21,7 @@ Status
 
 Nethogs is a mature piece of software included in most Linux distributions.
 
-Ideas for features, as well as open bugs, can be found on  [issues' label:enhancement](https://github.com/raboof/nethogs/issues?q=is%3Aopen+is%3Aissue+label%3Aenhancement).
+Ideas for features, as well as [open bugs](https://github.com/raboof/nethogs/issues?q=is%3Aopen+is%3Aissue), can be found on  [issues' label:enhancement](https://github.com/raboof/nethogs/issues?q=is%3Aopen+is%3Aissue+label%3Aenhancement).
 
 ### Building from source
 
