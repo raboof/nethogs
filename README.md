@@ -3,7 +3,7 @@ Nethogs
 
 [![Build Status](https://travis-ci.org/raboof/nethogs.svg?branch=master)](https://travis-ci.org/raboof/nethogs)
 
-http://nethogs.sf.net
+http://raboof.github.io/nethogs
 
 Introduction
 ------------
