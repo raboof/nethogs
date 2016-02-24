@@ -2,29 +2,32 @@
 
 static void versiondisplay(void)
 {
-	std::cerr << version << "\n";
+	std::cout << version << "\n";
 }
 
-static void help(void)
+static void help(bool iserror)
 {
-	//std::cerr << "usage: nethogs [-V] [-b] [-d seconds] [-t] [-p] [-f (eth|ppp))] [device [device [device ...]]]\n";
-	std::cerr << "usage: nethogs [-V] [-b] [-d seconds] [-v mode] [-c count] [-t] [-p] [-s] [device [device [device ...]]]\n";
-	std::cerr << "		-V : prints version.\n";
-	std::cerr << "		-b : bughunt mode - implies tracemode.\n";
-	std::cerr << "		-d : delay for update refresh rate in seconds. default is 1.\n";
-	std::cerr << "		-v : view mode (0 = KB/s, 1 = total KB, 2 = total B, 3 = total MB). default is 0.\n";
-	std::cerr << "		-c : number of updates. default is 0 (unlimited).\n";
-	std::cerr << "		-t : tracemode.\n";
-	//std::cerr << "		-f : format of packets on interface, default is eth.\n";
-	std::cerr << "		-p : sniff in promiscious mode (not recommended).\n";
-	std::cerr << "		-s : sort output by sent column.\n";
-	std::cerr << "		device : device(s) to monitor. default is all interfaces up and running excluding loopback\n";
-	std::cerr << std::endl;
-	std::cerr << "When nethogs is running, press:\n";
-	std::cerr << " q: quit\n";
-	std::cerr << " s: sort by SENT traffic\n";
-	std::cerr << " r: sort by RECEIVE traffic\n";
-	std::cerr << " m: switch between total (KB, B, MB) and KB/s mode\n";
+	std::ostream & output = (iserror ? std::cerr : std::cout);
+	
+	//output << "usage: nethogs [-V] [-b] [-d seconds] [-t] [-p] [-f (eth|ppp))] [device [device [device ...]]]\n";
+	output << "usage: nethogs [-V] [-h] [-b] [-d seconds] [-v mode] [-c count] [-t] [-p] [-s] [device [device [device ...]]]\n";
+	output << "		-V : prints version.\n";
+	output << "		-h : prints this help.\n";
+	output << "		-b : bughunt mode - implies tracemode.\n";
+	output << "		-d : delay for update refresh rate in seconds. default is 1.\n";
+	output << "		-v : view mode (0 = KB/s, 1 = total KB, 2 = total B, 3 = total MB). default is 0.\n";
+	output << "		-c : number of updates. default is 0 (unlimited).\n";
+	output << "		-t : tracemode.\n";
+	//output << "		-f : format of packets on interface, default is eth.\n";
+	output << "		-p : sniff in promiscious mode (not recommended).\n";
+	output << "		-s : sort output by sent column.\n";
+	output << "		device : device(s) to monitor. default is all interfaces up and running excluding loopback\n";
+	output << std::endl;
+	output << "When nethogs is running, press:\n";
+	output << " q: quit\n";
+	output << " s: sort by SENT traffic\n";
+	output << " r: sort by RECEIVE traffic\n";
+	output << " m: switch between total (KB, B, MB) and KB/s mode\n";
 }
 
 int main (int argc, char** argv)
@@ -42,7 +45,7 @@ int main (int argc, char** argv)
 				versiondisplay();
 				exit(0);
 			case 'h':
-				help();
+				help(false);
 				exit(0);
 			case 'b':
 				bughuntmode = true;
@@ -77,7 +80,7 @@ int main (int argc, char** argv)
 				break;
 			*/
 			default:
-				help();
+				help(true);
 				exit(EXIT_FAILURE);
 		}
 	}
