@@ -36,79 +36,51 @@
 #include <netinet/ip.h>
 #include <netinet/ip6.h>
 #include <sys/ioctl.h>
-#include <cstdio>
+#include <ifaddrs.h>
 // #include "inet6.c"
 
 local_addr * local_addrs = NULL;
-
-/* moves the pointer right until a non-space is seen */
-char * stripspaces (char * input)
-{
-	char * retval = input;
-	while (*retval == ' ')
-	  retval++;
-	return retval;
-}
 
 /*
  * getLocal
  *	device: This should be device explicit (e.g. eth0:1)
  *
- * uses ioctl to get address of this device, and adds it to the
+ * uses getifaddrs to get addresses of this device, and adds them to the
  * local_addrs-list.
  */
 void getLocal (const char *device, bool tracemode)
 {
-	/* get local IPv4 addresses */
-	int sock;
-	struct ifreq iFreq;
-	struct sockaddr_in *saddr;
-
-	if((sock=socket(AF_INET, SOCK_DGRAM, 0))<0)
-		forceExit(false, "creating socket failed while establishing local IP - are you root?");
-
-	strcpy(iFreq.ifr_name, device);
-
-	if(ioctl(sock, SIOCGIFADDR, &iFreq)<0)
-		forceExit(false, "ioctl failed while establishing local IP for selected device %s. You may specify the device on the command line.", device);
-
-	saddr=(struct sockaddr_in*)&iFreq.ifr_addr;
-	local_addrs = new local_addr (saddr->sin_addr.s_addr, local_addrs);
-
-	if (tracemode || DEBUG) {
-		printf ("Adding local address: %s\n", inet_ntoa(saddr->sin_addr));
+	struct ifaddrs *ifaddr, *ifa;
+	if(getifaddrs(&ifaddr) == -1) {
+		forceExit(false, "getifaddrs failed while establishing local IP.");
 	}
 
-	/* also get local IPv6 addresses */
-	FILE * ifinfo = fopen ("/proc/net/if_inet6", "r");
-	char buffer [500];
-	if (ifinfo)
-	{
-		do
-		{
-			if (fgets(buffer, sizeof(buffer), ifinfo))
-			{
-				char address [33];
-				char ifname [9];
-				int n_results = sscanf (buffer, "%32[0-9a-f] %*d %*d %*d %*d %8[0-9a-zA-Z]", address, ifname);
-				assert (n_results = 2);
+	for (ifa = ifaddr; ifa != NULL; ifa = ifa->ifa_next) {
+		if(ifa->ifa_addr == NULL)
+			continue;
 
-				if (strcmp (stripspaces(ifname), device) == 0)
-				{
-					local_addrs = new local_addr (address, local_addrs);
-					if (tracemode || DEBUG) {
-						printf ("Adding local address: %s\n", address);
-					}
-				}
-#if DEBUG
-				else
-				{
-				  	std::cerr << "Address skipped for interface " << ifname << std::endl;
-				}
-#endif
+		if(strcmp(ifa->ifa_name, device) != 0)
+			continue;
+
+		int family = ifa->ifa_addr->sa_family;
+
+		if(family == AF_INET){
+			struct sockaddr_in *addr = (struct sockaddr_in*)ifa->ifa_addr;
+			local_addrs = new local_addr(addr->sin_addr.s_addr, local_addrs);
+
+			if (tracemode || DEBUG) {
+				printf("Adding local address: %s\n", inet_ntoa(addr->sin_addr));
 			}
-		} while (!feof(ifinfo));
-		fclose(ifinfo);
+		}else if(family == AF_INET6){
+			struct sockaddr_in6 *addr = (struct sockaddr_in6*)ifa->ifa_addr;
+			local_addrs = new local_addr(&addr->sin6_addr, local_addrs);
+
+			if (tracemode || DEBUG) {
+				char host[512];
+				printf("Adding local address: %s\n",
+						inet_ntop(AF_INET6, &addr->sin6_addr, host, sizeof(struct in6_addr)));
+			}
+		}
 	}
 }
 

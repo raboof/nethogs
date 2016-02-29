@@ -90,42 +90,13 @@ public:
 		inet_ntop (AF_INET, &m_addr, string, 15);
 	}
 	/* this constructor takes an char address[33] */
-	local_addr (char m_address [33], local_addr * m_next = NULL)
+	local_addr (struct in6_addr *m_addr, local_addr * m_next = NULL)
 	{
+		addr6 = *m_addr;
 		next = m_next;
-		char address [40];
-		address[0] = m_address[0]; address[1] = m_address[1];
-		address[2] = m_address[2]; address[3] = m_address[3];
-		address[4] = ':';
-		address[5] = m_address[4]; address[6] = m_address[5];
-		address[7] = m_address[6]; address[8] = m_address[7];
-		address[9] = ':';
-		address[10] = m_address[8]; address[11] = m_address[9];
-		address[12] = m_address[10]; address[13] = m_address[11];
-		address[14] = ':';
-		address[15] = m_address[12]; address[16] = m_address[13];
-		address[17] = m_address[14]; address[18] = m_address[15];
-		address[19] = ':';
-		address[20] = m_address[16]; address[21] = m_address[17];
-		address[22] = m_address[18]; address[23] = m_address[19];
-		address[24] = ':';
-		address[25] = m_address[20]; address[26] = m_address[21];
-		address[27] = m_address[22]; address[28] = m_address[23];
-		address[29] = ':';
-		address[30] = m_address[24]; address[31] = m_address[25];
-		address[32] = m_address[26]; address[33] = m_address[27];
-		address[34] = ':';
-		address[35] = m_address[28]; address[36] = m_address[29];
-		address[37] = m_address[30]; address[38] = m_address[31];
-		address[39] = 0;
-		string = strdup(address);
-		//if (DEBUG)
-		//	std::cout << "Converting address " << address << std::endl;
-
-		int result = inet_pton (AF_INET6, address, &addr6);
-
-		assert (result > 0);
 		sa_family = AF_INET6;
+		string = (char*) malloc (64);
+		inet_ntop (AF_INET6, &m_addr, string, 63);
 	}
 
 	bool contains (const in_addr_t & n_addr);
