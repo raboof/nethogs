@@ -1,4 +1,4 @@
-/* 
+/*
  * packet.cpp
  *
  * Copyright (c) 2004-2006,2008 Arnout Engelen
@@ -74,11 +74,10 @@ void getLocal (const char *device, bool tracemode)
 		}else if(family == AF_INET6){
 			struct sockaddr_in6 *addr = (struct sockaddr_in6*)ifa->ifa_addr;
 			local_addrs = new local_addr(&addr->sin6_addr, local_addrs);
-
 			if (tracemode || DEBUG) {
 				char host[512];
 				printf("Adding local address: %s\n",
-						inet_ntop(AF_INET6, &addr->sin6_addr, host, sizeof(struct in6_addr)));
+						inet_ntop(AF_INET6, &addr->sin6_addr, host, sizeof(host)));
 			}
 		}
 	}
@@ -277,5 +276,5 @@ bool Packet::match (Packet * other)
 
 bool Packet::matchSource (Packet * other)
 {
-	return (sport == other->sport) && (sameinaddr(sip, other->sip)); 
+	return (sport == other->sport) && (sameinaddr(sip, other->sip));
 }
