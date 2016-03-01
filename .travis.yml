@@ -6,3 +6,7 @@ addons:
     - libpcap0.8-dev
 
 script: make
+
+os:
+  - linux
+  - osx
