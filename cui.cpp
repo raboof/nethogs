@@ -28,6 +28,7 @@
 #include <cerrno>
 #include <cstdlib>
 #include <algorithm>
+#include <unistd.h>
 
 #include <ncurses.h>
 #include "nethogs.h"
@@ -35,6 +36,7 @@
 
 
 std::string * caption;
+extern bool needrefresh;
 extern const char version[];
 extern ProcList * processes;
 extern timeval curtime;
@@ -255,8 +257,31 @@ void exit_ui ()
 	delete caption;
 }
 
+static void wait_for_input(){
+ 	fd_set fds;
+	
+	int maxfd = STDIN_FILENO;
+
+	FD_ZERO(&fds);
+	FD_SET(STDIN_FILENO, &fds);
+	int status = select(maxfd + 1, &fds, NULL, NULL, NULL);
+
+	if(status == -1){
+	  switch (errno) {
+	  case EINTR:
+	    break;
+	  default:
+	    std::cerr << "select error " << errno << ": " << strerror(errno) << std::endl;
+	    break;
+	  }
+	}
+}
+
 void ui_tick ()
 {
+
+	wait_for_input();
+
 	switch (getch()) {
 		case 'q':
 			/* quit */
@@ -265,14 +290,17 @@ void ui_tick ()
 		case 's':
 			/* sort on 'sent' */
 			sortRecv = false;
+			needrefresh = true;
 			break;
 		case 'r':
 			/* sort on 'received' */
 			sortRecv = true;
+			needrefresh = true;
 			break;
 		case 'm':
 			/* switch mode: total vs kb/s */
 			viewMode = (viewMode + 1) % VIEWMODE_COUNT;
+			needrefresh = true;
 			break;
 	}
 }

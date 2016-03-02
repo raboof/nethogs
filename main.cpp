@@ -154,8 +154,6 @@ int main (int argc, char** argv)
 	//  This causes the CPU utilisation to go up to 100%. This is tricky:
 	while (1)
 	{
-		bool packets_read = false;
-
 		handle * current_handle = handles;
 		while (current_handle != NULL)
 		{
@@ -166,30 +164,19 @@ int main (int argc, char** argv)
 			{
 				std::cerr << "Error dispatching: " << retval << std::endl;
 			}
-			else if (retval != 0)
-			{
-				packets_read = true;
-			}
 			current_handle = current_handle->next;
 		}
 
 
+		if ((!DEBUG)&&(!tracemode))
+		{
+		    // handle user input
+		    ui_tick();
+		}
 		if (needrefresh)
 		{
-			if ((!DEBUG)&&(!tracemode))
-			{
-				// handle user input
-				ui_tick();
-			}
 			do_refresh();
 			needrefresh = false;
-		}
-
-		// If no packets were read at all this iteration, pause to prevent 100%
-		// CPU utilisation;
-		if (!packets_read)
-		{
-			usleep(100);
 		}
 	}
 }
