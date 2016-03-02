@@ -48,11 +48,11 @@ local_addr * local_addrs = NULL;
  * uses getifaddrs to get addresses of this device, and adds them to the
  * local_addrs-list.
  */
-void getLocal (const char *device, bool tracemode)
+bool getLocal (const char *device, bool tracemode)
 {
 	struct ifaddrs *ifaddr, *ifa;
 	if(getifaddrs(&ifaddr) == -1) {
-		forceExit(false, "getifaddrs failed while establishing local IP.");
+		return false; 
 	}
 
 	for (ifa = ifaddr; ifa != NULL; ifa = ifa->ifa_next) {
@@ -81,6 +81,7 @@ void getLocal (const char *device, bool tracemode)
 			}
 		}
 	}
+	return true;
 }
 
 typedef u_int32_t tcp_seq;
