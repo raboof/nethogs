@@ -57,6 +57,7 @@ const int COLUMN_WIDTH_USER =  8;
 const int COLUMN_WIDTH_DEV =  5;
 const int COLUMN_WIDTH_SENT = 11;
 const int COLUMN_WIDTH_RECEIVED = 11;
+const int COLUMN_WIDTH_UNIT = 6;
 
 const char * COLUMN_FORMAT_PID = "%7d";
 const char * COLUMN_FORMAT_SENT = "%11.3f";
@@ -166,23 +167,16 @@ void Line::show (int row, unsigned int proglen)
 	else
 		mvprintw (row, column_offset_pid, COLUMN_FORMAT_PID, m_pid);
 
-	// USER column
 	std::string username = uid2username(m_uid);
 	mvaddstr_truncate_trailing (row, column_offset_user, username.c_str(), username.size(), COLUMN_WIDTH_USER);
 
-	// PROGRAM column
 	mvaddstr_truncate_leading (row, column_offset_program, m_name, strlen (m_name), proglen);
 
-	// DEV column
 	mvaddstr (row, column_offset_dev, devicename);
 
-	// SENT column
 	mvprintw (row, column_offset_sent, COLUMN_FORMAT_SENT, sent_value);
 
-	// RECEIVED column
 	mvprintw (row, column_offset_received, COLUMN_FORMAT_RECEIVED, recv_value);
-
-	// Unit column
 	if (viewMode == VIEWMODE_KBPS)
 	{
 		mvaddstr (row, column_offset_unit, "KB/sec");
@@ -442,16 +436,16 @@ void show_ncurses(Line * lines[], int nproc) {
 
 	attron(A_REVERSE);
 	int totalrow = std::min(rows-1, 3+1+i);
-	mvprintw (totalrow, 0, "  TOTAL        %-*.*s          %10.3f  %10.3f ", proglen, proglen, " ", sent_global, recv_global);
+	mvprintw (totalrow, 0, "  TOTAL        %-*.*s          %11.3f %11.3f ", proglen, proglen, " ", sent_global, recv_global);
 	if (viewMode == VIEWMODE_KBPS)
 	{
-		mvprintw (3+1+i, cols - 7, "KB/sec ");
+		mvprintw (3+1+i, cols - COLUMN_WIDTH_UNIT, "KB/sec ");
 	} else if (viewMode == VIEWMODE_TOTAL_B) {
-		mvprintw (3+1+i, cols - 7, "B      ");
+		mvprintw (3+1+i, cols - COLUMN_WIDTH_UNIT, "B      ");
 	} else if (viewMode == VIEWMODE_TOTAL_KB) {
-		mvprintw (3+1+i, cols - 7, "KB     ");
+		mvprintw (3+1+i, cols - COLUMN_WIDTH_UNIT, "KB     ");
 	} else if (viewMode == VIEWMODE_TOTAL_MB) {
-		mvprintw (3+1+i, cols - 7, "MB     ");
+		mvprintw (3+1+i, cols - COLUMN_WIDTH_UNIT, "MB     ");
 	}
 	attroff(A_REVERSE);
 	mvprintw (totalrow+1, 0, "");
