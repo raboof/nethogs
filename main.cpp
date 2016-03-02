@@ -30,6 +30,32 @@ static void help(bool iserror)
 	output << " m: switch between total (KB, B, MB) and KB/s mode\n";
 }
 
+void quit_cb (int /* i */)
+{
+	procclean();
+	if ((!tracemode) && (!DEBUG))
+		exit_ui();
+	exit(0);
+}
+
+void forceExit(bool success, const char *msg, ...)
+{
+	if ((!tracemode)&&(!DEBUG)){
+		exit_ui();
+	}
+
+	va_list argp;
+	va_start(argp, msg);
+	vfprintf(stderr, msg, argp);
+	va_end(argp);
+	std::cerr << std::endl;
+
+	if (success)
+		exit(EXIT_SUCCESS);
+	else
+		exit(EXIT_FAILURE);
+}
+
 int main (int argc, char** argv)
 {
 	process_init();
@@ -111,7 +137,11 @@ int main (int argc, char** argv)
 	handle * handles = NULL;
 	device * current_dev = devices;
 	while (current_dev != NULL) {
-		getLocal(current_dev->name, tracemode);
+		
+		if( !getLocal(current_dev->name, tracemode) )
+		{
+			forceExit(false, "getifaddrs failed while establishing local IP.");
+		}
 
 		dp_handle * newhandle = dp_open_live(current_dev->name, BUFSIZ, promisc, 100, errbuf);
 		if (newhandle != NULL)
