@@ -52,6 +52,17 @@ extern unsigned refreshcount;
 
 #define PID_MAX 4194303
 
+const int COLUMN_WIDTH_PID =  7;
+const int COLUMN_WIDTH_USER =  8;
+const int COLUMN_WIDTH_DEV =  5;
+const int COLUMN_WIDTH_SENT = 11;
+const int COLUMN_WIDTH_RECEIVED = 11;
+const int COLUMN_WIDTH_UNIT = 6;
+
+const char * COLUMN_FORMAT_PID = "%7d";
+const char * COLUMN_FORMAT_SENT = "%11.3f";
+const char * COLUMN_FORMAT_RECEIVED = "%11.3f";
+
 class Line
 {
 public:
@@ -109,47 +120,78 @@ std::string uid2username (uid_t uid)
 		return std::string(pwd->pw_name);
 }
 
+/**
+ * Render the provided text at the specified location, truncating if the length of the text exceeds a maximum. If the
+ * text must be truncated, the string ".." will be rendered, followed by max_len - 2 characters of the provided text.
+ */
+static void mvaddstr_truncate_leading(int row, int col, const char* str, std::size_t str_len, std::size_t max_len)
+{
+	if (str_len < max_len) {
+		mvaddstr(row, col, str);
+	} else {
+		mvaddstr(row, col, "..");
+		addnstr(str + 2, max_len - 2);
+	}
+}
+
+/**
+ * Render the provided text at the specified location, truncating if the length of the text exceeds a maximum. If the
+ * text must be truncated, the text will be rendered up to max_len - 2 characters and then ".." will be rendered.
+ */
+static void mvaddstr_truncate_trailing(int row, int col, const char* str, std::size_t str_len, std::size_t max_len)
+{
+	if (str_len < max_len) {
+		mvaddstr(row, col, str);
+	} else {
+		mvaddnstr(row, col, str, max_len - 2);
+		addstr("..");
+	}
+}
 
 void Line::show (int row, unsigned int proglen)
 {
 	assert (m_pid >= 0);
 	assert (m_pid <= PID_MAX);
 
+	const int column_offset_pid = 0;
+	const int column_offset_user = column_offset_pid + COLUMN_WIDTH_PID + 1;
+	const int column_offset_program = column_offset_user + COLUMN_WIDTH_USER + 1;
+	const int column_offset_dev = column_offset_program + proglen + 2;
+	const int column_offset_sent = column_offset_dev + COLUMN_WIDTH_DEV + 1;
+	const int column_offset_received = column_offset_sent + COLUMN_WIDTH_SENT + 1;
+	const int column_offset_unit = column_offset_received + COLUMN_WIDTH_RECEIVED + 1;
+
+	// PID column
 	if (m_pid == 0)
-		mvprintw (row, 6, "?");
+		mvaddch (row, column_offset_pid + COLUMN_WIDTH_PID - 1, '?');
 	else
-		mvprintw (row, 0, "%7d", m_pid);
+		mvprintw (row, column_offset_pid, COLUMN_FORMAT_PID, m_pid);
+
 	std::string username = uid2username(m_uid);
-	mvprintw (row, 8, "%s", username.c_str());
-	if (strlen (m_name) > proglen) {
-		// truncate oversized names
-		char * tmp = strdup(m_name);
-		char * start = tmp + strlen (m_name) - proglen;
-		start[0] = '.';
-		start[1] = '.';
-		mvprintw (row, 8 + 9, "%s", start);
-		free (tmp);
-	} else {
-		mvprintw (row, 8 + 9, "%s", m_name);
-	}
-	mvprintw (row, 8 + 9 + proglen + 2, "%s", devicename);
-	mvprintw (row, 8 + 9 + proglen + 2 + 6, "%10.3f", sent_value);
-	mvprintw (row, 8 + 9 + proglen + 2 + 6 + 9 + 3, "%10.3f", recv_value);
+	mvaddstr_truncate_trailing (row, column_offset_user, username.c_str(), username.size(), COLUMN_WIDTH_USER);
+
+	mvaddstr_truncate_leading (row, column_offset_program, m_name, strlen (m_name), proglen);
+
+	mvaddstr (row, column_offset_dev, devicename);
+
+	mvprintw (row, column_offset_sent, COLUMN_FORMAT_SENT, sent_value);
+
+	mvprintw (row, column_offset_received, COLUMN_FORMAT_RECEIVED, recv_value);
 	if (viewMode == VIEWMODE_KBPS)
 	{
-		mvprintw (row, 8 + 9 + proglen + 2 + 6 + 9 + 3 + 11, "KB/sec");
+		mvaddstr (row, column_offset_unit, "KB/sec");
 	}
 	else if (viewMode == VIEWMODE_TOTAL_MB)
 	{
-		mvprintw (row, 8 + 9 + proglen + 2 + 6 + 9 + 3 + 11, "MB    ");
+		mvaddstr (row, column_offset_unit, "MB    ");
 	}
 	else if (viewMode == VIEWMODE_TOTAL_KB)
 	{
-		mvprintw (row, 8 + 9 + proglen + 2 + 6 + 9 + 3 + 11, "KB    ");
+		mvaddstr (row, column_offset_unit, "KB    ");
 	}
 	else if (viewMode == VIEWMODE_TOTAL_B)
 	{
-		mvprintw (row, 8 + 9 + proglen + 2 + 6 + 9 + 3 + 11, "B     ");
+		mvaddstr (row, column_offset_unit, "B     ");
 	}
 }
 
@@ -394,16 +436,16 @@ void show_ncurses(Line * lines[], int nproc) {
 
 	attron(A_REVERSE);
 	int totalrow = std::min(rows-1, 3+1+i);
-	mvprintw (totalrow, 0, "  TOTAL        %-*.*s          %10.3f  %10.3f ", proglen, proglen, " ", sent_global, recv_global);
+	mvprintw (totalrow, 0, "  TOTAL        %-*.*s          %11.3f %11.3f ", proglen, proglen, " ", sent_global, recv_global);
 	if (viewMode == VIEWMODE_KBPS)
 	{
-		mvprintw (3+1+i, cols - 7, "KB/sec ");
+		mvprintw (3+1+i, cols - COLUMN_WIDTH_UNIT, "KB/sec ");
 	} else if (viewMode == VIEWMODE_TOTAL_B) {
-		mvprintw (3+1+i, cols - 7, "B      ");
+		mvprintw (3+1+i, cols - COLUMN_WIDTH_UNIT, "B      ");
 	} else if (viewMode == VIEWMODE_TOTAL_KB) {
-		mvprintw (3+1+i, cols - 7, "KB     ");
+		mvprintw (3+1+i, cols - COLUMN_WIDTH_UNIT, "KB     ");
 	} else if (viewMode == VIEWMODE_TOTAL_MB) {
-		mvprintw (3+1+i, cols - 7, "MB     ");
+		mvprintw (3+1+i, cols - COLUMN_WIDTH_UNIT, "MB     ");
 	}
 	attroff(A_REVERSE);
 	mvprintw (totalrow+1, 0, "");
