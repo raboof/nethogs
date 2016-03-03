@@ -22,7 +22,8 @@ class NETHOGS_DSO_VISIBLE NethogsMonitorData
 		float		sent_kbs;
 		float		recv_kbs;
 	};
-	std::map<std::string, Line> apps_info;
+	typedef std::map<std::string, Line> TAppMap;
+	TAppMap apps_info;
 };
 
 class NETHOGS_DSO_VISIBLE NethogsMonitor

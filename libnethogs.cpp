@@ -81,7 +81,6 @@ void NethogsMonitor::threadProc()
 	fprintf(stderr, "Waiting for first packet to arrive (see sourceforge.net bug 1019381)\n");
 	struct dpargs * userdata = (dpargs *) malloc (sizeof (struct dpargs));
 
-	time_t last_event_time = 0;
 	// Main loop:
 	//  Walks though the 'handles' list, which contains handles opened in non-blocking mode.
 	//  This causes the CPU utilisation to go up to 100%. This is tricky:
@@ -110,7 +109,6 @@ void NethogsMonitor::threadProc()
 		if ( packets_read && needrefresh )
 		{
 			needrefresh = false;
-			last_event_time = dp_get_lasttime();
 			handleUpdate();
 		}
 
@@ -149,6 +147,9 @@ void NethogsMonitor::handleUpdate()
 		{
 			if (DEBUG)
 				std::cout << "PROC: Deleting process\n";
+
+			monitor_data.apps_info.erase(curproc->getVal()->name);
+
 			ProcList * todelete = curproc;
 			Process * p_todelete = curproc->getVal();
 			if (previousproc)

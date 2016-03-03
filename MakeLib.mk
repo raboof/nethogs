@@ -23,7 +23,7 @@ else
   # Release mode options
   ODIR:=$(ODIR_BASE)/release
   CFLAGS?=-Wall -Wextra -O3 -fPIC $(VISIBILITY)
-  CXXFLAGS?=---std=c++11 Wall -Wextra -O3 -fPIC $(VISIBILITY) $(CXXINCLUDES)
+  CXXFLAGS?=-Wall --std=c++11 -Wextra -O3 -fPIC $(VISIBILITY) $(CXXINCLUDES)
 endif
 
 OBJ_NAMES= libnethogs.o packet.o connection.o process.o refresh.o decpcap.o inode2prog.o conninode.o devices.o
