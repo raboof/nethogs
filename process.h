@@ -95,6 +95,12 @@ public:
 	}
 	int getLastPacket ();
 
+	void gettotal( u_int32_t * recvd, u_int32_t * sent);
+	void getkbps (float * recvd, float * sent);
+	void gettotalmb(float * recvd, float * sent);
+	void gettotalkb(float * recvd, float * sent);
+	void gettotalb (float * recvd, float * sent);
+
 	char * name;
 	const char * devicename;
 	int pid;
@@ -142,14 +148,5 @@ void process_init ();
 void refreshconninode ();
 
 void procclean ();
-
-void getkbps (Process * curproc, float * recvd, float * sent);
-void gettotal(Process * curproc, u_int32_t * recvd, u_int32_t * sent);
-void gettotalmb(Process * curproc, float * recvd, float * sent);
-void gettotalkb(Process * curproc, float * recvd, float * sent);
-void gettotalb(Process * curproc, float * recvd, float * sent);
-float tomb (u_int32_t bytes);
-float tokb (u_int32_t bytes);
-float tokbps (u_int32_t bytes);
 
 #endif

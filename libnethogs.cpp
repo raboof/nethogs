@@ -183,8 +183,8 @@ void NethogsMonitor::handleUpdate()
 			u_int32_t recv_bytes;
 			float sent_kbs;
 			float recv_kbs;
-			getkbps  (curproc->getVal(), &sent_kbs,   &recv_kbs);
-			gettotal (curproc->getVal(), &recv_bytes, &sent_bytes);
+			curproc->getVal()->getkbps  (&sent_kbs,   &recv_kbs);
+			curproc->getVal()->gettotal (&recv_bytes, &sent_bytes);
 			
 			if( monitor_udpate_callback )
 			{

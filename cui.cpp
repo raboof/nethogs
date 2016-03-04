@@ -412,22 +412,22 @@ void do_refresh()
 			if (viewMode == VIEWMODE_KBPS)
 			{
 				//std::cout << "kbps viemode" << std::endl;
-				getkbps (curproc->getVal(), &value_recv, &value_sent);
+				curproc->getVal()->getkbps (&value_recv, &value_sent);
 			}
 			else if (viewMode == VIEWMODE_TOTAL_KB)
 			{
 				//std::cout << "total viemode" << std::endl;
-				gettotalkb(curproc->getVal(), &value_recv, &value_sent);
+				curproc->getVal()->gettotalkb(&value_recv, &value_sent);
 			}
 			else if (viewMode == VIEWMODE_TOTAL_MB)
 			{
 				//std::cout << "total viemode" << std::endl;
-				gettotalmb(curproc->getVal(), &value_recv, &value_sent);
+				curproc->getVal()->gettotalmb(&value_recv, &value_sent);
 			}
 			else if (viewMode == VIEWMODE_TOTAL_B)
 			{
 				//std::cout << "total viemode" << std::endl;
-				gettotalb(curproc->getVal(), &value_recv, &value_sent);
+				curproc->getVal()->gettotalb(&value_recv, &value_sent);
 			}
 			else
 			{
