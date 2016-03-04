@@ -154,10 +154,14 @@ void NethogsMonitor::handleUpdate()
 
 			if( monitor_udpate_callback )
 			{
-				NethogsAppUpdate &data = monitor_update_data[curproc->getVal()->pid];
-				data.action = NethogsAppUpdate::Remove;
-				monitor_udpate_callback(data);
-				monitor_update_data.erase(curproc->getVal()->pid);
+				NethogsAppUpdateMap::iterator it = monitor_update_data.find(curproc->getVal()->pid);
+				if( it != monitor_update_data.end() )
+				{
+					NethogsAppUpdate &data = it->second;
+					data.action = NethogsAppUpdate::Remove;
+					monitor_udpate_callback(data);
+					monitor_update_data.erase(it);
+				}
 			}
 
 			ProcList * todelete = curproc;
@@ -189,7 +193,9 @@ void NethogsMonitor::handleUpdate()
 			if( monitor_udpate_callback )
 			{
 				//notify update
-				NethogsAppUpdate &data = monitor_update_data[pid];
+				NethogsAppUpdate &data = 
+					monitor_update_data.insert(std::make_pair(pid, NethogsAppUpdate())).first->second;
+	
 				bool data_change = false;
 				
 				#define NHM_UPDATE_ONE_FIELD(TO,FROM) if((TO)!=(FROM)) { TO = FROM; data_change = true; }

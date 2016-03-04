@@ -18,12 +18,12 @@ ifeq ($(DEBUG),1)
   $(info Bulding debug version)
   ODIR:=$(ODIR_BASE)/lib/debug
   CFLAGS?=-Wall -Wextra -O0 -g -fPIC $(VISIBILITY)
-  CXXFLAGS?=--std=c++11 --std=c++11 -Wall -Wextra -O0 -g -fPIC $(VISIBILITY) $(CXXINCLUDES)
+  CXXFLAGS?=-Wall --std=c++0x -Wextra -O0 -g -fPIC $(VISIBILITY) $(CXXINCLUDES)
 else
   # Release mode options
   ODIR:=$(ODIR_BASE)/lib/release
   CFLAGS?=-Wall -Wextra -O3 -fPIC $(VISIBILITY)
-  CXXFLAGS?=-Wall --std=c++11 -Wextra -O3 -fPIC $(VISIBILITY) $(CXXINCLUDES)
+  CXXFLAGS?=-Wall --std=c++0x -Wextra -O3 -fPIC $(VISIBILITY) $(CXXINCLUDES)
 endif
 
 OBJ_NAMES= libnethogs.o packet.o connection.o process.o refresh.o decpcap.o inode2prog.o conninode.o devices.o

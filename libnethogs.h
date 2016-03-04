@@ -1,6 +1,7 @@
 #ifndef LIBNETHOGS_H_
 #define LIBNETHOGS_H_
 
+#include <stdint.h>
 #include <string>
 
 #define NETHOGS_DSO_VISIBLE __attribute__ ((visibility ("default")))
