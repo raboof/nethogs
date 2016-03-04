@@ -17,11 +17,11 @@ public:
 	}
 	Action		action;
 	int 		pid;
-	u_int32_t	uid;
+	uint32_t	uid;
 	std::string app_name;
 	std::string device_name;
-	u_int32_t	sent_bytes;
-	u_int32_t	recv_bytes;
+	uint32_t	sent_bytes;
+	uint32_t	recv_bytes;
 	float		sent_kbs;
 	float		recv_kbs;
 };
