@@ -193,8 +193,7 @@ void NethogsMonitor::handleUpdate()
 			if( monitor_udpate_callback )
 			{
 				//notify update
-				NethogsAppUpdate &data = 
-					monitor_update_data.insert(std::make_pair(pid, NethogsAppUpdate())).first->second;
+				NethogsAppUpdate &data = monitor_update_data[pid];
 	
 				bool data_change = false;
 				
