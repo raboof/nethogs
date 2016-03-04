@@ -1,38 +1,44 @@
 #ifndef NETHOGSMINITOR_H
 #define NETHOGSMINITOR_H
 
-#include <functional>
-#include <map>
+#include <string>
 
 #define NETHOGS_DSO_VISIBLE __attribute__ ((visibility ("default")))
 #define NETHOGS_DSO_HIDDEN  __attribute__ ((visibility ("hidden")))
 
-class NETHOGS_DSO_VISIBLE NethogsMonitorData
+class NETHOGS_DSO_VISIBLE NethogsAppUpdate
 {
-	public:
-	class Line
+public:
+	enum Action {Set, Remove};
+	NethogsAppUpdate() 
+	: action(Set), pid(0), uid(0), sent_kbs(0), recv_kbs(0)
 	{
-		public:
-		std::string app_name;
-		std::string device_name;
-		int			uid;
-		int 		pid;
-		u_int32_t	sent_bytes;
-		u_int32_t	recv_bytes;
-		float		sent_kbs;
-		float		recv_kbs;
-	};
-	typedef std::map<std::string, Line> TAppMap;
-	TAppMap apps_info;
+	}
+	Action		action;
+	int 		pid;
+	u_int32_t	uid;
+	std::string app_name;
+	std::string device_name;
+	u_int32_t	sent_bytes;
+	u_int32_t	recv_bytes;
+	float		sent_kbs;
+	float		recv_kbs;
 };
 
 class NETHOGS_DSO_VISIBLE NethogsMonitor
 {
 	NethogsMonitor();
 public:
-	typedef std::function<void(NethogsMonitorData const&)> Callback;
+	typedef void(*Callback)(NethogsAppUpdate const&);
 	
-	static void start(Callback const& cb);
+	//register async callback to receive updates
+	//have to be called before start
+	static void registerUpdateCallback(Callback const& cb);
+		
+	//start the monitor
+	static void start();
+	
+	//stop the monitor
 	static void stop();
 	
 private:

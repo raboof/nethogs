@@ -7,6 +7,7 @@
 #include <atomic>
 #include <memory>
 #include <thread>
+#include <map>
 
 //////////////////////////////
 extern ProcList * processes;
@@ -17,8 +18,11 @@ extern Process * unknownip;
 
 static std::shared_ptr<std::thread> monitor_thread_ptr;
 static std::atomic_bool monitor_thread_run_flag(false);
+
 static NethogsMonitor::Callback monitor_udpate_callback;
-static NethogsMonitorData monitor_data;
+
+typedef std::map<int, NethogsAppUpdate> NethogsAppUpdateMap;
+static NethogsAppUpdateMap monitor_update_data;
 
 bool NethogsMonitor::_trace = false;
 bool NethogsMonitor::_promisc = false;
@@ -106,7 +110,7 @@ void NethogsMonitor::threadProc()
 		}
 
 
-		if ( packets_read && needrefresh )
+		if (needrefresh)
 		{
 			needrefresh = false;
 			handleUpdate();
@@ -148,7 +152,13 @@ void NethogsMonitor::handleUpdate()
 			if (DEBUG)
 				std::cout << "PROC: Deleting process\n";
 
-			monitor_data.apps_info.erase(curproc->getVal()->name);
+			if( monitor_udpate_callback )
+			{
+				NethogsAppUpdate &data = monitor_update_data[curproc->getVal()->pid];
+				data.action = NethogsAppUpdate::Remove;
+				monitor_udpate_callback(data);
+				monitor_update_data.erase(curproc->getVal()->pid);
+			}
 
 			ProcList * todelete = curproc;
 			Process * p_todelete = curproc->getVal();
@@ -156,7 +166,8 @@ void NethogsMonitor::handleUpdate()
 			{
 				previousproc->next = curproc->next;
 				curproc = curproc->next;
-			} else {
+			} else 
+			{
 				processes = curproc->getNext();
 				curproc = processes;
 			}
@@ -166,37 +177,60 @@ void NethogsMonitor::handleUpdate()
 			//continue;
 		}
 		else
-		{			
-			NethogsMonitorData::Line& line =  monitor_data.apps_info[curproc->getVal()->name]; 
-			if( line.app_name.empty() )
-			{
-				line.app_name = curproc->getVal()->name;
-			}
-			if( line.device_name != curproc->getVal()->devicename )
-			{
-				line.device_name = curproc->getVal()->devicename;
-			}
-			line.pid = curproc->getVal()->pid;
-			line.uid = curproc->getVal()->getUid();
-				
-			getkbps  (curproc->getVal(), &line.sent_kbs,   &line.recv_kbs);
-			gettotal (curproc->getVal(), &line.recv_bytes, &line.sent_bytes);
+		{
+			int const pid = curproc->getVal()->pid;
+			u_int32_t sent_bytes;
+			u_int32_t recv_bytes;
+			float sent_kbs;
+			float recv_kbs;
+			getkbps  (curproc->getVal(), &sent_kbs,   &recv_kbs);
+			gettotal (curproc->getVal(), &recv_bytes, &sent_bytes);
 			
+			if( monitor_udpate_callback )
+			{
+				//notify update
+				NethogsAppUpdate &data = monitor_update_data[pid];
+				bool data_change = false;
+				
+				#define NHM_UPDATE_ONE_FIELD(TO,FROM) if((TO)!=(FROM)) { TO = FROM; data_change = true; }
+				NHM_UPDATE_ONE_FIELD( data.pid,         pid )
+				NHM_UPDATE_ONE_FIELD( data.uid,         curproc->getVal()->getUid() )
+				NHM_UPDATE_ONE_FIELD( data.app_name,    curproc->getVal()->name )
+				NHM_UPDATE_ONE_FIELD( data.device_name, curproc->getVal()->devicename )
+				NHM_UPDATE_ONE_FIELD( data.sent_bytes,  sent_bytes )
+				NHM_UPDATE_ONE_FIELD( data.recv_bytes,  recv_bytes )
+				NHM_UPDATE_ONE_FIELD( data.sent_kbs,    sent_kbs )
+				NHM_UPDATE_ONE_FIELD( data.recv_kbs,    recv_kbs )
+				#undef NHM_UPDATE_ONE_FIELD				
+				
+				if( data_change )
+				{
+					data.action = NethogsAppUpdate::Set;
+					monitor_udpate_callback(data);
+				}
+			}
+			
+			//next
 			previousproc = curproc;
 			curproc = curproc->next;
 		}
 	}
-	
-	monitor_udpate_callback(monitor_data);
 }
 
-void NethogsMonitor::start(NethogsMonitor::Callback const& cb)
+void NethogsMonitor::registerUpdateCallback(Callback const& cb)
+{
+	if( !monitor_thread_run_flag )
+	{
+		monitor_udpate_callback = cb;
+	}
+}
+
+void NethogsMonitor::start()
 {
 	bool expected = false;
 	if( monitor_thread_run_flag.compare_exchange_strong(expected, true) )
 	{
-		monitor_udpate_callback = cb;
-		monitor_thread_ptr = std::make_shared<std::thread>(&threadProc);
+		monitor_thread_ptr = std::make_shared<std::thread>(&NethogsMonitor::threadProc);
 	}
 }
 
