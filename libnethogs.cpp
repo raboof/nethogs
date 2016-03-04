@@ -4,6 +4,7 @@
 #include <pthread.h>
 #include <iostream>
 #include <mutex>
+#include <condition_variable>
 #include <atomic>
 #include <memory>
 #include <thread>
@@ -19,12 +20,16 @@ extern Process * unknownip;
 static std::shared_ptr<std::thread> monitor_thread_ptr;
 static std::atomic_bool monitor_thread_run_flag(false);
 
+std::mutex monitor_exit_event_mutex;
+std::condition_variable monitor_exit_event;
+
 static NethogsMonitor::Callback monitor_udpate_callback;
 
 typedef std::map<int, NethogsAppUpdate> NethogsAppUpdateMap;
 static NethogsAppUpdateMap monitor_update_data;
 
 static int monitor_refresh_delay = 1;
+static int monitor_pc_dispatch_delay_ms = 50;
 static time_t monitor_last_refresh_time = 0;
 
 void NethogsMonitor::threadProc()
@@ -117,9 +122,8 @@ void NethogsMonitor::threadProc()
 
 		if (!packets_read)
 		{
-			// If no packets were read at all this iteration, pause to prevent 100%
-			// Pause 10 milliseconds
-			usleep(10000);
+			std::unique_lock<std::mutex> lk(monitor_exit_event_mutex);
+			monitor_exit_event.wait_for(lk, std::chrono::milliseconds(monitor_pc_dispatch_delay_ms));
 		}
 	}	
 }
@@ -186,20 +190,25 @@ void NethogsMonitor::handleUpdate()
 			u_int32_t recv_bytes;
 			float sent_kbs;
 			float recv_kbs;
-			curproc->getVal()->getkbps  (&sent_kbs,   &recv_kbs);
+			curproc->getVal()->getkbps  (&recv_kbs,   &sent_kbs);
 			curproc->getVal()->gettotal (&recv_bytes, &sent_bytes);
 			
 			if( monitor_udpate_callback )
 			{
 				//notify update
+				bool const new_process = (monitor_update_data.find(pid) == monitor_update_data.end());
 				NethogsAppUpdate &data = monitor_update_data[pid];
 	
 				bool data_change = false;
-				
+	
 				#define NHM_UPDATE_ONE_FIELD(TO,FROM) if((TO)!=(FROM)) { TO = FROM; data_change = true; }
-				NHM_UPDATE_ONE_FIELD( data.pid,         pid )
+				if( new_process )
+				{
+					NHM_UPDATE_ONE_FIELD( data.pid, pid )
+					NHM_UPDATE_ONE_FIELD( data.app_name, curproc->getVal()->name )
+				}
+				
 				NHM_UPDATE_ONE_FIELD( data.uid,         curproc->getVal()->getUid() )
-				NHM_UPDATE_ONE_FIELD( data.app_name,    curproc->getVal()->name )
 				NHM_UPDATE_ONE_FIELD( data.device_name, curproc->getVal()->devicename )
 				NHM_UPDATE_ONE_FIELD( data.sent_bytes,  sent_bytes )
 				NHM_UPDATE_ONE_FIELD( data.recv_bytes,  recv_bytes )
@@ -234,6 +243,11 @@ void NethogsMonitor::setRefreshDelay(int seconds)
 	monitor_refresh_delay = seconds;
 }
 
+void NethogsMonitor::setPcapDispatchDelay(int milliseconds)
+{
+	monitor_pc_dispatch_delay_ms = milliseconds;
+}
+
 void NethogsMonitor::start()
 {
 	bool expected = false;
@@ -248,6 +262,7 @@ void NethogsMonitor::stop()
 	bool expected = true;
 	if( monitor_thread_run_flag.compare_exchange_strong(expected, false) )
 	{
+		monitor_exit_event.notify_one();
 		monitor_thread_ptr->join();
 		monitor_udpate_callback = nullptr;
 	}
