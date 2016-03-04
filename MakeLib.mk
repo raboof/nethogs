@@ -11,17 +11,17 @@ all: libnethogs
 LDFLAGS:= -shared
 CXXINCLUDES :=
 VISIBILITY=-fvisibility=hidden
-ODIR_BASE := objs/lib
+ODIR_BASE := obj
 
 ifeq ($(DEBUG),1)
   # Debug mode options
   $(info Bulding debug version)
-  ODIR:=$(ODIR_BASE)/debug
+  ODIR:=$(ODIR_BASE)/lib/debug
   CFLAGS?=-Wall -Wextra -O0 -g -fPIC $(VISIBILITY)
   CXXFLAGS?=--std=c++11 --std=c++11 -Wall -Wextra -O0 -g -fPIC $(VISIBILITY) $(CXXINCLUDES)
 else
   # Release mode options
-  ODIR:=$(ODIR_BASE)/release
+  ODIR:=$(ODIR_BASE)/lib/release
   CFLAGS?=-Wall -Wextra -O3 -fPIC $(VISIBILITY)
   CXXFLAGS?=-Wall --std=c++11 -Wextra -O3 -fPIC $(VISIBILITY) $(CXXINCLUDES)
 endif
@@ -91,4 +91,6 @@ $(ODIR)/libnethogs.o: libnethogs.cpp libnethogs.h
 clean:
 	rm -f $(OBJS)
 	rm -f libnethogs.so
+	mkdir -p $(ODIR)
+	rmdir -p --ignore-fail-on-non-empty $(ODIR)
 
