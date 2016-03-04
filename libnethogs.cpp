@@ -160,7 +160,7 @@ void NethogsMonitor::handleUpdate()
 					NethogsAppUpdate &data = it->second;
 					data.action = NethogsAppUpdate::Remove;
 					monitor_udpate_callback(data);
-					monitor_update_data.erase(it);
+					monitor_update_data.erase(curproc->getVal()->pid);
 				}
 			}
 
