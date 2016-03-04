@@ -143,4 +143,13 @@ void refreshconninode ();
 
 void procclean ();
 
+void getkbps (Process * curproc, float * recvd, float * sent);
+void gettotal(Process * curproc, u_int32_t * recvd, u_int32_t * sent);
+void gettotalmb(Process * curproc, float * recvd, float * sent);
+void gettotalkb(Process * curproc, float * recvd, float * sent);
+void gettotalb(Process * curproc, float * recvd, float * sent);
+float tomb (u_int32_t bytes);
+float tokb (u_int32_t bytes);
+float tokbps (u_int32_t bytes);
+
 #endif
