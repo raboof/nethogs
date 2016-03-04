@@ -36,20 +36,19 @@ public:
 	//register async callback to receive updates
 	//have to be called before start
 	static void registerUpdateCallback(Callback const& cb);
-		
+	
+	static void setRefreshDelay(int seconds);
+	
 	//start the monitor
 	static void start();
 	
 	//stop the monitor
 	static void stop();
-	
+		
 private:
 	static void threadProc();
 	static void handleUpdate();
-	
-	static bool _trace;
-	static bool _promisc;
-};
+	};
 
 #undef NETHOGS_DSO_VISIBLE
 #undef NETHOGS_DSO_HIDDEN

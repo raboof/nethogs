@@ -24,8 +24,8 @@ static NethogsMonitor::Callback monitor_udpate_callback;
 typedef std::map<int, NethogsAppUpdate> NethogsAppUpdateMap;
 static NethogsAppUpdateMap monitor_update_data;
 
-bool NethogsMonitor::_trace = false;
-bool NethogsMonitor::_promisc = false;
+static int monitor_refresh_delay = 1;
+static time_t monitor_last_refresh_time = 0;
 
 void NethogsMonitor::threadProc()
 {
@@ -41,16 +41,18 @@ void NethogsMonitor::threadProc()
 	handle * handles = NULL;
 	device * current_dev = devices;
 	
+	bool promiscuous = false;
+	
 	while (current_dev != NULL) 
 	{
-		if( !getLocal(current_dev->name, _trace) )
+		if( !getLocal(current_dev->name, false) )
 		{
 			std::cerr << "getifaddrs failed while establishing local IP." << std::endl;
 			continue;
 		}
 		
 		char errbuf[PCAP_ERRBUF_SIZE];
-		dp_handle * newhandle = dp_open_live(current_dev->name, BUFSIZ, _promisc, 100, errbuf);
+		dp_handle * newhandle = dp_open_live(current_dev->name, BUFSIZ, promiscuous, 100, errbuf);
 		if (newhandle != NULL)
 		{
 			dp_addcb (newhandle, dp_packet_ip, process_ip);
@@ -79,9 +81,6 @@ void NethogsMonitor::threadProc()
 		current_dev = current_dev->next;
 	}
 
-	signal (SIGALRM, &alarm_cb);
-	alarm (refreshdelay);
-
 	fprintf(stderr, "Waiting for first packet to arrive (see sourceforge.net bug 1019381)\n");
 	struct dpargs * userdata = (dpargs *) malloc (sizeof (struct dpargs));
 
@@ -109,18 +108,18 @@ void NethogsMonitor::threadProc()
 			current_handle = current_handle->next;
 		}
 
-
-		if (needrefresh)
+		time_t const now = ::time(NULL);
+		if( monitor_last_refresh_time + monitor_refresh_delay <= now )
 		{
-			needrefresh = false;
+			monitor_last_refresh_time = now;
 			handleUpdate();
 		}
 
-		// If no packets were read at all this iteration, pause to prevent 100%
-		// CPU utilisation;
 		if (!packets_read)
 		{
-			usleep(100);
+			// If no packets were read at all this iteration, pause to prevent 100%
+			// Pause 10 milliseconds
+			usleep(10000);
 		}
 	}	
 }
@@ -228,6 +227,11 @@ void NethogsMonitor::registerUpdateCallback(Callback const& cb)
 	{
 		monitor_udpate_callback = cb;
 	}
+}
+
+void NethogsMonitor::setRefreshDelay(int seconds)
+{
+	monitor_refresh_delay = seconds;
 }
 
 void NethogsMonitor::start()
