@@ -18,7 +18,7 @@ ifeq ($(DEBUG),1)
   $(info Bulding debug version)
   ODIR:=$(ODIR_BASE)/lib/debug
   CFLAGS?=-Wall -Wextra -O0 -g -fPIC $(VISIBILITY)
-  CXXFLAGS?=--std=c++11 --std=c++11 -Wall -Wextra -O0 -g -fPIC $(VISIBILITY) $(CXXINCLUDES)
+  CXXFLAGS?=--std=c++0x -Wall -Wextra -O0 -g -fPIC $(VISIBILITY) $(CXXINCLUDES)
 else
   # Release mode options
   ODIR:=$(ODIR_BASE)/lib/release
