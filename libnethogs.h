@@ -1,5 +1,5 @@
-#ifndef NETHOGSMINITOR_H
-#define NETHOGSMINITOR_H
+#ifndef LIBNETHOGS_H_
+#define LIBNETHOGS_H_
 
 #include <string>
 
@@ -52,4 +52,4 @@ private:
 #undef NETHOGS_DSO_VISIBLE
 #undef NETHOGS_DSO_HIDDEN
 
-#endif // NETHOGSMINITOR_H
+#endif // LIBNETHOGS_H_
