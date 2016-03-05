@@ -2,55 +2,43 @@
 #define LIBNETHOGS_H_
 
 #include <stdint.h>
-#include <inttypes.h>
-#include <string>
+#include <stdbool.h>
 
 #define NETHOGS_DSO_VISIBLE __attribute__ ((visibility ("default")))
 #define NETHOGS_DSO_HIDDEN  __attribute__ ((visibility ("hidden")))
 
-class NETHOGS_DSO_VISIBLE NethogsAppUpdate
+#define NETHOGS_APP_ACTION_SET	  1
+#define NETHOGS_APP_ACTION_REMOVE 2
+
+typedef struct NethogsMonitorUpdate
 {
-public:
-	enum Action {Set, Remove};
-	NethogsAppUpdate() 
-	: action(Set), pid(0), uid(0), sent_kbs(0), recv_kbs(0)
-	{
-	}
-	Action		action;
+	int		    action;
 	int 		pid;
 	uint32_t	uid;
-	std::string app_name;
-	std::string device_name;
+	const char* app_name;
+	const char* device_name;
 	uint32_t	sent_bytes;
 	uint32_t	recv_bytes;
 	float		sent_kbs;
 	float		recv_kbs;
-};
+} NethogsMonitorUpdate;
 
-class NETHOGS_DSO_VISIBLE NethogsMonitor
-{
-	NethogsMonitor();
-public:
-	typedef void(*Callback)(NethogsAppUpdate const&);
+typedef void(*NethogsMonitorCallback)(NethogsMonitorUpdate const*);
 	
-	//register async callback to receive updates
-	//have to be called before start
-	static void registerUpdateCallback(Callback const& cb);
-		
-	//start the monitor
-	static void start();
+//register async callback to receive updates
+//have to be called before start
+NETHOGS_DSO_VISIBLE void nethogsmonitor_register_callback(NethogsMonitorCallback);
 	
-	//stop the monitor
-	static void stop();
-	
-	//tuning functions
-	static void setRefreshDelay(int seconds);	
-	static void setPcapDispatchDelay(int milliseconds);
-	
-private:
-	static void threadProc();
-	static void handleUpdate();
-	};
+//start the monitor
+NETHOGS_DSO_VISIBLE bool nethogsmonitor_start();
+
+//stop the monitor
+NETHOGS_DSO_VISIBLE void nethogsmonitor_stop();
+
+//tuning functions
+NETHOGS_DSO_VISIBLE void nethogsmonitor_set_refresh_delay(int seconds);	
+NETHOGS_DSO_VISIBLE void nethogsmonitor_set_pcap_dispatch_delay(int milliseconds);
+
 
 #undef NETHOGS_DSO_VISIBLE
 #undef NETHOGS_DSO_HIDDEN
