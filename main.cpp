@@ -3,6 +3,7 @@
 #include <vector>
 
 std::pair<int,int> self_pipe = std::make_pair(-1, -1);
+time_t last_refresh_time = 0;
 
 static void versiondisplay(void)
 {
@@ -130,18 +131,18 @@ int main (int argc, char** argv)
             return 0;
         }
 	}
-
-	if ((!tracemode) && (!DEBUG)){
-		init_ui();
-	}
 	
-	std::pair<int,int> self_pipe = createSelfPipe();
-	if( self_pipe.first == -1|| self_pipe.second == -1 )
+	self_pipe = createSelfPipe();
+	if( self_pipe.first == -1 || self_pipe.second == -1 )
 	{
 		perror("Error creating pipe file descriptors\n");
 		return 0;
 	}
 
+	if ((!tracemode) && (!DEBUG)){
+		init_ui();
+	}
+	
 	if (NEEDROOT && (geteuid() != 0))
 		forceExit(false, "You need to be root to run NetHogs!");
 	
@@ -209,9 +210,7 @@ int main (int argc, char** argv)
 		pc_loop_fd_list.push_back(self_pipe.first);
 	}
 
-	signal (SIGALRM, &alarm_cb);
 	signal (SIGINT, &quit_cb);
-	alarm (refreshdelay);
 
 	fprintf(stderr, "Waiting for first packet to arrive (see sourceforge.net bug 1019381)\n");
 	struct dpargs * userdata = (dpargs *) malloc (sizeof (struct dpargs));
@@ -241,18 +240,18 @@ int main (int argc, char** argv)
 			current_handle = current_handle->next;
 		}
 
-
-		if (needrefresh)
-		{
-			if ((!DEBUG)&&(!tracemode))
+		time_t const now = ::time(NULL);
+ 		if( last_refresh_time + refreshdelay <= now )
+ 		{
+ 			last_refresh_time = now;
+ 			if ((!DEBUG)&&(!tracemode))
 			{
 				// handle user input
 				ui_tick();
 			}
 			do_refresh();
-			needrefresh = false;
 		}
-
+ 
 		//if not packets, do a select() until next packet
 		if (!packets_read)
 		{
@@ -270,8 +269,8 @@ int main (int argc, char** argv)
 				timeval timeout = {refreshdelay, 0};
 				if( select(nfds, &pc_loop_fd_set, 0, 0, &timeout) == -1 )
 				{
-					perror("error in select()\n");
-					break;
+					//this happens on system signal
+					continue;
 				}
 				if( FD_ISSET(self_pipe.first, &pc_loop_fd_set) )
 				{

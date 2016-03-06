@@ -46,7 +46,6 @@ extern "C" {
 #include "packet.h"
 #include "connection.h"
 #include "process.h"
-#include "refresh.h"
 #include "devices.h"
 
 extern Process * unknownudp;
@@ -57,7 +56,6 @@ unsigned refreshcount = 0;
 unsigned processlimit = 0;
 bool tracemode = false;
 bool bughuntmode = false;
-bool needrefresh = false;
 // sort on sent or received?
 bool sortRecv = true;
 // viewMode: kb/s or total
