@@ -228,6 +228,10 @@ static void nethogsmonitor_threadproc()
 			{
 				packets_read = true;
 			}
+			else
+			{
+				gettimeofday(&curtime, NULL);
+			}
 			current_handle = current_handle->next;
 		}
 
