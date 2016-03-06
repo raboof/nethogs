@@ -2,11 +2,11 @@
 #include <fcntl.h>
 #include <vector>
 
-//The self_pipe is used interrupt the select() in the main loop
+//The self_pipe is used to interrupt the select() in the main loop
 static std::pair<int,int> self_pipe = std::make_pair(-1, -1);
 static time_t last_refresh_time = 0;
 
-//selectable file descriptionts for the main loop
+//selectable file descriptors for the main loop
 static fd_set pc_loop_fd_set;
 static std::vector<int> pc_loop_fd_list;
 static bool pc_loop_use_select = true;		
