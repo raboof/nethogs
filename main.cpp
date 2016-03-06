@@ -2,8 +2,15 @@
 #include <fcntl.h>
 #include <vector>
 
-std::pair<int,int> self_pipe = std::make_pair(-1, -1);
-time_t last_refresh_time = 0;
+//The self_pipe is used interrupt the select() in the main loop
+static std::pair<int,int> self_pipe = std::make_pair(-1, -1);
+static time_t last_refresh_time = 0;
+
+//selectable file descriptionts for the main loop
+static fd_set pc_loop_fd_set;
+static std::vector<int> pc_loop_fd_list;
+static bool pc_loop_use_select = true;		
+
 
 static void versiondisplay(void)
 {
@@ -48,7 +55,7 @@ void quit_cb (int /* i */)
 	}
 }
 
-std::pair<int, int> createSelfPipe()
+std::pair<int, int> create_self_pipe()
 {
 	int pfd[2];
 	if (pipe(pfd) == -1) 
@@ -61,6 +68,51 @@ std::pair<int, int> createSelfPipe()
 		return std::make_pair(-1, -1);
 
 	return std::make_pair(pfd[0], pfd[1]);
+}
+
+bool wait_for_next_trigger()
+{
+	if( pc_loop_use_select )
+	{
+		FD_ZERO(&pc_loop_fd_set);
+		int nfds = 0;
+		for(std::vector<int>::const_iterator it=pc_loop_fd_list.begin();
+			it != pc_loop_fd_list.end(); ++it)
+		{
+			int const fd = *it;
+			nfds = std::max(nfds, *it + 1);
+			FD_SET(fd, &pc_loop_fd_set);
+		}
+		timeval timeout = {refreshdelay, 0};
+		if( select(nfds, &pc_loop_fd_set, 0, 0, &timeout) != -1 )
+		{
+			if( FD_ISSET(self_pipe.first, &pc_loop_fd_set) )
+			{
+				return false;
+			}
+		}
+	}
+	else
+	{
+		// If select() not possible, pause to prevent 100%
+		usleep(1000);
+	}
+	return true;	
+}
+
+
+void clean_up()
+{
+	//close file descriptors
+	for(std::vector<int>::const_iterator it=pc_loop_fd_list.begin();
+		it != pc_loop_fd_list.end(); ++it)
+	{
+		close(*it);
+	}
+	
+	procclean();
+	if ((!tracemode) && (!DEBUG))
+		exit_ui();	
 }
 
 int main (int argc, char** argv)
@@ -131,13 +183,6 @@ int main (int argc, char** argv)
             return 0;
         }
 	}
-	
-	self_pipe = createSelfPipe();
-	if( self_pipe.first == -1 || self_pipe.second == -1 )
-	{
-		perror("Error creating pipe file descriptors\n");
-		return 0;
-	}
 
 	if ((!tracemode) && (!DEBUG)){
 		init_ui();
@@ -145,13 +190,16 @@ int main (int argc, char** argv)
 	
 	if (NEEDROOT && (geteuid() != 0))
 		forceExit(false, "You need to be root to run NetHogs!");
-	
-	fd_set pc_loop_fd_set;
-	std::vector<int> pc_loop_fd_list;
-	bool pc_loop_use_select = true;	
-	
-	if( pc_loop_use_select )
+		
+	//use the Self-Pipe trick to interrupt the select() in the main loop
+	self_pipe = create_self_pipe();
+	if( self_pipe.first == -1 || self_pipe.second == -1 )
 	{
+		forceExit(false, "Error creating pipe file descriptors\n");
+	}
+	else
+	{
+		//add the self-pipe to allow interrupting select()
 		pc_loop_fd_list.push_back(self_pipe.first);
 	}
 
@@ -194,6 +242,7 @@ int main (int argc, char** argv)
 				{
 					pc_loop_use_select = false;
 					pc_loop_fd_list.clear();
+					fprintf(stderr, "failed to get selectable_fd for %s\n", current_dev->name);
 				}
 			}			
 		}
@@ -203,11 +252,6 @@ int main (int argc, char** argv)
 		}
 
 		current_dev = current_dev->next;
-	}
-
-	if( pc_loop_use_select )
-	{
-		pc_loop_fd_list.push_back(self_pipe.first);
 	}
 
 	signal (SIGINT, &quit_cb);
@@ -255,48 +299,15 @@ int main (int argc, char** argv)
 		//if not packets, do a select() until next packet
 		if (!packets_read)
 		{
-			if( pc_loop_use_select )
+			if( !wait_for_next_trigger() )
 			{
-				FD_ZERO(&pc_loop_fd_set);
-				int nfds = 0;
-				for(std::vector<int>::const_iterator it=pc_loop_fd_list.begin();
-					it != pc_loop_fd_list.end(); ++it)
-				{
-					int const fd = *it;
-					nfds = std::max(nfds, *it + 1);
-					FD_SET(fd, &pc_loop_fd_set);
-				}
-				timeval timeout = {refreshdelay, 0};
-				if( select(nfds, &pc_loop_fd_set, 0, 0, &timeout) == -1 )
-				{
-					//this happens on system signal
-					continue;
-				}
-				if( FD_ISSET(self_pipe.first, &pc_loop_fd_set) )
-				{
-					std::cout << "exited by select\n";
-					//exit the loop
-					break;
-				}
-			}
-			else
-			{
-				// If select() not possible, pause to prevent 100%
-				// Pause 10 milliseconds
-				usleep(1000);
+				//Exit the loop
+				break;
 			}
 		}
 	}
 	
-	//close file descriptors
-	for(std::vector<int>::const_iterator it=pc_loop_fd_list.begin();
-		it != pc_loop_fd_list.end(); ++it)
-	{
-		close(*it);
-	}
-	
-	procclean();
-	if ((!tracemode) && (!DEBUG))
-		exit_ui();
+	//clean up
+	clean_up();
 }
 
