@@ -39,7 +39,6 @@ void quit_cb (int /* i */)
 {
 	if( self_pipe.second != -1 )
 	{
-		std::cout << "writing to exit pipe\n";
 		write(self_pipe.second, "x", 1);
 	}
 	else
@@ -143,8 +142,8 @@ int main (int argc, char** argv)
 		return 0;
 	}
 
-	//if (NEEDROOT && (geteuid() != 0))
-	//	forceExit(false, "You need to be root to run NetHogs!");
+	if (NEEDROOT && (geteuid() != 0))
+		forceExit(false, "You need to be root to run NetHogs!");
 	
 	fd_set pc_loop_fd_set;
 	std::vector<int> pc_loop_fd_list;
