@@ -16,8 +16,13 @@ runtests: test
 	
 # nethogs_testsum
 
+ifeq ($(DEBUG),1)
+CFLAGS?=-Wall -Wextra -g -O0
+CXXFLAGS?=-Wall -Wextra -g -O0
+else
 CFLAGS?=-Wall -Wextra
 CXXFLAGS?=-Wall -Wextra
+endif
 
 OBJS=packet.o connection.o process.o refresh.o decpcap.o cui.o inode2prog.o conninode.o devices.o
 

@@ -1,4 +1,8 @@
 #include "nethogs.cpp"
+#include <fcntl.h>
+#include <vector>
+
+std::pair<int,int> self_pipe = std::make_pair(-1, -1);
 
 static void versiondisplay(void)
 {
@@ -28,6 +32,35 @@ static void help(bool iserror)
 	output << " s: sort by SENT traffic\n";
 	output << " r: sort by RECEIVE traffic\n";
 	output << " m: switch between total (KB, B, MB) and KB/s mode\n";
+}
+
+
+void quit_cb (int /* i */)
+{
+	if( self_pipe.second != -1 )
+	{
+		std::cout << "writing to exit pipe\n";
+		write(self_pipe.second, "x", 1);
+	}
+	else
+	{
+		exit(0);
+	}
+}
+
+std::pair<int, int> createSelfPipe()
+{
+	int pfd[2];
+	if (pipe(pfd) == -1) 
+		return std::make_pair(-1, -1);
+
+	if (fcntl(pfd[0], F_SETFL, fcntl(pfd[0], F_GETFL) | O_NONBLOCK) == -1)
+		return std::make_pair(-1, -1);
+
+    if (fcntl(pfd[1], F_SETFL, fcntl(pfd[1], F_GETFL) | O_NONBLOCK) == -1)
+		return std::make_pair(-1, -1);
+
+	return std::make_pair(pfd[0], pfd[1]);
 }
 
 int main (int argc, char** argv)
@@ -102,9 +135,25 @@ int main (int argc, char** argv)
 	if ((!tracemode) && (!DEBUG)){
 		init_ui();
 	}
+	
+	std::pair<int,int> self_pipe = createSelfPipe();
+	if( self_pipe.first == -1|| self_pipe.second == -1 )
+	{
+		perror("Error creating pipe file descriptors\n");
+		return 0;
+	}
 
-	if (NEEDROOT && (geteuid() != 0))
-		forceExit(false, "You need to be root to run NetHogs!");
+	//if (NEEDROOT && (geteuid() != 0))
+	//	forceExit(false, "You need to be root to run NetHogs!");
+	
+	fd_set pc_loop_fd_set;
+	std::vector<int> pc_loop_fd_list;
+	bool pc_loop_use_select = true;	
+	
+	if( pc_loop_use_select )
+	{
+		pc_loop_fd_list.push_back(self_pipe.first);
+	}
 
 	char errbuf[PCAP_ERRBUF_SIZE];
 
@@ -132,6 +181,21 @@ int main (int argc, char** argv)
 				fprintf(stderr, "Error putting libpcap in nonblocking mode\n");
 			}
 			handles = new handle (newhandle, current_dev->name, handles);
+			
+			if( pc_loop_use_select )
+			{
+				//some devices may not support pcap_get_selectable_fd
+				int const fd = pcap_get_selectable_fd(newhandle->pcap_handle);
+				if( fd != -1 )
+				{
+					pc_loop_fd_list.push_back(fd);
+				}
+				else
+				{
+					pc_loop_use_select = false;
+					pc_loop_fd_list.clear();
+				}
+			}			
 		}
 		else
 		{
@@ -139,6 +203,11 @@ int main (int argc, char** argv)
 		}
 
 		current_dev = current_dev->next;
+	}
+
+	if( pc_loop_use_select )
+	{
+		pc_loop_fd_list.push_back(self_pipe.first);
 	}
 
 	signal (SIGALRM, &alarm_cb);
@@ -185,12 +254,51 @@ int main (int argc, char** argv)
 			needrefresh = false;
 		}
 
-		// If no packets were read at all this iteration, pause to prevent 100%
-		// CPU utilisation;
+		//if not packets, do a select() until next packet
 		if (!packets_read)
 		{
-			usleep(100);
+			if( pc_loop_use_select )
+			{
+				FD_ZERO(&pc_loop_fd_set);
+				int nfds = 0;
+				for(std::vector<int>::const_iterator it=pc_loop_fd_list.begin();
+					it != pc_loop_fd_list.end(); ++it)
+				{
+					int const fd = *it;
+					nfds = std::max(nfds, *it + 1);
+					FD_SET(fd, &pc_loop_fd_set);
+				}
+				timeval timeout = {refreshdelay, 0};
+				if( select(nfds, &pc_loop_fd_set, 0, 0, &timeout) == -1 )
+				{
+					perror("error in select()\n");
+					break;
+				}
+				if( FD_ISSET(self_pipe.first, &pc_loop_fd_set) )
+				{
+					std::cout << "exited by select\n";
+					//exit the loop
+					break;
+				}
+			}
+			else
+			{
+				// If select() not possible, pause to prevent 100%
+				// Pause 10 milliseconds
+				usleep(1000);
+			}
 		}
 	}
+	
+	//close file descriptors
+	for(std::vector<int>::const_iterator it=pc_loop_fd_list.begin();
+		it != pc_loop_fd_list.end(); ++it)
+	{
+		close(*it);
+	}
+	
+	procclean();
+	if ((!tracemode) && (!DEBUG))
+		exit_ui();
 }
 
