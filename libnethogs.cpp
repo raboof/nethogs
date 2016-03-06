@@ -265,16 +265,6 @@ void nethogsmonitor_register_callback(NethogsMonitorCallback cb)
 	}
 }
 
-void nethogsmonitor_set_refresh_delay(int seconds)
-{
-	monitor_refresh_delay = seconds;
-}
-
-void nethogsmonitor_set_pcap_dispatch_delay(int milliseconds)
-{
-	monitor_pc_dispatch_delay_ms = milliseconds;
-}
-
 bool nethogsmonitor_start()
 {
 	bool expected = false;

@@ -35,11 +35,6 @@ NETHOGS_DSO_VISIBLE bool nethogsmonitor_start();
 //stop the monitor
 NETHOGS_DSO_VISIBLE void nethogsmonitor_stop();
 
-//tuning functions
-NETHOGS_DSO_VISIBLE void nethogsmonitor_set_refresh_delay(int seconds);	
-NETHOGS_DSO_VISIBLE void nethogsmonitor_set_pcap_dispatch_delay(int milliseconds);
-
-
 #undef NETHOGS_DSO_VISIBLE
 #undef NETHOGS_DSO_HIDDEN
 
