@@ -42,10 +42,12 @@ install: libnethogs.so
 	@echo
 	@echo "Installed libnethogs.h to $(DESTDIR)$(incdir)"
 	@echo
+	ldconfig
 
 uninstall:
 	rm $(DESTDIR)$(libdir)/libnethogs.so
 	rm $(DESTDIR)$(incdir)/libnethogs.h
+	ldconfig
 
 libnethogs.so: $(OBJS)
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(LDFLAGS) $(OBJS) -o $@ -lpcap
