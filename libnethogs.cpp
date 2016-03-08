@@ -12,6 +12,8 @@ extern "C"
 #include <memory>
 #include <thread>
 #include <map>
+#include <vector>
+#include <fcntl.h>
 
 //////////////////////////////
 extern ProcList * processes;
@@ -23,43 +25,89 @@ extern Process * unknownip;
 static std::shared_ptr<std::thread> monitor_thread_ptr;
 static std::atomic_bool monitor_thread_run_flag(false);
 
-std::mutex monitor_exit_event_mutex;
-std::condition_variable monitor_exit_event;
+//The self_pipe is used to interrupt the select() in the main loop
+static std::pair<int,int> self_pipe = std::make_pair(-1, -1);
 
 static NethogsMonitorCallback monitor_udpate_callback;
-
 typedef std::map<int, NethogsMonitorUpdate> NethogsAppUpdateMap;
 static NethogsAppUpdateMap monitor_update_data;
 
 static int monitor_refresh_delay = 1;
-static int monitor_pc_dispatch_delay_ms = 50;
 static time_t monitor_last_refresh_time = 0;
+
+//selectable file descriptors for the main loop
+static fd_set pc_loop_fd_set;
+static std::vector<int> pc_loop_fd_list;
+static bool pc_loop_use_select = true;	
 
 static handle * handles = NULL;
 
-static bool nethogsmonitor_init()
+static std::pair<int, int> create_self_pipe()
 {
-	bool success = true;
+	int pfd[2];
+	if (pipe(pfd) == -1) 
+		return std::make_pair(-1, -1);
 
+	if (fcntl(pfd[0], F_SETFL, fcntl(pfd[0], F_GETFL) | O_NONBLOCK) == -1)
+		return std::make_pair(-1, -1);
+
+    if (fcntl(pfd[1], F_SETFL, fcntl(pfd[1], F_GETFL) | O_NONBLOCK) == -1)
+		return std::make_pair(-1, -1);
+
+	return std::make_pair(pfd[0], pfd[1]);
+}
+
+static void wait_for_next_trigger()
+{
+	if( pc_loop_use_select )
+	{
+		FD_ZERO(&pc_loop_fd_set);
+		int nfds = 0;
+		for(std::vector<int>::const_iterator it=pc_loop_fd_list.begin();
+			it != pc_loop_fd_list.end(); ++it)
+		{
+			int const fd = *it;
+			nfds = std::max(nfds, *it + 1);
+			FD_SET(fd, &pc_loop_fd_set);
+		}
+		timeval timeout = {monitor_refresh_delay, 0};
+		std::cout << "--------------------------1\n";
+		select(nfds, &pc_loop_fd_set, 0, 0, &timeout);
+		std::cout << "--------------------------0\n\n";
+	}
+	else
+	{
+		// If select() not possible, pause to prevent 100%
+		usleep(1000);
+	}
+}
+
+static int nethogsmonitor_init()
+{
 	process_init();
 	
 	device * devices = get_default_devices();
 	if ( devices == NULL )
 	{
 		std::cerr << "Not devices to monitor" << std::endl;
-		return false;
+		return NETHOGS_STATUS_NO_DEVICE;
 	}
 	
 	device * current_dev = devices;
 	
 	bool promiscuous = false;
 	
+	int nb_devices = 0;
+	int nb_failed_devices = 0;
+	
 	while (current_dev != NULL) 
 	{
+		++nb_devices;
+		
 		if( !getLocal(current_dev->name, false) )
 		{
 			std::cerr << "getifaddrs failed while establishing local IP." << std::endl;
-			success = false;
+			++nb_failed_devices;
 			continue;
 		}
 		
@@ -83,18 +131,53 @@ static bool nethogsmonitor_init()
 				fprintf(stderr, "Error putting libpcap in nonblocking mode\n");
 			}
 			handles = new handle (newhandle, current_dev->name, handles);
+			
+			if( pc_loop_use_select )
+			{
+				//some devices may not support pcap_get_selectable_fd
+				int const fd = pcap_get_selectable_fd(newhandle->pcap_handle);
+				if( fd != -1 )
+				{
+					pc_loop_fd_list.push_back(fd);
+				}
+				else
+				{
+					pc_loop_use_select = false;
+					pc_loop_fd_list.clear();
+					fprintf(stderr, "failed to get selectable_fd for %s\n", current_dev->name);
+				}
+			}			
 		}
 		else
 		{
-			success = false;
-			fprintf(stderr, "ERROR: opening handler for device %s: %s\n", 
-				current_dev->name, strerror(errno));
+			fprintf(stderr, "ERROR: opening handler for device %s: %s\n", current_dev->name, strerror(errno));
+			++nb_failed_devices;
 		}
 
 		current_dev = current_dev->next;
 	}
 
-	return success;
+	if(nb_devices == nb_failed_devices)
+	{
+		return NETHOGS_STATUS_FAILURE;
+	}	
+		
+	//use the Self-Pipe trick to interrupt the select() in the main loop
+	if( pc_loop_use_select )
+	{
+		self_pipe = create_self_pipe();
+		if( self_pipe.first == -1 || self_pipe.second == -1 )
+		{
+			std::cerr << "Error creating pipe file descriptors\n";
+			pc_loop_use_select = false;
+		}
+		else
+		{
+			pc_loop_fd_list.push_back(self_pipe.first);
+		}
+	}
+	
+	return NETHOGS_STATUS_OK;
 }
 
 static void nethogsmonitor_handle_update()
@@ -244,8 +327,7 @@ static void nethogsmonitor_threadproc()
 
 		if (!packets_read)
 		{
-			std::unique_lock<std::mutex> lk(monitor_exit_event_mutex);
-			monitor_exit_event.wait_for(lk, std::chrono::milliseconds(monitor_pc_dispatch_delay_ms));
+			wait_for_next_trigger();
 		}
 	}
 	
@@ -265,19 +347,16 @@ void nethogsmonitor_register_callback(NethogsMonitorCallback cb)
 	}
 }
 
-bool nethogsmonitor_start()
+int nethogsmonitor_start()
 {
 	bool expected = false;
-	bool success = true;
+	int ret = NETHOGS_STATUS_OK;
 	if( monitor_thread_run_flag.compare_exchange_strong(expected, true) )
 	{
-		if( !nethogsmonitor_init() )
-		{
-			success = false;
-		}
+		ret = nethogsmonitor_init();
 		monitor_thread_ptr = std::make_shared<std::thread>(&nethogsmonitor_threadproc);
 	}
-	return success;
+	return ret;
 }
 
 void nethogsmonitor_stop()
@@ -285,7 +364,7 @@ void nethogsmonitor_stop()
 	bool expected = true;
 	if( monitor_thread_run_flag.compare_exchange_strong(expected, false) )
 	{
-		monitor_exit_event.notify_one();
+		write(self_pipe.second, "x", 1);
 		monitor_thread_ptr->join();
 		monitor_udpate_callback = nullptr;
 	}

@@ -1,3 +1,7 @@
+export VERSION      := 0
+export SUBVERSION   := 8
+export MINORVERSION := 2-SNAPSHOT
+
 all: nethogs decpcap_test
 	$(MAKE) -f MakeApp.mk $@
 	$(MAKE) -f MakeLib.mk $@
@@ -7,7 +11,7 @@ runtests: test
 	
 .PHONY: tgz
 tgz: clean
-	$(MAKE) -f MakeApp.mk $@
+	cd .. ; tar czvf nethogs-$(VERSION).$(SUBVERSION).$(MINORVERSION).tar.gz --exclude-vcs nethogs/*
 
 .PHONY: check uninstall
 check:
@@ -15,9 +19,11 @@ check:
 
 install: nethogs nethogs.8
 	$(MAKE) -f MakeApp.mk $@
-	 
+	$(MAKE) -f MakeLib.mk $@
+
 uninstall:
 	$(MAKE) -f MakeApp.mk $@
+	$(MAKE) -f MakeLib.mk $@
 	 
 nethogs: main.cpp nethogs.cpp $(OBJS)
 	$(MAKE) -f MakeApp.mk $@

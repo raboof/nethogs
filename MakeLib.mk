@@ -1,10 +1,5 @@
-VERSION      := 0
-SUBVERSION   := 8
-MINORVERSION := 2-SNAPSHOT
-
-#prefix := /usr
 prefix := /usr/local
-sbin := $(prefix)/lib
+libdir := $(prefix)/lib
 
 all: libnethogs
 		
@@ -36,15 +31,14 @@ OBJS=$(addprefix $(ODIR)/,$(OBJ_NAMES))
 .PHONY: uninstall
 
 install: libnethogs
-	install -d -m 755 $(DESTDIR)$(sbin)
-	install -m 755 libnethogs $(DESTDIR)$(sbin)
+	install -d -m 755 $(DESTDIR)$(libdir)
+	install -m 755 libnethogs $(DESTDIR)$(libdir)
 	@echo
-	@echo "Installed libnethogs to $(DESTDIR)$(sbin)"
+	@echo "Installed libnethogs to $(DESTDIR)$(libdir)"
 	@echo
-	@echo "You might have to add this directory to your PATH and/or refresh your shells' path cache with a command like 'hash -r'."
 
 uninstall:
-	rm $(DESTDIR)$(sbin)/libnethogs
+	rm $(DESTDIR)$(libdir)/libnethogs
 
 libnethogs: $(OBJS)
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(LDFLAGS) $(OBJS) -o libnethogs.so -lpcap

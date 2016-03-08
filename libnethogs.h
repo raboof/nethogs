@@ -10,6 +10,10 @@
 #define NETHOGS_APP_ACTION_SET	  1
 #define NETHOGS_APP_ACTION_REMOVE 2
 
+#define NETHOGS_STATUS_OK         0 
+#define NETHOGS_STATUS_FAILURE    1 //generic error
+#define NETHOGS_STATUS_NO_DEVICE  2 //no device foundr
+
 typedef struct NethogsMonitorUpdate
 {
 	int		    action;
@@ -29,8 +33,8 @@ typedef void(*NethogsMonitorCallback)(NethogsMonitorUpdate const*);
 //have to be called before start
 NETHOGS_DSO_VISIBLE void nethogsmonitor_register_callback(NethogsMonitorCallback);
 	
-//start the monitor
-NETHOGS_DSO_VISIBLE bool nethogsmonitor_start();
+//start the monitor (return one of the NETHOGS_STATUS above)
+NETHOGS_DSO_VISIBLE int nethogsmonitor_start();
 
 //stop the monitor
 NETHOGS_DSO_VISIBLE void nethogsmonitor_stop();

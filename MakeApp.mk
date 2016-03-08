@@ -1,7 +1,3 @@
-VERSION      := 0
-SUBVERSION   := 8
-MINORVERSION := 2-SNAPSHOT
-
 #prefix := /usr
 prefix := /usr/local
 
@@ -24,9 +20,6 @@ OBJS=packet.o connection.o process.o refresh.o decpcap.o cui.o inode2prog.o conn
 NCURSES_LIBS?=-lncurses
 
 .PHONY: tgz
-
-tgz: clean
-	cd .. ; tar czvf nethogs-$(VERSION).$(SUBVERSION).$(MINORVERSION).tar.gz --exclude-vcs nethogs/*
 
 .PHONY: check uninstall
 check:
