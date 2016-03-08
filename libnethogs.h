@@ -1,6 +1,10 @@
 #ifndef LIBNETHOGS_H_
 #define LIBNETHOGS_H_
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stdint.h>
 #include <stdbool.h>
 
@@ -41,5 +45,9 @@ NETHOGS_DSO_VISIBLE void nethogsmonitor_stop();
 
 #undef NETHOGS_DSO_VISIBLE
 #undef NETHOGS_DSO_HIDDEN
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // LIBNETHOGS_H_

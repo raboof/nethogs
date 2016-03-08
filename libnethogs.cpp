@@ -71,9 +71,7 @@ static void wait_for_next_trigger()
 			FD_SET(fd, &pc_loop_fd_set);
 		}
 		timeval timeout = {monitor_refresh_delay, 0};
-		std::cout << "--------------------------1\n";
 		select(nfds, &pc_loop_fd_set, 0, 0, &timeout);
-		std::cout << "--------------------------0\n\n";
 	}
 	else
 	{

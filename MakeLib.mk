@@ -1,7 +1,8 @@
 prefix := /usr/local
 libdir := $(prefix)/lib
+incdir := $(prefix)/include
 
-all: libnethogs
+all: libnethogs.so
 		
 LDFLAGS:= -shared
 CXXINCLUDES :=
@@ -30,18 +31,24 @@ OBJS=$(addprefix $(ODIR)/,$(OBJ_NAMES))
 
 .PHONY: uninstall
 
-install: libnethogs
+install: libnethogs.so
 	install -d -m 755 $(DESTDIR)$(libdir)
-	install -m 755 libnethogs $(DESTDIR)$(libdir)
+	install -m 755 libnethogs.so $(DESTDIR)$(libdir)
 	@echo
-	@echo "Installed libnethogs to $(DESTDIR)$(libdir)"
+	@echo "Installed libnethogs.so to $(DESTDIR)$(libdir)"
+	@echo
+	install -d -m 755 $(DESTDIR)$(incdir)
+	install -m 755 libnethogs.h $(DESTDIR)$(incdir)
+	@echo
+	@echo "Installed libnethogs.h to $(DESTDIR)$(incdir)"
 	@echo
 
 uninstall:
-	rm $(DESTDIR)$(libdir)/libnethogs
+	rm $(DESTDIR)$(libdir)/libnethogs.so
+	rm $(DESTDIR)$(incdir)/libnethogs.h
 
-libnethogs: $(OBJS)
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(LDFLAGS) $(OBJS) -o libnethogs.so -lpcap
+libnethogs.so: $(OBJS)
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(LDFLAGS) $(OBJS) -o $@ -lpcap
 
 #-lefence
 
