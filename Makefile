@@ -16,10 +16,15 @@ runtests: test
 	
 # nethogs_testsum
 
+ifeq ($(DEBUG),1)
+CFLAGS?=-Wall -Wextra -g -O0
+CXXFLAGS?=-Wall -Wextra -g -O0
+else
 CFLAGS?=-Wall -Wextra
 CXXFLAGS?=-Wall -Wextra
+endif
 
-OBJS=packet.o connection.o process.o refresh.o decpcap.o cui.o inode2prog.o conninode.o devices.o
+OBJS=packet.o connection.o process.o decpcap.o cui.o inode2prog.o conninode.o devices.o
 
 NCURSES_LIBS?=-lncurses
 
@@ -59,8 +64,6 @@ decpcap_test: decpcap_test.cpp decpcap.o
 
 #-lefence
 
-refresh.o: refresh.cpp refresh.h nethogs.h
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c refresh.cpp
 process.o: process.cpp process.h nethogs.h
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c process.cpp
 packet.o: packet.cpp packet.h nethogs.h

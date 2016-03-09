@@ -46,7 +46,6 @@ extern "C" {
 #include "packet.h"
 #include "connection.h"
 #include "process.h"
-#include "refresh.h"
 #include "devices.h"
 
 extern Process * unknownudp;
@@ -57,7 +56,6 @@ unsigned refreshcount = 0;
 unsigned processlimit = 0;
 bool tracemode = false;
 bool bughuntmode = false;
-bool needrefresh = false;
 // sort on sent or received?
 bool sortRecv = true;
 // viewMode: kb/s or total
@@ -225,14 +223,6 @@ int process_ip6 (u_char * userdata, const dp_header * /* header */, const u_char
 
 	/* we're not done yet - also parse tcp :) */
 	return false;
-}
-
-void quit_cb (int /* i */)
-{
-	procclean();
-	if ((!tracemode) && (!DEBUG))
-		exit_ui();
-	exit(0);
 }
 
 void forceExit(bool success, const char *msg, ...)
