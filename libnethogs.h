@@ -20,10 +20,10 @@ extern "C" {
 
 typedef struct NethogsMonitorUpdate
 {
-	int		    action;
+	int		    action; // NETHOGS_APP_ACTION_SET or NETHOGS_APP_ACTION_REMOVE
+	const char* name; //the key of the set/remove
 	int 		pid;
 	uint32_t	uid;
-	const char* app_name;
 	const char* device_name;
 	uint32_t	sent_bytes;
 	uint32_t	recv_bytes;
