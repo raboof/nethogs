@@ -23,8 +23,7 @@ extern Process * unknownip;
 static std::pair<int,int> self_pipe = std::make_pair(-1, -1);
 
 static bool monitor_run_flag = false;
-static NethogsMonitorCallback monitor_udpate_callback;
-typedef std::map<const char*, NethogsMonitorUpdate> NethogsAppUpdateMap;
+typedef std::map<uint64_t, NethogsMonitorUpdate> NethogsAppUpdateMap;
 static NethogsAppUpdateMap monitor_update_data;
 
 static int monitor_refresh_delay = 1;
@@ -50,6 +49,11 @@ static std::pair<int, int> create_self_pipe()
 		return std::make_pair(-1, -1);
 
 	return std::make_pair(pfd[0], pfd[1]);
+}
+
+static uint64_t getProcAsKey(ProcList * curproc)
+{
+	return reinterpret_cast<uint64_t>(curproc);
 }
 
 static bool wait_for_next_trigger()
@@ -207,13 +211,13 @@ static void nethogsmonitor_handle_update(NethogsMonitorCallback cb)
 			if (DEBUG)
 				std::cout << "PROC: Deleting process\n";
 
-			NethogsAppUpdateMap::iterator it = monitor_update_data.find(curproc->getVal()->name);
+			NethogsAppUpdateMap::iterator it = monitor_update_data.find(getProcAsKey(curproc));
 			if( it != monitor_update_data.end() )
 			{
 				NethogsMonitorUpdate& data = it->second;
 				data.action = NETHOGS_APP_ACTION_REMOVE;
 				(*cb)(&data);
-				monitor_update_data.erase(curproc->getVal()->name);
+				monitor_update_data.erase(getProcAsKey(curproc));
 			}
 
 			ProcList * todelete = curproc;
@@ -234,7 +238,6 @@ static void nethogsmonitor_handle_update(NethogsMonitorCallback cb)
 		}
 		else
 		{
-			const char* name = curproc->getVal()->name;
 			const u_int32_t uid = curproc->getVal()->getUid();
 			u_int32_t sent_bytes;
 			u_int32_t recv_bytes;
@@ -244,8 +247,8 @@ static void nethogsmonitor_handle_update(NethogsMonitorCallback cb)
 			curproc->getVal()->gettotal (&recv_bytes, &sent_bytes);
 			
 			//notify update
-			bool const new_data = (monitor_update_data.find(name) == monitor_update_data.end());
-			NethogsMonitorUpdate &data = monitor_update_data[name];
+			bool const new_data = (monitor_update_data.find(getProcAsKey(curproc)) == monitor_update_data.end());
+			NethogsMonitorUpdate &data = monitor_update_data[getProcAsKey(curproc)];
 
 			bool data_change = false;	
 			if( new_data )

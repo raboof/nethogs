@@ -21,7 +21,8 @@ extern "C" {
 typedef struct NethogsMonitorUpdate
 {
 	int		    action; // NETHOGS_APP_ACTION_SET or NETHOGS_APP_ACTION_REMOVE
-	const char* name; //the key of the set/remove
+	uint64_t	key; //A unique key for the record, used with set/remove actions
+	const char* name;
 	int 		pid;
 	uint32_t	uid;
 	const char* device_name;
