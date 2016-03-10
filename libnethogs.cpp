@@ -4,16 +4,12 @@ extern "C"
 }
 
 #include "nethogs.cpp"
-#include <pthread.h>
 #include <iostream>
-#include <mutex>
-#include <condition_variable>
-#include <atomic>
 #include <memory>
-#include <thread>
 #include <map>
 #include <vector>
 #include <fcntl.h>
+#include <errno.h>
 
 //////////////////////////////
 extern ProcList * processes;
@@ -22,12 +18,10 @@ extern Process * unknownudp;
 extern Process * unknownip;
 //////////////////////////////
 
-static std::shared_ptr<std::thread> monitor_thread_ptr;
-static std::atomic_bool monitor_thread_run_flag(false);
-
 //The self_pipe is used to interrupt the select() in the main loop
 static std::pair<int,int> self_pipe = std::make_pair(-1, -1);
 
+static bool monitor_run_flag = false;
 static NethogsMonitorCallback monitor_udpate_callback;
 typedef std::map<int, NethogsMonitorUpdate> NethogsAppUpdateMap;
 static NethogsAppUpdateMap monitor_update_data;
@@ -57,7 +51,7 @@ static std::pair<int, int> create_self_pipe()
 	return std::make_pair(pfd[0], pfd[1]);
 }
 
-static void wait_for_next_trigger()
+static bool wait_for_next_trigger()
 {
 	if( pc_loop_use_select )
 	{
@@ -71,13 +65,20 @@ static void wait_for_next_trigger()
 			FD_SET(fd, &pc_loop_fd_set);
 		}
 		timeval timeout = {monitor_refresh_delay, 0};
-		select(nfds, &pc_loop_fd_set, 0, 0, &timeout);
+		if( select(nfds, &pc_loop_fd_set, 0, 0, &timeout) != -1 )
+		{
+			if( FD_ISSET(self_pipe.first, &pc_loop_fd_set) )
+			{
+				return false;
+			}
+		}		
 	}
 	else
 	{
 		// If select() not possible, pause to prevent 100%
 		usleep(1000);
 	}
+	return true;
 }
 
 static int nethogsmonitor_init()
@@ -178,7 +179,7 @@ static int nethogsmonitor_init()
 	return NETHOGS_STATUS_OK;
 }
 
-static void nethogsmonitor_handle_update()
+static void nethogsmonitor_handle_update(NethogsMonitorCallback cb)
 {
 	refreshconninode();
 	refreshcount++;
@@ -205,16 +206,13 @@ static void nethogsmonitor_handle_update()
 			if (DEBUG)
 				std::cout << "PROC: Deleting process\n";
 
-			if( monitor_udpate_callback )
+			NethogsAppUpdateMap::iterator it = monitor_update_data.find(curproc->getVal()->pid);
+			if( it != monitor_update_data.end() )
 			{
-				NethogsAppUpdateMap::iterator it = monitor_update_data.find(curproc->getVal()->pid);
-				if( it != monitor_update_data.end() )
-				{
-					NethogsMonitorUpdate& data = it->second;
-					data.action = NETHOGS_APP_ACTION_REMOVE;
-					monitor_udpate_callback(&data);
-					monitor_update_data.erase(curproc->getVal()->pid);
-				}
+				NethogsMonitorUpdate& data = it->second;
+				data.action = NETHOGS_APP_ACTION_REMOVE;
+				(*cb)(&data);
+				monitor_update_data.erase(curproc->getVal()->pid);
 			}
 
 			ProcList * todelete = curproc;
@@ -244,38 +242,35 @@ static void nethogsmonitor_handle_update()
 			curproc->getVal()->getkbps  (&recv_kbs,   &sent_kbs);
 			curproc->getVal()->gettotal (&recv_bytes, &sent_bytes);
 			
-			if( monitor_udpate_callback )
-			{
-				//notify update
-				bool const new_data = (monitor_update_data.find(pid) == monitor_update_data.end());
-				NethogsMonitorUpdate &data = monitor_update_data[pid];
-	
-				bool data_change = false;	
-				if( new_data )
-				{
-					data_change = true;
-					memset(&data, 0, sizeof(data));
-					data.pid = pid;
-					data.app_name = curproc->getVal()->name;
-				}
-				
-				data.device_name = curproc->getVal()->devicename;
+			//notify update
+			bool const new_data = (monitor_update_data.find(pid) == monitor_update_data.end());
+			NethogsMonitorUpdate &data = monitor_update_data[pid];
 
-				#define NHM_UPDATE_ONE_FIELD(TO,FROM) if((TO)!=(FROM)) { TO = FROM; data_change = true; }
-				
-				NHM_UPDATE_ONE_FIELD( data.uid,         uid )
-				NHM_UPDATE_ONE_FIELD( data.sent_bytes,  sent_bytes )
-				NHM_UPDATE_ONE_FIELD( data.recv_bytes,  recv_bytes )
-				NHM_UPDATE_ONE_FIELD( data.sent_kbs,    sent_kbs )
-				NHM_UPDATE_ONE_FIELD( data.recv_kbs,    recv_kbs )
-				
-				#undef NHM_UPDATE_ONE_FIELD				
-				
-				if( data_change )
-				{
-					data.action = NETHOGS_APP_ACTION_SET;
-					monitor_udpate_callback(&data);
-				}
+			bool data_change = false;	
+			if( new_data )
+			{
+				data_change = true;
+				memset(&data, 0, sizeof(data));
+				data.pid = pid;
+				data.app_name = curproc->getVal()->name;
+			}
+			
+			data.device_name = curproc->getVal()->devicename;
+
+			#define NHM_UPDATE_ONE_FIELD(TO,FROM) if((TO)!=(FROM)) { TO = FROM; data_change = true; }
+			
+			NHM_UPDATE_ONE_FIELD( data.uid,         uid )
+			NHM_UPDATE_ONE_FIELD( data.sent_bytes,  sent_bytes )
+			NHM_UPDATE_ONE_FIELD( data.recv_bytes,  recv_bytes )
+			NHM_UPDATE_ONE_FIELD( data.sent_kbs,    sent_kbs )
+			NHM_UPDATE_ONE_FIELD( data.recv_kbs,    recv_kbs )
+			
+			#undef NHM_UPDATE_ONE_FIELD				
+			
+			if( data_change )
+			{
+				data.action = NETHOGS_APP_ACTION_SET;
+				(*cb)(&data);
 			}
 			
 			//next
@@ -285,13 +280,45 @@ static void nethogsmonitor_handle_update()
 	}
 }
 
-static void nethogsmonitor_threadproc()
+static void nethogsmonitor_clean_up()
 {
-	fprintf(stderr, "Waiting for first packet to arrive (see sourceforge.net bug 1019381)\n");
+	//clean up
+	handle * current_handle = handles;
+	while (current_handle != NULL)
+	{
+		pcap_close(current_handle->content->pcap_handle);
+		current_handle = current_handle->next;
+	}
+	
+	//close file descriptors
+	for(std::vector<int>::const_iterator it=pc_loop_fd_list.begin();
+		it != pc_loop_fd_list.end(); ++it)
+	{
+		close(*it);
+	}
+	
+	procclean();
+}
+
+int nethogsmonitor_loop(NethogsMonitorCallback cb)
+{
+	if( monitor_run_flag )
+	{
+		return NETHOGS_STATUS_FAILURE;
+	}
+	
+	int return_value = nethogsmonitor_init();
+	if( return_value != NETHOGS_STATUS_OK )
+	{
+		return return_value;
+	}
+	
+	monitor_run_flag = true;
+	
 	struct dpargs * userdata = (dpargs *) malloc (sizeof (struct dpargs));
 
 	// Main loop
-	while (monitor_thread_run_flag)
+	while (monitor_run_flag)
 	{
 		bool packets_read = false;
 
@@ -320,50 +347,25 @@ static void nethogsmonitor_threadproc()
 		if( monitor_last_refresh_time + monitor_refresh_delay <= now )
 		{
 			monitor_last_refresh_time = now;
-			nethogsmonitor_handle_update();
+			nethogsmonitor_handle_update(cb);
 		}
 
 		if (!packets_read)
 		{
-			wait_for_next_trigger();
+			if( !wait_for_next_trigger() )
+			{
+				break;
+			}
 		}
 	}
 	
-	handle * current_handle = handles;
-	while (current_handle != NULL)
-	{
-		pcap_close(current_handle->content->pcap_handle);
-		current_handle = current_handle->next;
-	}
+	nethogsmonitor_clean_up();
+	
+	return NETHOGS_STATUS_OK;
 }
 
-void nethogsmonitor_register_callback(NethogsMonitorCallback cb)
+void nethogsmonitor_breakloop()
 {
-	if( !monitor_thread_run_flag )
-	{
-		monitor_udpate_callback = cb;
-	}
-}
-
-int nethogsmonitor_start()
-{
-	bool expected = false;
-	int ret = NETHOGS_STATUS_OK;
-	if( monitor_thread_run_flag.compare_exchange_strong(expected, true) )
-	{
-		ret = nethogsmonitor_init();
-		monitor_thread_ptr = std::make_shared<std::thread>(&nethogsmonitor_threadproc);
-	}
-	return ret;
-}
-
-void nethogsmonitor_stop()
-{
-	bool expected = true;
-	if( monitor_thread_run_flag.compare_exchange_strong(expected, false) )
-	{
-		write(self_pipe.second, "x", 1);
-		monitor_thread_ptr->join();
-		monitor_udpate_callback = nullptr;
-	}
+	monitor_run_flag = false;
+	write(self_pipe.second, "x", 1);
 }

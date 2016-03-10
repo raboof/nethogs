@@ -33,15 +33,19 @@ typedef struct NethogsMonitorUpdate
 
 typedef void(*NethogsMonitorCallback)(NethogsMonitorUpdate const*);
 	
-//register async callback to receive updates
-//have to be called before start
-NETHOGS_DSO_VISIBLE void nethogsmonitor_register_callback(NethogsMonitorCallback);
-	
-//start the monitor (return one of the NETHOGS_STATUS above)
-NETHOGS_DSO_VISIBLE int nethogsmonitor_start();
+/**
+ * @brief Enter the process monitoring loop and reports updates using the 
+ * callback provided as parameter.
+ * This call will block until nethogsmonitor_stop is called or a failure occurs.
+ * @param cb A pointer to a callback function following the NethogsMonitorCallback definition
+ */
 
-//stop the monitor
-NETHOGS_DSO_VISIBLE void nethogsmonitor_stop();
+NETHOGS_DSO_VISIBLE int nethogsmonitor_loop(NethogsMonitorCallback cb);
+
+/**
+ * @brief Makes the call to nethogsmonitor_loop return.
+ */
+NETHOGS_DSO_VISIBLE void nethogsmonitor_breakloop();
 
 #undef NETHOGS_DSO_VISIBLE
 #undef NETHOGS_DSO_HIDDEN
