@@ -12,7 +12,7 @@ incdir := $(prefix)/include
 
 all: $(LIBNAME) libnethogs.a
 
-ifeq ($(UNAME_S),Darwin)
+ifeq ($(OS),Darwin)
 LDFLAGS:= -shared -Wl,-install_name,$(SO_NAME)
 else
 LDFLAGS:= -shared -Wl,-soname,$(SO_NAME)

@@ -17,6 +17,9 @@ install:
 	$(MAKE) -f MakeApp.mk $@
 	$(MAKE) -f MakeLib.mk $@
 
+install_dev:
+	$(MAKE) -f MakeLib.mk $@ 
+
 uninstall:
 	$(MAKE) -f MakeApp.mk $@
 	$(MAKE) -f MakeLib.mk $@
