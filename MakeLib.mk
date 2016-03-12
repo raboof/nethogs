@@ -12,10 +12,11 @@ incdir := $(prefix)/include
 
 all: $(LIBNAME) libnethogs.a
 
-ifeq ($(OS),Darwin)
-LDFLAGS:= -shared -Wl,-install_name,$(SO_NAME)
+UNAME_S := $(shell uname -s)
+ifeq ($(UNAME_S),Linux)
+  LDFLAGS:= -shared -Wl,-soname,$(SO_NAME)
 else
-LDFLAGS:= -shared -Wl,-soname,$(SO_NAME)
+  LDFLAGS:= -shared -Wl,-install_name,$(SO_NAME)
 endif
 
 CXXINCLUDES :=
