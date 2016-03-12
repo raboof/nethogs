@@ -3,3 +3,5 @@ decpcap_test
 TAGS
 *.o
 *~
+nethogs.project
+libnethogs.so

@@ -225,24 +225,6 @@ int process_ip6 (u_char * userdata, const dp_header * /* header */, const u_char
 	return false;
 }
 
-void forceExit(bool success, const char *msg, ...)
-{
-	if ((!tracemode)&&(!DEBUG)){
-		exit_ui();
-	}
-
-	va_list argp;
-	va_start(argp, msg);
-	vfprintf(stderr, msg, argp);
-	va_end(argp);
-	std::cerr << std::endl;
-
-	if (success)
-		exit(EXIT_SUCCESS);
-	else
-		exit(EXIT_FAILURE);
-}
-
 class handle {
 public:
 	handle (dp_handle * m_handle, const char * m_devicename = NULL,
