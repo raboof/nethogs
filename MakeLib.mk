@@ -1,10 +1,18 @@
+LIBVERSION      := 0
+LIBSUBVERSION   := 1
+LIBMINORVERSION := 0
+
+LIBRARY=libnethogs.so
+LIBNAME=$(LIBRARY).$(LIBVERSION).$(LIBSUBVERSION).$(LIBMINORVERSION)
+SO_NAME=$(LIBRARY).$(LIBVERSION)
+
 prefix := /usr/local
 libdir := $(prefix)/lib
 incdir := $(prefix)/include
 
-all: libnethogs.so libnethogs.a
+all: $(LIBNAME) libnethogs.a
 		
-LDFLAGS:= -shared
+LDFLAGS:= -shared -Wl,-soname,$(SO_NAME)
 CXXINCLUDES :=
 VISIBILITY=-fvisibility=hidden
 ODIR_BASE := obj
@@ -31,10 +39,14 @@ OBJS=$(addprefix $(ODIR)/,$(OBJ_NAMES))
 
 .PHONY: uninstall
 
-install: libnethogs.so
+install: $(LIBNAME)
 	install -d -m 755 $(DESTDIR)$(libdir)
-	install -m 755 libnethogs.so $(DESTDIR)$(libdir)
-	@echo "Installed libnethogs.so to $(DESTDIR)$(libdir)"
+	install -m 755 $(LIBNAME) $(DESTDIR)$(libdir)
+	@echo "Installed $(LIBNAME) to $(DESTDIR)$(libdir)"
+	ldconfig
+
+install_dev: install
+	@ln -s $(DESTDIR)$(libdir)/$(LIBNAME) $(DESTDIR)$(libdir)/$(LIBRARY)
 	install -m 755 libnethogs.a $(DESTDIR)$(libdir)
 	@echo "Installed libnethogs.a to $(DESTDIR)$(libdir)"
 	install -d -m 755 $(DESTDIR)$(incdir)
@@ -43,12 +55,13 @@ install: libnethogs.so
 	ldconfig
 
 uninstall:
-	rm $(DESTDIR)$(libdir)/libnethogs.so
-	rm $(DESTDIR)$(libdir)/libnethogs.a
-	rm $(DESTDIR)$(incdir)/libnethogs.h
+	rm -f $(DESTDIR)$(libdir)/$(LIBNAME)
+	rm -f $(DESTDIR)$(libdir)/$(LIBRARY)
+	rm -f $(DESTDIR)$(libdir)/libnethogs.a
+	rm -f $(DESTDIR)$(incdir)/libnethogs.h
 	ldconfig
 
-libnethogs.so: $(OBJS)
+$(LIBNAME): $(OBJS)
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(LDFLAGS) $(OBJS) -o $@ -lpcap
 
 libnethogs.a: $(OBJS)
@@ -86,12 +99,12 @@ $(ODIR)/devices.o: devices.cpp devices.h
 
 $(ODIR)/libnethogs.o: libnethogs.cpp libnethogs.h
 	@mkdir -p $(ODIR)
-	$(CXX) $(CXXFLAGS) -o $@ -c libnethogs.cpp -DVERSION=\"$(VERSION)\" -DSUBVERSION=\"$(SUBVERSION)\" -DMINORVERSION=\"$(MINORVERSION)\"
+	$(CXX) $(CXXFLAGS) -o $@ -c libnethogs.cpp -DVERSION=\"$(LIBVERSION)\" -DSUBVERSION=\"$(LIBSUBVERSION)\" -DMINORVERSION=\"$(LIBMINORVERSION)\"
 
 .PHONY: clean
 clean:
 	rm -f $(OBJS)
-	rm -f libnethogs.so
+	rm -f $(LIBNAME)
 	rm -f libnethogs.a
 	mkdir -p $(ODIR)
 	rmdir -p --ignore-fail-on-non-empty $(ODIR)

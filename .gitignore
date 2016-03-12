@@ -4,5 +4,5 @@ TAGS
 *.o
 *~
 nethogs.project
-libnethogs.so
+libnethogs.so.*
 libnethogs.a

@@ -1,7 +1,3 @@
-export VERSION      := 0
-export SUBVERSION   := 8
-export MINORVERSION := 2-SNAPSHOT
-
 all: nethogs decpcap_test
 	$(MAKE) -f MakeApp.mk $@
 	$(MAKE) -f MakeLib.mk $@

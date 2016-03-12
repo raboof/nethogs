@@ -37,7 +37,7 @@ typedef void(*NethogsMonitorCallback)(NethogsMonitorUpdate const*);
 /**
  * @brief Enter the process monitoring loop and reports updates using the 
  * callback provided as parameter.
- * This call will block until nethogsmonitor_stop is called or a failure occurs.
+ * This call will block until nethogsmonitor_breakloop is called or a failure occurs.
  * @param cb A pointer to a callback function following the NethogsMonitorCallback definition
  */
 
