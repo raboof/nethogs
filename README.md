@@ -29,7 +29,13 @@ Nethogs depends on `ncurses` for the text-based interface and `libpcap` for user
 
 #### Debian/Ubuntu
 
-    apt-get install libncurses5-dev libpcap-dev
+    apt-get install build-essential libncurses5-dev libpcap-dev
+
+#### Yum-based distro's
+
+    yum install gcc-c++ libpcap-devel.x86_64 libpcap.x86_64 ncurses*
+
+#### General
 
 After that, simply 
 
