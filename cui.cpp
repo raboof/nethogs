@@ -32,7 +32,6 @@
 #include <ncurses.h>
 #include "nethogs.h"
 #include "process.h"
-#include "refresh.h"
 
 std::string * caption;
 extern const char version[];

@@ -2,7 +2,7 @@ prefix := /usr/local
 libdir := $(prefix)/lib
 incdir := $(prefix)/include
 
-all: libnethogs.so
+all: libnethogs.so libnethogs.a
 		
 LDFLAGS:= -shared
 CXXINCLUDES :=
@@ -22,7 +22,7 @@ else
   CXXFLAGS?=-Wall -Wextra -O3 -fPIC $(VISIBILITY) $(CXXINCLUDES)
 endif
 
-OBJ_NAMES= libnethogs.o packet.o connection.o process.o refresh.o decpcap.o inode2prog.o conninode.o devices.o
+OBJ_NAMES= libnethogs.o packet.o connection.o process.o decpcap.o inode2prog.o conninode.o devices.o
 OBJS=$(addprefix $(ODIR)/,$(OBJ_NAMES))
 
 #$(info $(OBJS))
@@ -34,29 +34,27 @@ OBJS=$(addprefix $(ODIR)/,$(OBJ_NAMES))
 install: libnethogs.so
 	install -d -m 755 $(DESTDIR)$(libdir)
 	install -m 755 libnethogs.so $(DESTDIR)$(libdir)
-	@echo
 	@echo "Installed libnethogs.so to $(DESTDIR)$(libdir)"
-	@echo
+	install -m 755 libnethogs.a $(DESTDIR)$(libdir)
+	@echo "Installed libnethogs.a to $(DESTDIR)$(libdir)"
 	install -d -m 755 $(DESTDIR)$(incdir)
 	install -m 755 libnethogs.h $(DESTDIR)$(incdir)
-	@echo
 	@echo "Installed libnethogs.h to $(DESTDIR)$(incdir)"
-	@echo
 	ldconfig
 
 uninstall:
 	rm $(DESTDIR)$(libdir)/libnethogs.so
+	rm $(DESTDIR)$(libdir)/libnethogs.a
 	rm $(DESTDIR)$(incdir)/libnethogs.h
 	ldconfig
 
 libnethogs.so: $(OBJS)
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(LDFLAGS) $(OBJS) -o $@ -lpcap
 
-#-lefence
+libnethogs.a: $(OBJS)
+	$(AR) rcs $@ $(OBJS)
 
-$(ODIR)/refresh.o: refresh.cpp refresh.h nethogs.h
-	@mkdir -p $(ODIR)
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -o $@ -c refresh.cpp
+#-lefence
 
 $(ODIR)/process.o: process.cpp process.h nethogs.h
 	@mkdir -p $(ODIR)
@@ -94,6 +92,7 @@ $(ODIR)/libnethogs.o: libnethogs.cpp libnethogs.h
 clean:
 	rm -f $(OBJS)
 	rm -f libnethogs.so
+	rm -f libnethogs.a
 	mkdir -p $(ODIR)
 	rmdir -p --ignore-fail-on-non-empty $(ODIR)
 
