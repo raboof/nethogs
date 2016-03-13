@@ -20,8 +20,6 @@ extern "C" {
 
 typedef struct NethogsMonitorUpdate
 {
-	int		    action; // NETHOGS_APP_ACTION_SET or NETHOGS_APP_ACTION_REMOVE
-	uint64_t	key; //A unique key for the record, used with set/remove actions
 	const char* name;
 	int 		pid;
 	uint32_t	uid;
@@ -32,12 +30,22 @@ typedef struct NethogsMonitorUpdate
 	float		recv_kbs;
 } NethogsMonitorUpdate;
 
-typedef void(*NethogsMonitorCallback)(NethogsMonitorUpdate const*);
-	
+
+/**
+ * @brief Defines a callback to handle updates about applications
+ * @param action NETHOGS_APP_ACTION_SET if data is beeing added or updated,
+ *        NETHOGS_APP_ACTION_REMOVE if data is beeing removed.
+ *        the 'data' pointer is used to uniquely identify the data beeing update or removed.
+ * @param data a pointer to an application usage data. the pointer remains valid until
+ *        the callback is called with NETHOGS_APP_ACTION_REMOVE for the same pointer.
+ *        the user should not modify the content of the structure pointed by data.
+ */
+typedef void(*NethogsMonitorCallback)(int action, NethogsMonitorUpdate const* data);
+		
 /**
  * @brief Enter the process monitoring loop and reports updates using the 
  * callback provided as parameter.
- * This call will block until nethogsmonitor_breakloop is called or a failure occurs.
+ * This call will block until nethogsmonitor_breakloop() is called or a failure occurs.
  * @param cb A pointer to a callback function following the NethogsMonitorCallback definition
  */
 

@@ -23,7 +23,7 @@ extern Process * unknownip;
 static std::pair<int,int> self_pipe = std::make_pair(-1, -1);
 
 static bool monitor_run_flag = false;
-typedef std::map<uint64_t, NethogsMonitorUpdate> NethogsAppUpdateMap;
+typedef std::map<void*, NethogsMonitorUpdate> NethogsAppUpdateMap;
 static NethogsAppUpdateMap monitor_update_data;
 
 static int monitor_refresh_delay = 1;
@@ -49,11 +49,6 @@ static std::pair<int, int> create_self_pipe()
 		return std::make_pair(-1, -1);
 
 	return std::make_pair(pfd[0], pfd[1]);
-}
-
-static uint64_t getProcAsKey(ProcList * curproc)
-{
-	return reinterpret_cast<uint64_t>(curproc);
 }
 
 static bool wait_for_next_trigger()
@@ -211,13 +206,12 @@ static void nethogsmonitor_handle_update(NethogsMonitorCallback cb)
 			if (DEBUG)
 				std::cout << "PROC: Deleting process\n";
 
-			NethogsAppUpdateMap::iterator it = monitor_update_data.find(getProcAsKey(curproc));
+			NethogsAppUpdateMap::iterator it = monitor_update_data.find(curproc);
 			if( it != monitor_update_data.end() )
 			{
 				NethogsMonitorUpdate& data = it->second;
-				data.action = NETHOGS_APP_ACTION_REMOVE;
-				(*cb)(&data);
-				monitor_update_data.erase(getProcAsKey(curproc));
+				(*cb)(NETHOGS_APP_ACTION_REMOVE, &data);
+				monitor_update_data.erase(curproc);
 			}
 
 			ProcList * todelete = curproc;
@@ -247,8 +241,8 @@ static void nethogsmonitor_handle_update(NethogsMonitorCallback cb)
 			curproc->getVal()->gettotal (&recv_bytes, &sent_bytes);
 			
 			//notify update
-			bool const new_data = (monitor_update_data.find(getProcAsKey(curproc)) == monitor_update_data.end());
-			NethogsMonitorUpdate &data = monitor_update_data[getProcAsKey(curproc)];
+			bool const new_data = (monitor_update_data.find(curproc) == monitor_update_data.end());
+			NethogsMonitorUpdate &data = monitor_update_data[curproc];
 
 			bool data_change = false;	
 			if( new_data )
@@ -273,8 +267,7 @@ static void nethogsmonitor_handle_update(NethogsMonitorCallback cb)
 			
 			if( data_change )
 			{
-				data.action = NETHOGS_APP_ACTION_SET;
-				(*cb)(&data);
+				(*cb)(NETHOGS_APP_ACTION_SET, &data);
 			}
 			
 			//next

@@ -52,7 +52,7 @@ install: $(LIBNAME)
 	ldconfig
 
 install_dev: install
-	@ln -s $(DESTDIR)$(libdir)/$(LIBNAME) $(DESTDIR)$(libdir)/$(LIBRARY)
+	@ln -f -s $(DESTDIR)$(libdir)/$(LIBNAME) $(DESTDIR)$(libdir)/$(LIBRARY)
 	install -m 755 libnethogs.a $(DESTDIR)$(libdir)
 	@echo "Installed libnethogs.a to $(DESTDIR)$(libdir)"
 	install -d -m 755 $(DESTDIR)$(incdir)
