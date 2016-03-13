@@ -18,8 +18,9 @@ extern "C" {
 #define NETHOGS_STATUS_FAILURE    1 //generic error
 #define NETHOGS_STATUS_NO_DEVICE  2 //no device foundr
 
-typedef struct NethogsMonitorUpdate
-{
+typedef struct NethogsMonitorRecord
+{	
+	int 		record_id;
 	const char* name;
 	int 		pid;
 	uint32_t	uid;
@@ -28,19 +29,19 @@ typedef struct NethogsMonitorUpdate
 	uint32_t	recv_bytes;
 	float		sent_kbs;
 	float		recv_kbs;
-} NethogsMonitorUpdate;
+} NethogsMonitorRecord;
 
 
 /**
  * @brief Defines a callback to handle updates about applications
  * @param action NETHOGS_APP_ACTION_SET if data is beeing added or updated,
  *        NETHOGS_APP_ACTION_REMOVE if data is beeing removed.
- *        the 'data' pointer is used to uniquely identify the data beeing update or removed.
+ *        the record_id member is used to uniquely identify the data beeing update or removed.
  * @param data a pointer to an application usage data. the pointer remains valid until
  *        the callback is called with NETHOGS_APP_ACTION_REMOVE for the same pointer.
  *        the user should not modify the content of the structure pointed by data.
  */
-typedef void(*NethogsMonitorCallback)(int action, NethogsMonitorUpdate const* data);
+typedef void(*NethogsMonitorCallback)(int action, NethogsMonitorRecord const* data);
 		
 /**
  * @brief Enter the process monitoring loop and reports updates using the 

@@ -23,8 +23,8 @@ extern Process * unknownip;
 static std::pair<int,int> self_pipe = std::make_pair(-1, -1);
 
 static bool monitor_run_flag = false;
-typedef std::map<void*, NethogsMonitorUpdate> NethogsAppUpdateMap;
-static NethogsAppUpdateMap monitor_update_data;
+typedef std::map<void*, NethogsMonitorRecord> NethogsRecordMap;
+static NethogsRecordMap monitor_record_map;
 
 static int monitor_refresh_delay = 1;
 static time_t monitor_last_refresh_time = 0;
@@ -206,12 +206,12 @@ static void nethogsmonitor_handle_update(NethogsMonitorCallback cb)
 			if (DEBUG)
 				std::cout << "PROC: Deleting process\n";
 
-			NethogsAppUpdateMap::iterator it = monitor_update_data.find(curproc);
-			if( it != monitor_update_data.end() )
+			NethogsRecordMap::iterator it = monitor_record_map.find(curproc);
+			if( it != monitor_record_map.end() )
 			{
-				NethogsMonitorUpdate& data = it->second;
+				NethogsMonitorRecord& data = it->second;
 				(*cb)(NETHOGS_APP_ACTION_REMOVE, &data);
-				monitor_update_data.erase(curproc);
+				monitor_record_map.erase(curproc);
 			}
 
 			ProcList * todelete = curproc;
@@ -241,14 +241,17 @@ static void nethogsmonitor_handle_update(NethogsMonitorCallback cb)
 			curproc->getVal()->gettotal (&recv_bytes, &sent_bytes);
 			
 			//notify update
-			bool const new_data = (monitor_update_data.find(curproc) == monitor_update_data.end());
-			NethogsMonitorUpdate &data = monitor_update_data[curproc];
+			bool const new_data = (monitor_record_map.find(curproc) == monitor_record_map.end());
+			NethogsMonitorRecord &data = monitor_record_map[curproc];
 
 			bool data_change = false;	
 			if( new_data )
 			{
 				data_change = true;
+				static int record_id = 0;
+				++record_id;
 				memset(&data, 0, sizeof(data));
+				data.record_id = record_id;
 				data.name = curproc->getVal()->name;
 				data.pid = curproc->getVal()->pid;
 			}
