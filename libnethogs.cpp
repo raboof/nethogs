@@ -32,14 +32,14 @@ static time_t monitor_last_refresh_time = 0;
 //selectable file descriptors for the main loop
 static fd_set pc_loop_fd_set;
 static std::vector<int> pc_loop_fd_list;
-static bool pc_loop_use_select = true;	
+static bool pc_loop_use_select = true;
 
 static handle * handles = NULL;
 
 static std::pair<int, int> create_self_pipe()
 {
 	int pfd[2];
-	if (pipe(pfd) == -1) 
+	if (pipe(pfd) == -1)
 		return std::make_pair(-1, -1);
 
 	if (fcntl(pfd[0], F_SETFL, fcntl(pfd[0], F_GETFL) | O_NONBLOCK) == -1)
@@ -71,7 +71,7 @@ static bool wait_for_next_trigger()
 			{
 				return false;
 			}
-		}		
+		}
 	}
 	else
 	{
@@ -84,32 +84,32 @@ static bool wait_for_next_trigger()
 static int nethogsmonitor_init()
 {
 	process_init();
-	
+
 	device * devices = get_default_devices();
 	if ( devices == NULL )
 	{
-		std::cerr << "Not devices to monitor" << std::endl;
+		std::cerr << "No devices to monitor" << std::endl;
 		return NETHOGS_STATUS_NO_DEVICE;
 	}
-	
+
 	device * current_dev = devices;
-	
+
 	bool promiscuous = false;
-	
+
 	int nb_devices = 0;
 	int nb_failed_devices = 0;
-	
-	while (current_dev != NULL) 
+
+	while (current_dev != NULL)
 	{
 		++nb_devices;
-		
+
 		if( !getLocal(current_dev->name, false) )
 		{
 			std::cerr << "getifaddrs failed while establishing local IP." << std::endl;
 			++nb_failed_devices;
 			continue;
 		}
-		
+
 		char errbuf[PCAP_ERRBUF_SIZE];
 		dp_handle * newhandle = dp_open_live(current_dev->name, BUFSIZ, promiscuous, 100, errbuf);
 		if (newhandle != NULL)
@@ -130,7 +130,7 @@ static int nethogsmonitor_init()
 				fprintf(stderr, "Error putting libpcap in nonblocking mode\n");
 			}
 			handles = new handle (newhandle, current_dev->name, handles);
-			
+
 			if( pc_loop_use_select )
 			{
 				//some devices may not support pcap_get_selectable_fd
@@ -145,7 +145,7 @@ static int nethogsmonitor_init()
 					pc_loop_fd_list.clear();
 					fprintf(stderr, "failed to get selectable_fd for %s\n", current_dev->name);
 				}
-			}			
+			}
 		}
 		else
 		{
@@ -159,8 +159,8 @@ static int nethogsmonitor_init()
 	if(nb_devices == nb_failed_devices)
 	{
 		return NETHOGS_STATUS_FAILURE;
-	}	
-		
+	}
+
 	//use the Self-Pipe trick to interrupt the select() in the main loop
 	if( pc_loop_use_select )
 	{
@@ -175,7 +175,7 @@ static int nethogsmonitor_init()
 			pc_loop_fd_list.push_back(self_pipe.first);
 		}
 	}
-	
+
 	return NETHOGS_STATUS_OK;
 }
 
@@ -220,7 +220,7 @@ static void nethogsmonitor_handle_update(NethogsMonitorCallback cb)
 			{
 				previousproc->next = curproc->next;
 				curproc = curproc->next;
-			} else 
+			} else
 			{
 				processes = curproc->getNext();
 				curproc = processes;
@@ -239,12 +239,12 @@ static void nethogsmonitor_handle_update(NethogsMonitorCallback cb)
 			float recv_kbs;
 			curproc->getVal()->getkbps  (&recv_kbs,   &sent_kbs);
 			curproc->getVal()->gettotal (&recv_bytes, &sent_bytes);
-			
+
 			//notify update
 			bool const new_data = (monitor_record_map.find(curproc) == monitor_record_map.end());
 			NethogsMonitorRecord &data = monitor_record_map[curproc];
 
-			bool data_change = false;	
+			bool data_change = false;
 			if( new_data )
 			{
 				data_change = true;
@@ -255,24 +255,24 @@ static void nethogsmonitor_handle_update(NethogsMonitorCallback cb)
 				data.name = curproc->getVal()->name;
 				data.pid = curproc->getVal()->pid;
 			}
-			
+
 			data.device_name = curproc->getVal()->devicename;
 
 			#define NHM_UPDATE_ONE_FIELD(TO,FROM) if((TO)!=(FROM)) { TO = FROM; data_change = true; }
-			
+
 			NHM_UPDATE_ONE_FIELD( data.uid,         uid )
 			NHM_UPDATE_ONE_FIELD( data.sent_bytes,  sent_bytes )
 			NHM_UPDATE_ONE_FIELD( data.recv_bytes,  recv_bytes )
 			NHM_UPDATE_ONE_FIELD( data.sent_kbs,    sent_kbs )
 			NHM_UPDATE_ONE_FIELD( data.recv_kbs,    recv_kbs )
-			
-			#undef NHM_UPDATE_ONE_FIELD				
-			
+
+			#undef NHM_UPDATE_ONE_FIELD
+
 			if( data_change )
 			{
 				(*cb)(NETHOGS_APP_ACTION_SET, &data);
 			}
-			
+
 			//next
 			previousproc = curproc;
 			curproc = curproc->next;
@@ -289,14 +289,14 @@ static void nethogsmonitor_clean_up()
 		pcap_close(current_handle->content->pcap_handle);
 		current_handle = current_handle->next;
 	}
-	
+
 	//close file descriptors
 	for(std::vector<int>::const_iterator it=pc_loop_fd_list.begin();
 		it != pc_loop_fd_list.end(); ++it)
 	{
 		close(*it);
 	}
-	
+
 	procclean();
 }
 
@@ -306,15 +306,15 @@ int nethogsmonitor_loop(NethogsMonitorCallback cb)
 	{
 		return NETHOGS_STATUS_FAILURE;
 	}
-	
+
 	int return_value = nethogsmonitor_init();
 	if( return_value != NETHOGS_STATUS_OK )
 	{
 		return return_value;
 	}
-	
+
 	monitor_run_flag = true;
-	
+
 	struct dpargs * userdata = (dpargs *) malloc (sizeof (struct dpargs));
 
 	// Main loop
@@ -358,9 +358,9 @@ int nethogsmonitor_loop(NethogsMonitorCallback cb)
 			}
 		}
 	}
-	
+
 	nethogsmonitor_clean_up();
-	
+
 	return NETHOGS_STATUS_OK;
 }
 

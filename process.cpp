@@ -1,4 +1,4 @@
-/* 
+/*
  * process.cpp
  *
  * Copyright (c) 2004,2005,2008,2011 Arnout Engelen
@@ -37,17 +37,14 @@
 
 #include "process.h"
 #include "nethogs.h"
-/* #include "inodeproc.cpp" */
-#include "inode2prog.h" 
+#include "inode2prog.h"
 #include "conninode.h"
-
-extern local_addr * local_addrs;
 
 extern timeval curtime;
 
-/* 
+/*
  * connection-inode table. takes information from /proc/net/tcp.
- * key contains source ip, source port, destination ip, destination 
+ * key contains source ip, source port, destination ip, destination
  * port in format: '1.2.3.4:5-1.2.3.4:5'
  */
 extern std::map <std::string, unsigned long> conninode;
@@ -64,12 +61,12 @@ extern std::map <std::string, unsigned long> conninode;
  * * unknown IP traffic
  * We must take care these never get removed from the list.
  */
-Process * unknowntcp; 
-Process * unknownudp; 
-Process * unknownip; 
+Process * unknowntcp;
+Process * unknownudp;
+Process * unknownip;
 ProcList * processes;
 
-/* We're migrating to having several `unknown' processes that are added as 
+/* We're migrating to having several `unknown' processes that are added as
  * normal processes, instead of hard-wired unknown processes.
  * This mapping maps from unknown processes descriptions to processes */
 std::map <std::string, Process*> unknownprocs;
@@ -90,7 +87,7 @@ float tokbps (u_int32_t bytes)
 }
 
 
-void process_init () 
+void process_init ()
 {
 	unknowntcp = new Process (0, "", "unknown TCP");
 	//unknownudp = new Process (0, "", "unknown UDP");
@@ -205,7 +202,7 @@ Process * findProcess (struct prg_node * node)
 	{
 		Process * currentproc = current->getVal();
 		assert (currentproc != NULL);
-		
+
 		if (node->pid == currentproc->pid)
 			return current->getVal();
 		current = current->next;
@@ -214,7 +211,7 @@ Process * findProcess (struct prg_node * node)
 }
 
 /* finds process based on inode, if any */
-/* should be done quickly after arrival of the packet, 
+/* should be done quickly after arrival of the packet,
  * otherwise findPID will be outdated */
 Process * findProcess (unsigned long inode)
 {
@@ -246,7 +243,7 @@ void check_all_procs ()
 	}
 }
 
-/* 
+/*
  * returns the process from proclist with matching pid
  * if the inode is not associated with any PID, return NULL
  * if the process is not yet in the proclist, add it
@@ -254,7 +251,7 @@ void check_all_procs ()
 Process * getProcess (unsigned long inode, const char * devicename)
 {
 	struct prg_node * node = findPID(inode);
-	
+
 	if (node == NULL)
 	{
 		if (DEBUG || bughuntmode)
@@ -275,7 +272,7 @@ Process * getProcess (unsigned long inode, const char * devicename)
 	struct stat stats;
 	int retval = stat(procdir, &stats);
 
-	/* 0 seems a proper default. 
+	/* 0 seems a proper default.
 	 * used in case the PID disappeared while nethogs was running
 	 * TODO we can store node->uid this while info on the inodes,
 	 * right? */
@@ -293,7 +290,7 @@ Process * getProcess (unsigned long inode, const char * devicename)
 		newproc->setUid(stats.st_uid);
 
 	/*if (getpwuid(stats.st_uid) == NULL) {
-		std::stderr << "uid for inode 
+		std::stderr << "uid for inode
 		if (!ROBUST)
 			assert(false);
 	}*/
@@ -301,11 +298,11 @@ Process * getProcess (unsigned long inode, const char * devicename)
 	return newproc;
 }
 
-/* 
+/*
  * Used when a new connection is encountered. Finds corresponding
  * process and adds the connection. If the connection  doesn't belong
  * to any known process, the process list is updated and a new process
- * is made. If no process can be found even then, it's added to the 
+ * is made. If no process can be found even then, it's added to the
  * 'unknown' process.
  */
 Process * getProcess (Connection * connection, const char * devicename)

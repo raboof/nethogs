@@ -1,4 +1,4 @@
-/* 
+/*
  * devices.h
  *
  * Copyright (c) 2011 Arnout Engelen
@@ -26,7 +26,7 @@
 
 class device {
 public:
-	device (const char * m_name, device * m_next = NULL) 
+	device (const char * m_name, device * m_next = NULL)
 	{
 		name = m_name; next = m_next;
 	}
@@ -34,10 +34,16 @@ public:
 	device * next;
 };
 
-/**
- * This function can return null, if no good interface is found
- * The function avoids loopback interface and down/not running interfaces
- */
+/** get all devices that are up, running and not loopback */
 device * get_default_devices();
+
+/**
+ * Get all specified devices.
+ * If no devices are specified, get all devices.
+ *
+ * when 'all' is set, also return loopback interfaces and interfaces
+ * that are down or not running
+ */
+device * get_devices(int devc, char** devv, bool all);
 
 #endif
