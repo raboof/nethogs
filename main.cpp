@@ -33,6 +33,7 @@ static void help(bool iserror)
 	//output << "		-f : format of packets on interface, default is eth.\n";
 	output << "		-p : sniff in promiscious mode (not recommended).\n";
 	output << "		-s : sort output by sent column.\n";
+  output << "   -a : monitor all devices, even loopback/stopped ones.\n";
 	output << "		device : device(s) to monitor. default is all interfaces up and running excluding loopback\n";
 	output << std::endl;
 	output << "When nethogs is running, press:\n";
@@ -137,11 +138,11 @@ int main (int argc, char** argv)
 {
 	process_init();
 
-	device * devices = NULL;
 	int promisc = 0;
+	bool all = false;
 
 	int opt;
-	while ((opt = getopt(argc, argv, "Vhbtpd:v:c:s")) != -1) {
+	while ((opt = getopt(argc, argv, "Vahbtpd:v:c:sa")) != -1) {
 		switch(opt) {
 			case 'V':
 				versiondisplay();
@@ -171,25 +172,18 @@ int main (int argc, char** argv)
 			case 'c':
 				refreshlimit = atoi(optarg);
 				break;
+			case 'a':
+			  all = true;
+				break;
 			default:
 				help(true);
 				exit(EXIT_FAILURE);
 		}
 	}
 
-	while (optind < argc) {
-		devices = new device (strdup(argv[optind++]), devices);
-	}
-
+	device * devices = get_devices(argc - optind, argv + optind, all);
 	if (devices == NULL)
-	{
-		devices = get_default_devices();
-        if ( devices == NULL )
-        {
-            std::cerr << "Not devices to monitor" << std::endl;
-            return 0;
-        }
-	}
+    forceExit(false, "No devices to monitor. Use '-a' to allow monitoring loopback interfaces or devices that are not up/running");
 
 	if ((!tracemode) && (!DEBUG)){
 		init_ui();
