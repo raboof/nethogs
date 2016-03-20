@@ -1,5 +1,5 @@
 /*
- * nethogs.cpp
+ * `nethogs.cpp`
  *
  * Copyright (c) 2004-2006,2008,2011 Arnout Engelen
  *
@@ -138,7 +138,8 @@ int process_tcp (u_char * userdata, const dp_header * header, const u_char * m_p
 			#endif
 			break;
 		default:
-			forceExit(false, "invalid address family for TCP packet: %d", args->sa_family);
+			std::cerr << "Invalid address family for UDP packet: " << args->sa_family << std::endl;
+			return true;
 	}
 
 	Connection * connection = findConnection(packet);
@@ -182,7 +183,8 @@ int process_udp (u_char * userdata, const dp_header * header, const u_char * m_p
 			#endif
 			break;
 		default:
-			forceExit(false, "Invalid address family for UDP packet: %d", args->sa_family);
+			std::cerr << "Invalid address family for UDP packet: " << args->sa_family << std::endl;
+			return true;
 	}
 
 	//if (DEBUG)
