@@ -138,7 +138,7 @@ int process_tcp (u_char * userdata, const dp_header * header, const u_char * m_p
 			#endif
 			break;
 		default:
-			std::cerr << "Invalid address family for UDP packet: " << args->sa_family << std::endl;
+			std::cerr << "Invalid address family for TCP packet: " << args->sa_family << std::endl;
 			return true;
 	}
 
