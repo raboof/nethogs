@@ -8,46 +8,51 @@ extern "C" {
 #include <stdint.h>
 #include <stdbool.h>
 
-#define NETHOGS_DSO_VISIBLE __attribute__ ((visibility ("default")))
-#define NETHOGS_DSO_HIDDEN  __attribute__ ((visibility ("hidden")))
+#define NETHOGS_DSO_VISIBLE __attribute__((visibility("default")))
+#define NETHOGS_DSO_HIDDEN __attribute__((visibility("hidden")))
 
-#define NETHOGS_APP_ACTION_SET	  1
+#define NETHOGS_APP_ACTION_SET 1
 #define NETHOGS_APP_ACTION_REMOVE 2
 
-#define NETHOGS_STATUS_OK         0 
-#define NETHOGS_STATUS_FAILURE    1 //generic error
-#define NETHOGS_STATUS_NO_DEVICE  2 //no device foundr
+#define NETHOGS_STATUS_OK 0
+#define NETHOGS_STATUS_FAILURE 1 // generic error
+#define NETHOGS_STATUS_NO_DEVICE 2 // no device foundr
 
-typedef struct NethogsMonitorRecord
-{	
-	int 		record_id;
-	const char* name;
-	int 		pid;
-	uint32_t	uid;
-	const char* device_name;
-	uint32_t	sent_bytes;
-	uint32_t	recv_bytes;
-	float		sent_kbs;
-	float		recv_kbs;
+typedef struct NethogsMonitorRecord {
+  int record_id;
+  const char *name;
+  int pid;
+  uint32_t uid;
+  const char *device_name;
+  uint32_t sent_bytes;
+  uint32_t recv_bytes;
+  float sent_kbs;
+  float recv_kbs;
 } NethogsMonitorRecord;
-
 
 /**
  * @brief Defines a callback to handle updates about applications
  * @param action NETHOGS_APP_ACTION_SET if data is beeing added or updated,
  *        NETHOGS_APP_ACTION_REMOVE if data is beeing removed.
- *        the record_id member is used to uniquely identify the data beeing update or removed.
- * @param data a pointer to an application usage data. the pointer remains valid until
- *        the callback is called with NETHOGS_APP_ACTION_REMOVE for the same pointer.
- *        the user should not modify the content of the structure pointed by data.
+ *        the record_id member is used to uniquely identify the data beeing
+ * update or removed.
+ * @param data a pointer to an application usage data. the pointer remains valid
+ * until
+ *        the callback is called with NETHOGS_APP_ACTION_REMOVE for the same
+ * pointer.
+ *        the user should not modify the content of the structure pointed by
+ * data.
  */
-typedef void(*NethogsMonitorCallback)(int action, NethogsMonitorRecord const* data);
-		
+typedef void (*NethogsMonitorCallback)(int action,
+                                       NethogsMonitorRecord const *data);
+
 /**
- * @brief Enter the process monitoring loop and reports updates using the 
+ * @brief Enter the process monitoring loop and reports updates using the
  * callback provided as parameter.
- * This call will block until nethogsmonitor_breakloop() is called or a failure occurs.
- * @param cb A pointer to a callback function following the NethogsMonitorCallback definition
+ * This call will block until nethogsmonitor_breakloop() is called or a failure
+ * occurs.
+ * @param cb A pointer to a callback function following the
+ * NethogsMonitorCallback definition
  */
 
 NETHOGS_DSO_VISIBLE int nethogsmonitor_loop(NethogsMonitorCallback cb);

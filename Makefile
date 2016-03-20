@@ -30,7 +30,9 @@ nethogs:
 decpcap_test:
 	$(MAKE) -f MakeApp.mk $@
 	 
-.PHONY: clean
 clean:
 	$(MAKE) -f MakeApp.mk $@
 	$(MAKE) -f MakeLib.mk $@
+
+format:
+	clang-format -i *.c *.cpp *.h
