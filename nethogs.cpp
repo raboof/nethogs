@@ -1,4 +1,4 @@
-/* 
+/*
  * nethogs.cpp
  *
  * Copyright (c) 2004-2006,2008,2011 Arnout Engelen
@@ -60,8 +60,6 @@ bool bughuntmode = false;
 bool sortRecv = true;
 // viewMode: kb/s or total
 int viewMode = VIEWMODE_KBPS;
-//packet_type packettype = packet_ethernet;
-//dp_link_type linktype = dp_link_ethernet;
 const char version[] = " version " VERSION "." SUBVERSION "." MINORVERSION;
 
 timeval curtime;
@@ -235,4 +233,3 @@ public:
 	const char * devicename;
 	handle * next;
 };
-

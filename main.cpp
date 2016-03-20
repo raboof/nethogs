@@ -9,7 +9,7 @@ static time_t last_refresh_time = 0;
 //selectable file descriptors for the main loop
 static fd_set pc_loop_fd_set;
 static std::vector<int> pc_loop_fd_list;
-static bool pc_loop_use_select = true;		
+static bool pc_loop_use_select = true;
 
 
 static void versiondisplay(void)
@@ -20,7 +20,7 @@ static void versiondisplay(void)
 static void help(bool iserror)
 {
 	std::ostream & output = (iserror ? std::cerr : std::cout);
-	
+
 	//output << "usage: nethogs [-V] [-b] [-d seconds] [-t] [-p] [-f (eth|ppp))] [device [device [device ...]]]\n";
 	output << "usage: nethogs [-V] [-h] [-b] [-d seconds] [-v mode] [-c count] [-t] [-p] [-s] [device [device [device ...]]]\n";
 	output << "		-V : prints version.\n";
@@ -76,7 +76,7 @@ void forceExit(bool success, const char *msg, ...)
 std::pair<int, int> create_self_pipe()
 {
 	int pfd[2];
-	if (pipe(pfd) == -1) 
+	if (pipe(pfd) == -1)
 		return std::make_pair(-1, -1);
 
 	if (fcntl(pfd[0], F_SETFL, fcntl(pfd[0], F_GETFL) | O_NONBLOCK) == -1)
@@ -115,7 +115,7 @@ bool wait_for_next_trigger()
 		// If select() not possible, pause to prevent 100%
 		usleep(1000);
 	}
-	return true;	
+	return true;
 }
 
 
@@ -127,10 +127,10 @@ void clean_up()
 	{
 		close(*it);
 	}
-	
+
 	procclean();
 	if ((!tracemode) && (!DEBUG))
-		exit_ui();	
+		exit_ui();
 }
 
 int main (int argc, char** argv)
@@ -138,7 +138,6 @@ int main (int argc, char** argv)
 	process_init();
 
 	device * devices = NULL;
-	//dp_link_type linktype = dp_link_ethernet;
 	int promisc = 0;
 
 	int opt;
@@ -172,16 +171,6 @@ int main (int argc, char** argv)
 			case 'c':
 				refreshlimit = atoi(optarg);
 				break;
-			/*
-			case 'f':
-				argv++;
-				if (strcmp (optarg, "ppp") == 0)
-					linktype = dp_link_ppp;
-				else if (strcmp (optarg, "eth") == 0)
-					linktype = dp_link_ethernet;
-				}
-				break;
-			*/
 			default:
 				help(true);
 				exit(EXIT_FAILURE);
@@ -205,10 +194,10 @@ int main (int argc, char** argv)
 	if ((!tracemode) && (!DEBUG)){
 		init_ui();
 	}
-	
+
 	if (NEEDROOT && (geteuid() != 0))
 		forceExit(false, "You need to be root to run NetHogs!");
-		
+
 	//use the Self-Pipe trick to interrupt the select() in the main loop
 	self_pipe = create_self_pipe();
 	if( self_pipe.first == -1 || self_pipe.second == -1 )
@@ -226,7 +215,7 @@ int main (int argc, char** argv)
 	handle * handles = NULL;
 	device * current_dev = devices;
 	while (current_dev != NULL) {
-		
+
 		if( !getLocal(current_dev->name, tracemode) )
 		{
 			forceExit(false, "getifaddrs failed while establishing local IP.");
@@ -251,7 +240,7 @@ int main (int argc, char** argv)
 				fprintf(stderr, "Error putting libpcap in nonblocking mode\n");
 			}
 			handles = new handle (newhandle, current_dev->name, handles);
-			
+
 			if( pc_loop_use_select )
 			{
 				//some devices may not support pcap_get_selectable_fd
@@ -266,7 +255,7 @@ int main (int argc, char** argv)
 					pc_loop_fd_list.clear();
 					fprintf(stderr, "failed to get selectable_fd for %s\n", current_dev->name);
 				}
-			}			
+			}
 		}
 		else
 		{
@@ -317,7 +306,7 @@ int main (int argc, char** argv)
 			}
 			do_refresh();
 		}
- 
+
 		//if not packets, do a select() until next packet
 		if (!packets_read)
 		{
@@ -328,8 +317,7 @@ int main (int argc, char** argv)
 			}
 		}
 	}
-	
+
 	//clean up
 	clean_up();
 }
-
