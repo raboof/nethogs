@@ -55,6 +55,24 @@ void quit_cb (int /* i */)
 	}
 }
 
+void forceExit(bool success, const char *msg, ...)
+{
+	if ((!tracemode)&&(!DEBUG)){
+		exit_ui();
+	}
+
+	va_list argp;
+	va_start(argp, msg);
+	vfprintf(stderr, msg, argp);
+	va_end(argp);
+	std::cerr << std::endl;
+
+	if (success)
+		exit(EXIT_SUCCESS);
+	else
+		exit(EXIT_FAILURE);
+}
+
 std::pair<int, int> create_self_pipe()
 {
 	int pfd[2];
@@ -208,7 +226,11 @@ int main (int argc, char** argv)
 	handle * handles = NULL;
 	device * current_dev = devices;
 	while (current_dev != NULL) {
-		getLocal(current_dev->name, tracemode);
+		
+		if( !getLocal(current_dev->name, tracemode) )
+		{
+			forceExit(false, "getifaddrs failed while establishing local IP.");
+		}
 
 		dp_handle * newhandle = dp_open_live(current_dev->name, BUFSIZ, promisc, 100, errbuf);
 		if (newhandle != NULL)

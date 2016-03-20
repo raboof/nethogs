@@ -95,6 +95,12 @@ public:
 	}
 	int getLastPacket ();
 
+	void gettotal( u_int32_t * recvd, u_int32_t * sent);
+	void getkbps (float * recvd, float * sent);
+	void gettotalmb(float * recvd, float * sent);
+	void gettotalkb(float * recvd, float * sent);
+	void gettotalb (float * recvd, float * sent);
+
 	char * name;
 	const char * devicename;
 	int pid;

@@ -33,7 +33,6 @@
 #include "nethogs.h"
 #include "process.h"
 
-
 std::string * caption;
 extern const char version[];
 extern ProcList * processes;
@@ -277,106 +276,6 @@ void ui_tick ()
 	}
 }
 
-float tomb (u_int32_t bytes)
-{
-	return ((double)bytes) / 1024 / 1024;
-}
-float tokb (u_int32_t bytes)
-{
-	return ((double)bytes) / 1024;
-}
-float tokbps (u_int32_t bytes)
-{
-	return (((double)bytes) / PERIOD) / 1024;
-}
-
-/** Get the kb/s values for this process */
-void getkbps (Process * curproc, float * recvd, float * sent)
-{
-	u_int32_t sum_sent = 0,
-	  	sum_recv = 0;
-
-	/* walk though all this process's connections, and sum
-	 * them up */
-	ConnList * curconn = curproc->connections;
-	ConnList * previous = NULL;
-	while (curconn != NULL)
-	{
-		if (curconn->getVal()->getLastPacket() <= curtime.tv_sec - CONNTIMEOUT)
-		{
-			/* stalled connection, remove. */
-			ConnList * todelete = curconn;
-			Connection * conn_todelete = curconn->getVal();
-			curconn = curconn->getNext();
-			if (todelete == curproc->connections)
-				curproc->connections = curconn;
-			if (previous != NULL)
-				previous->setNext(curconn);
-			delete (todelete);
-			delete (conn_todelete);
-		}
-		else
-		{
-			u_int32_t sent = 0, recv = 0;
-			curconn->getVal()->sumanddel(curtime, &recv, &sent);
-			sum_sent += sent;
-			sum_recv += recv;
-			previous = curconn;
-			curconn = curconn->getNext();
-		}
-	}
-	*recvd = tokbps(sum_recv);
-	*sent = tokbps(sum_sent);
-}
-
-/** get total values for this process */
-void gettotal(Process * curproc, u_int32_t * recvd, u_int32_t * sent)
-{
-	u_int32_t sum_sent = 0,
-	  	sum_recv = 0;
-	ConnList * curconn = curproc->connections;
-	while (curconn != NULL)
-	{
-		Connection * conn = curconn->getVal();
-		sum_sent += conn->sumSent;
-		sum_recv += conn->sumRecv;
-		curconn = curconn->getNext();
-	}
-	//std::cout << "Sum sent: " << sum_sent << std::endl;
-	//std::cout << "Sum recv: " << sum_recv << std::endl;
-	*recvd = sum_recv;
-	*sent = sum_sent;
-}
-
-void gettotalmb(Process * curproc, float * recvd, float * sent)
-{
-	u_int32_t sum_sent = 0,
-	  	sum_recv = 0;
-	gettotal(curproc, &sum_recv, &sum_sent);
-	*recvd = tomb(sum_recv);
-	*sent = tomb(sum_sent);
-}
-
-/** get total values for this process */
-void gettotalkb(Process * curproc, float * recvd, float * sent)
-{
-	u_int32_t sum_sent = 0,
-	  	sum_recv = 0;
-	gettotal(curproc, &sum_recv, &sum_sent);
-	*recvd = tokb(sum_recv);
-	*sent = tokb(sum_sent);
-}
-
-void gettotalb(Process * curproc, float * recvd, float * sent)
-{
-	u_int32_t sum_sent = 0,
-	  	sum_recv = 0;
-	gettotal(curproc, &sum_recv, &sum_sent);
-	//std::cout << "Total sent: " << sum_sent << std::endl;
-	*sent = sum_sent;
-	*recvd = sum_recv;
-}
-
 void show_trace(Line * lines[], int nproc) {
 	std::cout << "\nRefreshing:\n";
 
@@ -512,22 +411,22 @@ void do_refresh()
 			if (viewMode == VIEWMODE_KBPS)
 			{
 				//std::cout << "kbps viemode" << std::endl;
-				getkbps (curproc->getVal(), &value_recv, &value_sent);
+				curproc->getVal()->getkbps (&value_recv, &value_sent);
 			}
 			else if (viewMode == VIEWMODE_TOTAL_KB)
 			{
 				//std::cout << "total viemode" << std::endl;
-				gettotalkb(curproc->getVal(), &value_recv, &value_sent);
+				curproc->getVal()->gettotalkb(&value_recv, &value_sent);
 			}
 			else if (viewMode == VIEWMODE_TOTAL_MB)
 			{
 				//std::cout << "total viemode" << std::endl;
-				gettotalmb(curproc->getVal(), &value_recv, &value_sent);
+				curproc->getVal()->gettotalmb(&value_recv, &value_sent);
 			}
 			else if (viewMode == VIEWMODE_TOTAL_B)
 			{
 				//std::cout << "total viemode" << std::endl;
-				gettotalb(curproc->getVal(), &value_recv, &value_sent);
+				curproc->getVal()->gettotalb(&value_recv, &value_sent);
 			}
 			else
 			{
