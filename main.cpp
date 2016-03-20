@@ -271,28 +271,19 @@ int main (int argc, char** argv)
 	struct dpargs * userdata = (dpargs *) malloc (sizeof (struct dpargs));
 
 	// Main loop:
-	//
-	//  Walks though the 'handles' list, which contains handles opened in non-blocking mode.
-	//  This causes the CPU utilisation to go up to 100%. This is tricky:
 	while (1)
 	{
 		bool packets_read = false;
 
-		handle * current_handle = handles;
-		while (current_handle != NULL)
+		for (handle * current_handle = handles; current_handle != NULL; current_handle = current_handle->next)
 		{
 			userdata->device = current_handle->devicename;
 			userdata->sa_family = AF_UNSPEC;
 			int retval = dp_dispatch (current_handle->content, -1, (u_char *)userdata, sizeof (struct dpargs));
 			if (retval < 0)
-			{
 				std::cerr << "Error dispatching: " << retval << std::endl;
-			}
 			else if (retval != 0)
-			{
 				packets_read = true;
-			}
-			current_handle = current_handle->next;
 		}
 
 		time_t const now = ::time(NULL);
@@ -307,17 +298,12 @@ int main (int argc, char** argv)
 			do_refresh();
 		}
 
-		//if not packets, do a select() until next packet
+		// if not packets, do a select() until next packet
 		if (!packets_read)
-		{
 			if( !wait_for_next_trigger() )
-			{
-				//Exit the loop
+				// Shutdown requested - exit the loop
 				break;
-			}
-		}
 	}
 
-	//clean up
 	clean_up();
 }
