@@ -1,4 +1,4 @@
-/* 
+/*
  * devices.cpp
  *
  * Copyright (c) 2011 Arnout Engelen
@@ -28,11 +28,44 @@
 #include <net/if.h>
 #include <ifaddrs.h>
 
-device * get_default_devices()
+bool selected(int devc, char** devicenames, char* devicename) {
+	if (devc == 0)
+		return true;
+
+	for (int i = 0; i < devc; i++)
+		if (strcmp(devicenames[i], devicename) == 0)
+			return true;
+
+	return false;
+}
+
+bool already_seen(device* devices, char* devicename) {
+	for (class device* current_device = devices;
+		current_device != NULL;
+		current_device = current_device->next) {
+			if (strcmp(current_device->name, devicename) == 0)
+				return true;
+	}
+	return false;
+}
+
+// The interface is up, not a loopback and running?
+bool up_running(int ifa_flags) {
+	std::cout << "up: " << (ifa_flags & IFF_UP) << std::endl;
+	return !(ifa_flags & IFF_LOOPBACK) &&
+			 (ifa_flags & IFF_UP) &&
+			 (ifa_flags & IFF_RUNNING);
+}
+
+/**
+ * This function can return null, if no good interface is found
+ * When 'all' is set to 'false', the function avoids loopback interface and down/not running interfaces
+ */
+device * get_devices(int devc, char** devicenames, bool all)
 {
 	struct ifaddrs *ifaddr, *ifa;
 
-	if (getifaddrs(&ifaddr) == -1) 
+	if (getifaddrs(&ifaddr) == -1)
 	{
 		std::cerr << "Fail to get interface addresses" << std::endl;
 		// perror("getifaddrs");
@@ -40,37 +73,24 @@ device * get_default_devices()
 	}
 
 	device* devices = NULL;
-	for (ifa = ifaddr; ifa != NULL; ifa = ifa->ifa_next) 
+	for (ifa = ifaddr; ifa != NULL; ifa = ifa->ifa_next)
 	{
-		if (ifa->ifa_addr == NULL)  
-			continue;  
+		if (ifa->ifa_addr == NULL)
+			continue;
+		if (!selected(devc, devicenames, ifa->ifa_name))
+			continue;
+		if (already_seen(devices, ifa->ifa_name))
+			continue;
+		if (!all && !up_running(ifa->ifa_flags))
+			continue;
 
-		// The interface is up, not a loopback and running ?
-		if ( !(ifa->ifa_flags & IFF_LOOPBACK) && 
-			 (ifa->ifa_flags & IFF_UP) &&
-			 (ifa->ifa_flags & IFF_RUNNING) )
-		{
-			// Check if the interface is already known by going through all the devices
-			bool found = false;
-			device* pIter = devices;
-			while(pIter != NULL)
-			{
-				if ( strcmp(ifa->ifa_name,pIter->name) == 0 )
-				{
-					found = true;
-				}
-				pIter = pIter->next;
-			}
-
-			// We found a new interface, let's add it
-			if ( found == false )
-			{
-				devices = new device(strdup(ifa->ifa_name),devices);
-			}
-		}
+		devices = new device(strdup(ifa->ifa_name),devices);
 	}
 
 	freeifaddrs(ifaddr);
 	return devices;
 }
 
+device * get_default_devices() {
+	return get_devices(0, NULL, false);
+}
