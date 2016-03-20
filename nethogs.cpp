@@ -123,20 +123,22 @@ int process_tcp (u_char * userdata, const dp_header * header, const u_char * m_p
 	Packet * packet;
 	switch (args->sa_family)
 	{
-		case (AF_INET):
+		case AF_INET:
 			#ifdef __APPLE__
 				packet = new Packet (args->ip_src, ntohs(tcp->th_sport), args->ip_dst, ntohs(tcp->th_dport), header->len, header->ts);
 			#else
 				packet = new Packet (args->ip_src, ntohs(tcp->source), args->ip_dst, ntohs(tcp->dest), header->len, header->ts);
 			#endif
 			break;
-		case (AF_INET6):
+		case AF_INET6:
 			#ifdef __APPLE__
 				packet = new Packet (args->ip6_src, ntohs(tcp->th_sport), args->ip6_dst, ntohs(tcp->th_dport), header->len, header->ts);
 			#else
 				packet = new Packet (args->ip6_src, ntohs(tcp->source), args->ip6_dst, ntohs(tcp->dest), header->len, header->ts);
 			#endif
 			break;
+		default:
+			forceExit(false, "invalid address family for TCP packet: %d", args->sa_family);
 	}
 
 	Connection * connection = findConnection(packet);
@@ -165,20 +167,22 @@ int process_udp (u_char * userdata, const dp_header * header, const u_char * m_p
 	Packet * packet;
 	switch (args->sa_family)
 	{
-		case (AF_INET):
+		case AF_INET:
 			#ifdef __APPLE__
 				packet = new Packet (args->ip_src, ntohs(udp->uh_sport), args->ip_dst, ntohs(udp->uh_dport), header->len, header->ts);
 			#else
 				packet = new Packet (args->ip_src, ntohs(udp->source), args->ip_dst, ntohs(udp->dest), header->len, header->ts);
 			#endif
 			break;
-		case (AF_INET6):
+		case AF_INET6:
 			#ifdef __APPLE__
 				packet = new Packet (args->ip6_src, ntohs(udp->uh_sport), args->ip6_dst, ntohs(udp->uh_dport), header->len, header->ts);
 			#else
 				packet = new Packet (args->ip6_src, ntohs(udp->source), args->ip6_dst, ntohs(udp->dest), header->len, header->ts);
 			#endif
 			break;
+		default:
+			forceExit(false, "Invalid address family for UDP packet: %d", args->sa_family);
 	}
 
 	//if (DEBUG)
