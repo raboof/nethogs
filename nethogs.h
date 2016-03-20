@@ -1,4 +1,4 @@
-/* 
+/*
  * nethogs.h
  *
  * Copyright (c) 2004-2006,2008,2010 Arnout Engelen
@@ -73,7 +73,7 @@
 #define VIEWMODE_TOTAL_B  2
 #define VIEWMODE_TOTAL_MB 3
 #define VIEWMODE_COUNT    4
- 
+
 #define NORETURN __attribute__ ((__noreturn__))
 
 void forceExit(bool success, const char *msg, ...) NORETURN;
