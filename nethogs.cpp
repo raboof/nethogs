@@ -1,5 +1,5 @@
 /*
- * nethogs.cpp
+ * `nethogs.cpp`
  *
  * Copyright (c) 2004-2006,2008,2011 Arnout Engelen
  *
@@ -123,20 +123,23 @@ int process_tcp (u_char * userdata, const dp_header * header, const u_char * m_p
 	Packet * packet;
 	switch (args->sa_family)
 	{
-		case (AF_INET):
+		case AF_INET:
 			#ifdef __APPLE__
 				packet = new Packet (args->ip_src, ntohs(tcp->th_sport), args->ip_dst, ntohs(tcp->th_dport), header->len, header->ts);
 			#else
 				packet = new Packet (args->ip_src, ntohs(tcp->source), args->ip_dst, ntohs(tcp->dest), header->len, header->ts);
 			#endif
 			break;
-		case (AF_INET6):
+		case AF_INET6:
 			#ifdef __APPLE__
 				packet = new Packet (args->ip6_src, ntohs(tcp->th_sport), args->ip6_dst, ntohs(tcp->th_dport), header->len, header->ts);
 			#else
 				packet = new Packet (args->ip6_src, ntohs(tcp->source), args->ip6_dst, ntohs(tcp->dest), header->len, header->ts);
 			#endif
 			break;
+		default:
+			std::cerr << "Invalid address family for TCP packet: " << args->sa_family << std::endl;
+			return true;
 	}
 
 	Connection * connection = findConnection(packet);
@@ -165,20 +168,23 @@ int process_udp (u_char * userdata, const dp_header * header, const u_char * m_p
 	Packet * packet;
 	switch (args->sa_family)
 	{
-		case (AF_INET):
+		case AF_INET:
 			#ifdef __APPLE__
 				packet = new Packet (args->ip_src, ntohs(udp->uh_sport), args->ip_dst, ntohs(udp->uh_dport), header->len, header->ts);
 			#else
 				packet = new Packet (args->ip_src, ntohs(udp->source), args->ip_dst, ntohs(udp->dest), header->len, header->ts);
 			#endif
 			break;
-		case (AF_INET6):
+		case AF_INET6:
 			#ifdef __APPLE__
 				packet = new Packet (args->ip6_src, ntohs(udp->uh_sport), args->ip6_dst, ntohs(udp->uh_dport), header->len, header->ts);
 			#else
 				packet = new Packet (args->ip6_src, ntohs(udp->source), args->ip6_dst, ntohs(udp->dest), header->len, header->ts);
 			#endif
 			break;
+		default:
+			std::cerr << "Invalid address family for UDP packet: " << args->sa_family << std::endl;
+			return true;
 	}
 
 	//if (DEBUG)
