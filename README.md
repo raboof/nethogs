@@ -61,6 +61,17 @@ For now:
  * functions: camelcased, start lowercase
  * local variables: camelcased, start lowercase
 
+libnethogs
+----------
+
+Apart from the 'nethogs' tool, this codebase now also builds as a 'libnethogs'
+library. This is highly experimental, and we expect to break source and binary
+compatibility while we look for the right abstraction points. Packaging
+libnethogs as an independent package is currently discouraged, as the chance
+of different applications successfully using the same libnethogs are slim.
+
+libnethogs is being used in https://github.com/mb-gh/gnethogs
+
 License
 -------
 
