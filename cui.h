@@ -15,15 +15,16 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
+ *USA.
  *
  */
 
 /* NetHogs console UI */
 
-void do_refresh ();
-void init_ui ();
-void exit_ui ();
+void do_refresh();
+void init_ui();
+void exit_ui();
 
 /* periodically gives some CPU-time to the UI */
-void ui_tick ();
+void ui_tick();

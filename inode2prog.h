@@ -15,7 +15,8 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
+ *USA.
  *
  */
 #ifndef __INODE2PROG_h
@@ -28,16 +29,16 @@
 #include "nethogs.h"
 
 struct prg_node {
-    long inode;
-    pid_t pid;
-    std::string name;
+  long inode;
+  pid_t pid;
+  std::string name;
 };
 
-struct prg_node * findPID (unsigned long inode);
+struct prg_node *findPID(unsigned long inode);
 
 void prg_cache_clear();
 
 // reread the inode-to-prg_node-mapping
-void reread_mapping ();
+void reread_mapping();
 
 #endif
