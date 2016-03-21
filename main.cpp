@@ -292,6 +292,10 @@ int main (int argc, char** argv)
 			{
 				packets_read = true;
 			}
+			else
+			{
+				gettimeofday(&curtime, NULL);
+			}
 			current_handle = current_handle->next;
 		}
 
