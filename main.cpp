@@ -278,6 +278,8 @@ int main (int argc, char** argv)
 				std::cerr << "Error dispatching: " << retval << std::endl;
 			else if (retval != 0)
 				packets_read = true;
+			else
+				gettimeofday(&curtime, NULL);
 		}
 
 		time_t const now = ::time(NULL);
