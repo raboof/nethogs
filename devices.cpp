@@ -51,7 +51,6 @@ bool already_seen(device* devices, char* devicename) {
 
 // The interface is up, not a loopback and running?
 bool up_running(int ifa_flags) {
-	std::cout << "up: " << (ifa_flags & IFF_UP) << std::endl;
 	return !(ifa_flags & IFF_LOOPBACK) &&
 			 (ifa_flags & IFF_UP) &&
 			 (ifa_flags & IFF_RUNNING);
