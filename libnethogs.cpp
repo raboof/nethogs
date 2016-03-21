@@ -343,10 +343,9 @@ int nethogsmonitor_loop(NethogsMonitorCallback cb)
 			current_handle = current_handle->next;
 		}
 
-		time_t const now = ::time(NULL);
-		if( monitor_last_refresh_time + monitor_refresh_delay <= now )
+		if( monitor_last_refresh_time + monitor_refresh_delay <= curtime.tv_sec )
 		{
-			monitor_last_refresh_time = now;
+			monitor_last_refresh_time = curtime.tv_sec;
 			nethogsmonitor_handle_update(cb);
 		}
 
