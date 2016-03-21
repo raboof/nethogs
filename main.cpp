@@ -278,12 +278,13 @@ int main (int argc, char** argv)
 				std::cerr << "Error dispatching: " << retval << std::endl;
 			else if (retval != 0)
 				packets_read = true;
+			else
+				gettimeofday(&curtime, NULL);
 		}
 
-		time_t const now = ::time(NULL);
- 		if( last_refresh_time + refreshdelay <= now )
+ 		if( last_refresh_time + refreshdelay <= curtime.tv_sec )
  		{
- 			last_refresh_time = now;
+ 			last_refresh_time = curtime.tv_sec;
  			if ((!DEBUG)&&(!tracemode))
 			{
 				// handle user input
