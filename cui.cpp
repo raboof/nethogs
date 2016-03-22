@@ -354,8 +354,12 @@ void do_refresh() {
 
   ProcList *curproc = processes;
   int nproc = processes->size();
+
   /* initialize to null pointers */
-  Line *lines[nproc] = { NULL };
+  Line *lines[nproc];;
+  for (int i = 0; i < nproc; i++)
+    lines[i] = NULL;
+
   int n = 0;
 
   while (curproc != NULL) {
