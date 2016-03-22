@@ -48,6 +48,9 @@ We use the [http://llvm.org/docs/CodingStandards.html](LLVM coding standards),
 with the exception that we do allow 'return' after 'else' if it makes the code
 more readable.
 
+Note to contributors: feel free to request more exceptions and we'll list them 
+here.
+
 Not all code currently adheres to this standard. Pull requests fixing style
 are welcome, and do write new code in the proper style, but please do not
 mix style fixes and new functionality in one pull request.
