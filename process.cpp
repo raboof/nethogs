@@ -350,3 +350,29 @@ void procclean() {
   // delete conninode;
   prg_cache_clear();
 }
+
+void remove_timed_out_processes() {
+  ProcList *previousproc = NULL;
+
+  for (ProcList *curproc = processes; curproc != NULL; curproc = curproc->next) {
+    if ((curproc->getVal()->getLastPacket() + PROCESSTIMEOUT <=
+         curtime.tv_sec) &&
+        (curproc->getVal() != unknowntcp) &&
+        (curproc->getVal() != unknownudp) && (curproc->getVal() != unknownip)) {
+      if (DEBUG)
+        std::cout << "PROC: Deleting process\n";
+      ProcList *todelete = curproc;
+      Process *p_todelete = curproc->getVal();
+      if (previousproc) {
+        previousproc->next = curproc->next;
+        curproc = curproc->next;
+      } else {
+        processes = curproc->getNext();
+        curproc = processes;
+      }
+      delete todelete;
+      delete p_todelete;
+    }
+    previousproc = curproc;
+  }
+}
