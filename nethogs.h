@@ -15,10 +15,10 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
+ *USA.
  *
  */
-
 
 #ifndef __NETHOGS_H
 #define __NETHOGS_H
@@ -30,9 +30,9 @@
 #include <cassert>
 #include <cstring>
 #ifdef __APPLE__
-	#include <sys/malloc.h>
+#include <sys/malloc.h>
 #else
-	#include <malloc.h>
+#include <malloc.h>
 #endif
 #include <iostream>
 
@@ -68,50 +68,48 @@
 #define PROGNAME_WIDTH 512
 
 // viewMode: how to represent numbers
-#define VIEWMODE_KBPS     0
+#define VIEWMODE_KBPS 0
 #define VIEWMODE_TOTAL_KB 1
-#define VIEWMODE_TOTAL_B  2
+#define VIEWMODE_TOTAL_B 2
 #define VIEWMODE_TOTAL_MB 3
-#define VIEWMODE_COUNT    4
+#define VIEWMODE_COUNT 4
 
-#define NORETURN __attribute__ ((__noreturn__))
+#define NORETURN __attribute__((__noreturn__))
 
 void forceExit(bool success, const char *msg, ...) NORETURN;
 
 class local_addr {
 public:
-	/* ipv4 constructor takes an in_addr_t */
-	local_addr (in_addr_t m_addr, local_addr * m_next = NULL)
-	{
-		addr = m_addr;
-		next = m_next;
-		sa_family = AF_INET;
-		string = (char*) malloc (16);
-		inet_ntop (AF_INET, &m_addr, string, 15);
-	}
-	/* this constructor takes an char address[33] */
-	local_addr (struct in6_addr *m_addr, local_addr * m_next = NULL)
-	{
-		addr6 = *m_addr;
-		next = m_next;
-		sa_family = AF_INET6;
-		string = (char*) malloc (64);
-		inet_ntop (AF_INET6, &m_addr, string, 63);
-	}
+  /* ipv4 constructor takes an in_addr_t */
+  local_addr(in_addr_t m_addr, local_addr *m_next = NULL) {
+    addr = m_addr;
+    next = m_next;
+    sa_family = AF_INET;
+    string = (char *)malloc(16);
+    inet_ntop(AF_INET, &m_addr, string, 15);
+  }
+  /* this constructor takes an char address[33] */
+  local_addr(struct in6_addr *m_addr, local_addr *m_next = NULL) {
+    addr6 = *m_addr;
+    next = m_next;
+    sa_family = AF_INET6;
+    string = (char *)malloc(64);
+    inet_ntop(AF_INET6, &m_addr, string, 63);
+  }
 
-	bool contains (const in_addr_t & n_addr);
-	bool contains (const struct in6_addr & n_addr);
-	char * string;
-	local_addr * next;
+  bool contains(const in_addr_t &n_addr);
+  bool contains(const struct in6_addr &n_addr);
+  char *string;
+  local_addr *next;
+
 private:
-
-	in_addr_t addr;
-	struct in6_addr addr6;
-	short int sa_family;
+  in_addr_t addr;
+  struct in6_addr addr6;
+  short int sa_family;
 };
 
-void quit_cb (int i);
+void quit_cb(int i);
 
-const char* getVersion();
+const char *getVersion();
 
 #endif

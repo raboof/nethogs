@@ -44,22 +44,19 @@ After that, simply
 Coding standards
 ----------------
 
-Can anyone recommend a sensible set? :)
+We use the [http://llvm.org/docs/CodingStandards.html](LLVM coding standards),
+with the exception that we do allow 'return' after 'else' if it makes the code
+more readable.
 
-For now:
-* '{' 
- * on a new line for function definitions
- * on a new line for enums
- * on the same line for conditionals/loops 
- * omitted when possible
-* use tab for indentation
-* use doxygen/javadoc-style comments.
- * for multiline doxygen docs, add a newline after '/**'
-* case
- * classes: camelcased, start uppercase
- * enums: camelcased, start uppercase
- * functions: camelcased, start lowercase
- * local variables: camelcased, start lowercase
+Note to contributors: feel free to request more exceptions and we'll list them 
+here.
+
+Not all code currently adheres to this standard. Pull requests fixing style
+are welcome, and do write new code in the proper style, but please do not
+mix style fixes and new functionality in one pull request.
+
+When writing new code, at least run 'make format' to have clang-format fix
+some superficial style aspects.
 
 libnethogs
 ----------

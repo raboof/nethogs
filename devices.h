@@ -15,7 +15,8 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
+ *USA.
  *
  */
 
@@ -26,16 +27,16 @@
 
 class device {
 public:
-	device (const char * m_name, device * m_next = NULL)
-	{
-		name = m_name; next = m_next;
-	}
-	const char * name;
-	device * next;
+  device(const char *m_name, device *m_next = NULL) {
+    name = m_name;
+    next = m_next;
+  }
+  const char *name;
+  device *next;
 };
 
 /** get all devices that are up, running and not loopback */
-device * get_default_devices();
+device *get_default_devices();
 
 /**
  * Get all specified devices.
@@ -44,6 +45,6 @@ device * get_default_devices();
  * when 'all' is set, also return loopback interfaces and interfaces
  * that are down or not running
  */
-device * get_devices(int devc, char** devv, bool all);
+device *get_devices(int devc, char **devv, bool all);
 
 #endif
