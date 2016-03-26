@@ -1,7 +1,3 @@
-LIBVERSION      := 0
-LIBSUBVERSION   := 1
-LIBMINORVERSION := 0
-
 LIBRARY=libnethogs.so
 LIBNAME=$(LIBRARY).$(LIBVERSION).$(LIBSUBVERSION).$(LIBMINORVERSION)
 SO_NAME=$(LIBRARY).$(LIBVERSION)
@@ -114,4 +110,3 @@ clean:
 	rm -f libnethogs.a
 	mkdir -p $(ODIR)
 	rmdir -p --ignore-fail-on-non-empty $(ODIR)
-

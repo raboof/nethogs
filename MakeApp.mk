@@ -1,7 +1,3 @@
-VERSION      := 0
-SUBVERSION   := 8
-MINORVERSION := 2-SNAPSHOT
-
 #prefix := /usr
 prefix := /usr/local
 
@@ -12,8 +8,7 @@ all: nethogs decpcap_test
 
 runtests: test
 	./test
-	
-	
+
 # nethogs_testsum
 
 CFLAGS?=-Wall -Wextra
