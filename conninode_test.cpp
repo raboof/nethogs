@@ -12,15 +12,10 @@ int main() {
     return 2;
   }
 
-#if defined(__APPLE__)
-  if (!addprocinfo("net.inet.tcp.pcblist")) {
-    std::cerr << "Failed to load net.inet.tcp.pcblist" << std::endl;
-    return 3;
-  }
-#else
+#if not defined(__APPLE__)
   if (!addprocinfo("/proc/net/tcp")) {
     std::cerr << "Failed to load /proc/net/tcp" << std::endl;
-    return 4;
+    return 3;
   }
 #endif
 
