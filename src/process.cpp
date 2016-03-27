@@ -65,11 +65,6 @@ Process *unknownudp;
 Process *unknownip;
 ProcList *processes;
 
-/* We're migrating to having several `unknown' processes that are added as
- * normal processes, instead of hard-wired unknown processes.
- * This mapping maps from unknown processes descriptions to processes */
-std::map<std::string, Process *> unknownprocs;
-
 float tomb(u_int32_t bytes) { return ((double)bytes) / 1024 / 1024; }
 float tokb(u_int32_t bytes) { return ((double)bytes) / 1024; }
 
