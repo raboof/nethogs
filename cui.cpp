@@ -348,85 +348,49 @@ void do_refresh() {
   refreshconninode();
   refreshcount++;
 
-  ProcList *curproc = processes;
-  ProcList *previousproc = NULL;
-  int nproc = processes->size();
-  /* initialise to null pointers */
-  Line *lines[nproc];
-  int n = 0;
+  if (viewMode == VIEWMODE_KBPS) {
+    remove_timed_out_processes();
+  }
 
-#ifndef NDEBUG
-  // initialise to null pointers
+  ProcList *curproc = processes;
+  int nproc = processes->size();
+
+  /* initialize to null pointers */
+  Line *lines[nproc];;
   for (int i = 0; i < nproc; i++)
     lines[i] = NULL;
-#endif
+
+  int n = 0;
 
   while (curproc != NULL) {
     // walk though its connections, summing up their data, and
     // throwing away connections that haven't received a package
-    // in the last PROCESSTIMEOUT seconds.
-    assert(curproc != NULL);
+    // in the last CONNTIMEOUT seconds.
     assert(curproc->getVal() != NULL);
     assert(nproc == processes->size());
 
-    /* remove timed-out processes (unless it's one of the the unknown process)
-     */
-    if ((curproc->getVal()->getLastPacket() + PROCESSTIMEOUT <=
-         curtime.tv_sec) &&
-        (curproc->getVal() != unknowntcp) &&
-        (curproc->getVal() != unknownudp) && (curproc->getVal() != unknownip)) {
-      if (DEBUG)
-        std::cout << "PROC: Deleting process\n";
-      ProcList *todelete = curproc;
-      Process *p_todelete = curproc->getVal();
-      if (previousproc) {
-        previousproc->next = curproc->next;
-        curproc = curproc->next;
-      } else {
-        processes = curproc->getNext();
-        curproc = processes;
-      }
-      delete todelete;
-      delete p_todelete;
-      nproc--;
-      // continue;
+    float value_sent = 0, value_recv = 0;
+
+    if (viewMode == VIEWMODE_KBPS) {
+      curproc->getVal()->getkbps(&value_recv, &value_sent);
+    } else if (viewMode == VIEWMODE_TOTAL_KB) {
+      curproc->getVal()->gettotalkb(&value_recv, &value_sent);
+    } else if (viewMode == VIEWMODE_TOTAL_MB) {
+      curproc->getVal()->gettotalmb(&value_recv, &value_sent);
+    } else if (viewMode == VIEWMODE_TOTAL_B) {
+      curproc->getVal()->gettotalb(&value_recv, &value_sent);
     } else {
-      // add a non-timed-out process to the list of stuff to show
-      float value_sent = 0, value_recv = 0;
-
-      if (viewMode == VIEWMODE_KBPS) {
-        // std::cout << "kbps viemode" << std::endl;
-        curproc->getVal()->getkbps(&value_recv, &value_sent);
-      } else if (viewMode == VIEWMODE_TOTAL_KB) {
-        // std::cout << "total viemode" << std::endl;
-        curproc->getVal()->gettotalkb(&value_recv, &value_sent);
-      } else if (viewMode == VIEWMODE_TOTAL_MB) {
-        // std::cout << "total viemode" << std::endl;
-        curproc->getVal()->gettotalmb(&value_recv, &value_sent);
-      } else if (viewMode == VIEWMODE_TOTAL_B) {
-        // std::cout << "total viemode" << std::endl;
-        curproc->getVal()->gettotalb(&value_recv, &value_sent);
-      } else {
-        forceExit(false, "Invalid viewMode: %d", viewMode);
-      }
-      uid_t uid = curproc->getVal()->getUid();
-      assert(curproc->getVal()->pid >= 0);
-      assert(n < nproc);
-
-      lines[n] =
-          new Line(curproc->getVal()->name, value_recv, value_sent,
-                   curproc->getVal()->pid, uid, curproc->getVal()->devicename);
-      previousproc = curproc;
-      curproc = curproc->next;
-      n++;
-#ifndef NDEBUG
-      assert(nproc == processes->size());
-      if (curproc == NULL)
-        assert(n - 1 < nproc);
-      else
-        assert(n < nproc);
-#endif
+      forceExit(false, "Invalid viewMode: %d", viewMode);
     }
+    uid_t uid = curproc->getVal()->getUid();
+    assert(curproc->getVal()->pid >= 0);
+    assert(n < nproc);
+
+    lines[n] =
+        new Line(curproc->getVal()->name, value_recv, value_sent,
+                 curproc->getVal()->pid, uid, curproc->getVal()->devicename);
+    curproc = curproc->next;
+    n++;
   }
 
   /* sort the accumulated lines */

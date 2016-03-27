@@ -129,4 +129,6 @@ void refreshconninode();
 
 void procclean();
 
+void remove_timed_out_processes();
+
 #endif
