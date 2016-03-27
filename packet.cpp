@@ -277,7 +277,7 @@ char *Packet::gethashstring() {
   free(remote_string);
   // if (DEBUG)
   //	std::cout << "Returning newly created hash string: " << hashstring <<
-  //std::endl;
+  // std::endl;
   return hashstring;
 }
 

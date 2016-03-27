@@ -15,8 +15,8 @@ extern "C" {
 #define NETHOGS_APP_ACTION_REMOVE 2
 
 #define NETHOGS_STATUS_OK 0
-#define NETHOGS_STATUS_FAILURE 1 // generic error
-#define NETHOGS_STATUS_NO_DEVICE 2 // no device foundr
+#define NETHOGS_STATUS_FAILURE 1
+#define NETHOGS_STATUS_NO_DEVICE 2
 
 typedef struct NethogsMonitorRecord {
   int record_id;
