@@ -83,6 +83,7 @@ Nethogs monitors traffic going to/from a machine, per process. Other tools rathe
 * [iftop](http://ex-parrot.com/~pdw/iftop/) shows network traffic by service and host
 * [ifstat](http://gael.roualland.free.fr/ifstat/) shows network traffic by interface in a vmstat/iostat-like manner
 * [BusyTasks](http://kde-apps.org/content/show.php?content=143833) KDE Plasmoid script using nethogs as a backend
+* [gnethogs](https://github.com/mbfoss/gnethogs) GTK-based GUI (work-in-progress)
 
 License
 -------
