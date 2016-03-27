@@ -278,7 +278,8 @@ Process *getProcess(Connection *connection, const char *devicename) {
     // no? refresh and check conn/inode table
     if (bughuntmode) {
       std::cout << "?  new connection not in connection-to-inode table before "
-                   "refresh.\n";
+                   "refresh, hash " << connection->refpacket->gethashstring()
+                << std::endl;
     }
 // refresh the inode->pid table first. Presumably processing the renewed
 // connection->inode table
