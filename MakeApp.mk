@@ -6,9 +6,6 @@ man8 := $(prefix)/share/man/man8
 
 all: nethogs decpcap_test
 
-runtests: test
-	./test
-
 # nethogs_testsum
 
 CFLAGS?=-Wall -Wextra
@@ -38,9 +35,6 @@ uninstall:
 	rm $(DESTDIR)$(sbin)/nethogs
 	rm $(DESTDIR)$(man8)/nethogs.8
 
-test: test.cpp
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(LDFLAGS) test.cpp -o test -lpcap -lm ${NCURSES_LIBS} -DVERSION=\"$(VERSION)\" -DSUBVERSION=\"$(SUBVERSION)\" -DMINORVERSION=\"$(MINORVERSION)\"
-
 nethogs: main.cpp nethogs.cpp $(OBJS)
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(LDFLAGS) main.cpp $(OBJS) -o nethogs -lpcap -lm ${NCURSES_LIBS} -DVERSION=\"$(VERSION)\" -DSUBVERSION=\"$(SUBVERSION)\" -DMINORVERSION=\"$(MINORVERSION)\"
 nethogs_testsum: nethogs_testsum.cpp $(OBJS)
@@ -68,9 +62,16 @@ conninode.o: conninode.cpp nethogs.h conninode.h
 cui.o: cui.cpp cui.h nethogs.h
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c cui.cpp -DVERSION=\"$(VERSION)\" -DSUBVERSION=\"$(SUBVERSION)\" -DMINORVERSION=\"$(MINORVERSION)\"
 
+TESTS=conninode_test
+
+.PHONY: test
+test: $(TESTS)
+	for test in $(TESTS); do echo $$test ; ./$$test ; done
+
 .PHONY: clean
 clean:
 	rm -f $(OBJS)
+	rm -f $(TESTS)
 	rm -f nethogs
 	rm -f test
 	rm -f decpcap_test
