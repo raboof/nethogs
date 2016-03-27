@@ -198,6 +198,10 @@ bool sameinaddr(in_addr one, in_addr other) {
   return one.s_addr == other.s_addr;
 }
 
+bool samein6addr(in6_addr one, in6_addr other) {
+  return std::equal(one.s6_addr, one.s6_addr + 16, other.s6_addr);
+}
+
 bool Packet::isOlderThan(timeval t) {
   std::cout << "Comparing " << time.tv_sec << " <= " << t.tv_sec << std::endl;
   return (time.tv_sec <= t.tv_sec);
@@ -249,12 +253,12 @@ bool Packet::Outgoing() {
 /* returns the packet in '1.2.3.4:5-1.2.3.4:5'-form, for use in the 'conninode'
  * table */
 /* '1.2.3.4' should be the local address. */
-/* the calling code should take care of deletion of the hash string */
 char *Packet::gethashstring() {
   if (hashstring != NULL) {
     return hashstring;
   }
 
+  // TODO free this value in the Packet destructor
   hashstring = (char *)malloc(HASHKEYSIZE * sizeof(char));
 
   char *local_string = (char *)malloc(50);
@@ -284,8 +288,12 @@ char *Packet::gethashstring() {
 /* 2 packets match if they have the same
  * source and destination ports and IP's. */
 bool Packet::match(Packet *other) {
-  return (sport == other->sport) && (dport == other->dport) &&
-         (sameinaddr(sip, other->sip)) && (sameinaddr(dip, other->dip));
+  return sa_family == other->sa_family && (sport == other->sport) &&
+         (dport == other->dport) &&
+         (sa_family == AF_INET
+              ? (sameinaddr(sip, other->sip)) && (sameinaddr(dip, other->dip))
+              : (samein6addr(sip6, other->sip6)) &&
+                    (samein6addr(dip6, other->dip6)));
 }
 
 bool Packet::matchSource(Packet *other) {
