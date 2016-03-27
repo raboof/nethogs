@@ -35,6 +35,7 @@
 #endif
 
 extern local_addr *local_addrs;
+extern bool bughuntmode;
 /*
  * connection-inode table. takes information from /proc/net/tcp.
  * key contains source ip, source port, destination ip, destination
@@ -67,8 +68,9 @@ void addtoconninode(char *buffer) {
   struct in6_addr in6_local;
   struct in6_addr in6_remote;
 
-  // this leaked memory
-  // unsigned long * inode = (unsigned long *) malloc (sizeof(unsigned long));
+  if (bughuntmode) {
+    std::cout << "ci: " << buffer;
+  }
   unsigned long inode;
 
   int matches = sscanf(buffer, "%*d: %64[0-9A-Fa-f]:%X %64[0-9A-Fa-f]:%X %*X "
