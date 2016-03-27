@@ -2,12 +2,9 @@ export VERSION      := 0
 export SUBVERSION   := 8
 export MINORVERSION := 2-SNAPSHOT
 
-all: nethogs decpcap_test
+all: nethogs decpcap_test test
 	$(MAKE) -f MakeApp.mk $@
 	$(MAKE) -f MakeLib.mk $@
-
-runtests: test
-	./test
 
 .PHONY:
 tgz: clean
@@ -31,6 +28,9 @@ nethogs:
 	$(MAKE) -f MakeApp.mk $@
 
 decpcap_test:
+	$(MAKE) -f MakeApp.mk $@
+
+test:
 	$(MAKE) -f MakeApp.mk $@
 
 clean:
