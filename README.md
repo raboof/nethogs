@@ -38,11 +38,29 @@ The master branch is intended to be stable at all times:
 
     git clone https://github.com/raboof/nethogs
 
-#### General
+#### Building
 
 After that, simply 
 
-    make && sudo make install
+    make
+    sudo ./nethogs
+
+#### Installing
+
+    sudo make install
+    hash -r
+    sudo nethogs
+
+#### Upgrading
+
+When upgrading (or downgrading), you can simply install the new version 'over'
+the old one.
+
+#### Uninstalling
+
+If you want to remove Nethogs from your system, you can:
+
+    sudo make uninstall
 
 Coding standards
 ----------------
