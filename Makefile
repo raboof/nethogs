@@ -2,6 +2,9 @@ export VERSION      := 0
 export SUBVERSION   := 8
 export MINORVERSION := 2-SNAPSHOT
 
+#export PREFIX := /usr
+export PREFIX ?= /usr/local
+
 all: nethogs decpcap_test test
 	$(MAKE) -C src -f MakeApp.mk $@
 	$(MAKE) -C src -f MakeLib.mk $@
@@ -16,13 +19,16 @@ check:
 install:
 	$(MAKE) -C src -f MakeApp.mk $@
 	$(MAKE) -C src -f MakeLib.mk $@
+	$(MAKE) -C doc $@
 
 install_dev:
 	$(MAKE) -C src -f MakeLib.mk $@
+	$(MAKE) -C doc $@
 
 uninstall:
 	$(MAKE) -C src -f MakeApp.mk $@
 	$(MAKE) -C src -f MakeLib.mk $@
+	$(MAKE) -C doc $@
 
 nethogs:
 	$(MAKE) -C src -f MakeApp.mk $@

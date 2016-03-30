@@ -1,8 +1,4 @@
-#prefix := /usr
-prefix := /usr/local
-
-sbin := $(prefix)/sbin
-man8 := $(prefix)/share/man/man8
+sbin := $(PREFIX)/sbin
 
 all: nethogs decpcap_test
 
@@ -21,19 +17,16 @@ NCURSES_LIBS?=-lncurses
 check:
 	@echo "Not implemented"
 
-install: nethogs nethogs.8
+install: nethogs
 	install -d -m 755 $(DESTDIR)$(sbin)
 	install -m 755 nethogs $(DESTDIR)$(sbin)
-	install -d -m 755 $(DESTDIR)$(man8)
-	install -m 644 nethogs.8 $(DESTDIR)$(man8)
 	@echo
 	@echo "Installed nethogs to $(DESTDIR)$(sbin)"
 	@echo
 	@echo "You might have to add this directory to your PATH and/or refresh your shells' path cache with a command like 'hash -r'."
 
 uninstall:
-	rm $(DESTDIR)$(sbin)/nethogs
-	rm $(DESTDIR)$(man8)/nethogs.8
+	rm $(DESTDIR)$(sbin)/nethogs || true
 
 nethogs: main.cpp nethogs.cpp $(OBJS)
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(LDFLAGS) main.cpp $(OBJS) -o nethogs -lpcap -lm ${NCURSES_LIBS} -DVERSION=\"$(VERSION)\" -DSUBVERSION=\"$(SUBVERSION)\" -DMINORVERSION=\"$(MINORVERSION)\"

@@ -2,9 +2,8 @@ LIBRARY=libnethogs.so
 LIBNAME=$(LIBRARY).$(LIBVERSION).$(LIBSUBVERSION).$(LIBMINORVERSION)
 SO_NAME=$(LIBRARY).$(LIBVERSION)
 
-prefix := /usr/local
-libdir := $(prefix)/lib
-incdir := $(prefix)/include
+libdir := $(PREFIX)/lib
+incdir := $(PREFIX)/include
 
 all: $(LIBNAME) libnethogs.a
 
@@ -45,7 +44,7 @@ install: $(LIBNAME)
 	install -d -m 755 $(DESTDIR)$(libdir)
 	install -m 755 $(LIBNAME) $(DESTDIR)$(libdir)
 	@echo "Installed $(LIBNAME) to $(DESTDIR)$(libdir)"
-	ldconfig
+	ldconfig || true
 
 install_dev: install
 	@ln -f -s $(DESTDIR)$(libdir)/$(LIBNAME) $(DESTDIR)$(libdir)/$(LIBRARY)
@@ -54,14 +53,14 @@ install_dev: install
 	install -d -m 755 $(DESTDIR)$(incdir)
 	install -m 755 libnethogs.h $(DESTDIR)$(incdir)
 	@echo "Installed libnethogs.h to $(DESTDIR)$(incdir)"
-	ldconfig
+	ldconfig || true
 
 uninstall:
 	rm -f $(DESTDIR)$(libdir)/$(LIBNAME)
 	rm -f $(DESTDIR)$(libdir)/$(LIBRARY)
 	rm -f $(DESTDIR)$(libdir)/libnethogs.a
 	rm -f $(DESTDIR)$(incdir)/libnethogs.h
-	ldconfig
+	ldconfig || true
 
 $(LIBNAME): $(OBJS)
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(LDFLAGS) $(OBJS) -o $@ -lpcap
