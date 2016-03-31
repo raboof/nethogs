@@ -60,8 +60,8 @@ std::map<std::string, unsigned long> conninode;
  */
 void addtoconninode(char *buffer) {
   short int sa_family;
-  struct in6_addr result_addr_local;
-  struct in6_addr result_addr_remote;
+  struct in6_addr result_addr_local = {};
+  struct in6_addr result_addr_remote = {};
 
   char rem_addr[128], local_addr[128];
   int local_port, rem_port;
@@ -102,8 +102,8 @@ void addtoconninode(char *buffer) {
     if ((in6_local.s6_addr32[0] == 0x0) && (in6_local.s6_addr32[1] == 0x0) &&
         (in6_local.s6_addr32[2] == 0xFFFF0000)) {
       /* IPv4-compatible address */
-      result_addr_local = *((struct in6_addr *)&(in6_local.s6_addr32[3]));
-      result_addr_remote = *((struct in6_addr *)&(in6_remote.s6_addr32[3]));
+      result_addr_local.s6_addr32[0]  = in6_local.s6_addr32[3];
+      result_addr_remote.s6_addr32[0] = in6_remote.s6_addr32[3];
       sa_family = AF_INET;
     } else {
       /* real IPv6 address */
