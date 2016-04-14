@@ -23,6 +23,7 @@
 #include "nethogs.h"
 #include <iostream>
 #include "packet.h"
+#include <stdio.h>
 #include <netinet/tcp.h>
 #include <netinet/in.h>
 #ifdef __APPLE__
