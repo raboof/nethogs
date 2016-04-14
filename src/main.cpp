@@ -177,9 +177,11 @@ int main(int argc, char **argv) {
   if (geteuid() != 0)
     forceExit(false, "You need to be root to run NetHogs!");
 #else
+  char exe_path[PATH_MAX];
   unsigned int caps[5] = {0};
 
-  getxattr(argv[0], "security.capability", (char *)caps, sizeof(caps));
+  readlink("/proc/self/exe", exe_path, PATH_MAX);
+  getxattr(exe_path, "security.capability", (char *)caps, sizeof(caps));
 
   if (((caps[1] >> CAP_NET_ADMIN) & 1) != 1)
     forceExit(false, "You need to enable cap_net_admin (and cap_net_raw) to run NetHogs!");
