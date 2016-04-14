@@ -182,9 +182,9 @@ int main(int argc, char **argv) {
 
     getxattr(argv[0], "security.capability", (char *)caps, sizeof(caps));
 
-    if ((val[1] >> CAP_NET_ADMIN) & 1 != 1)
+    if ((caps[1] >> CAP_NET_ADMIN) & 1 != 1)
       forceExit(false, "You need to enable cap_net_admin (and cap_net_raw) to run NetHogs!");
-    if ((val[1] >> CAP_NET_RAW) & 1 != 1)
+    if ((caps[1] >> CAP_NET_RAW) & 1 != 1)
       forceExit(false, "You need to enable cap_net_raw to run NetHogs!");
   }
 
