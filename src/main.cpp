@@ -173,8 +173,20 @@ int main(int argc, char **argv) {
     init_ui();
   }
 
-  if (NEEDROOT && (geteuid() != 0))
-    forceExit(false, "You need to be root to run NetHogs!");
+  if (NEEDROOT) {
+    if (geteuid() != 0)
+      forceExit(false, "You need to be root to run NetHogs!");
+  }
+  else {
+    unsigned int caps[5] = {0};
+
+    getxattr(argv[0], "security.capability", (char *)caps, sizeof(caps));
+
+    if ((val[1] >> CAP_NET_ADMIN) & 1 != 1)
+      forceExit(false, "You need to enable cap_net_admin (and cap_net_raw) to run NetHogs!");
+    if ((val[1] >> CAP_NET_RAW) & 1 != 1)
+      forceExit(false, "You need to enable cap_net_raw to run NetHogs!");
+  }
 
   // use the Self-Pipe trick to interrupt the select() in the main loop
   self_pipe = create_self_pipe();

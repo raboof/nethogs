@@ -37,6 +37,9 @@
 #include <netinet/ip6.h>
 #include <netinet/tcp.h>
 #include <netinet/udp.h>
+#include <sys/types.h>
+#include <sys/xattr.h>
+#include <linux/capability.h>
 
 #include "cui.h"
 
