@@ -53,7 +53,7 @@
  * like www.adamantix.org: in that case nethogs shouldn't check if it's
  * running as root. Take care to give it sufficient privileges though. */
 #ifndef NEEDROOT
-#define NEEDROOT 1
+#define NEEDROOT 0
 #endif
 
 #define DEBUG 0
