@@ -184,9 +184,13 @@ int main(int argc, char **argv) {
   if (geteuid() != 0) {
 #ifdef __linux__
     char exe_path[PATH_MAX];
-    unsigned int caps[5] = {0};
+    ssize_t len;
+    unsigned int caps[5] = {0,0,0,0,0};
 
-    readlink("/proc/self/exe", exe_path, PATH_MAX);
+    if ((len = readlink("/proc/self/exe", exe_path, PATH_MAX)) == -1)
+      forceExit(false, "Failed to locate nethogs binary.");
+    exe_path[len] = '\0';
+
     getxattr(exe_path, "security.capability", (char *)caps, sizeof(caps));
 
     if ((((caps[1] >> CAP_NET_ADMIN) & 1) != 1) || (((caps[1] >> CAP_NET_RAW) & 1) != 1))
