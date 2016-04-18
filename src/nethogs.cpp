@@ -38,14 +38,6 @@
 #include <netinet/tcp.h>
 #include <netinet/udp.h>
 
-#if NEEDROOT == 0
-#include <linux/limits.h>
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/xattr.h>
-#include <linux/capability.h>
-#endif
-
 #include "cui.h"
 
 extern "C" {
