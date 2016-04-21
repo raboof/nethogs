@@ -65,7 +65,7 @@ If you want to remove Nethogs from your system, you can:
 Coding standards
 ----------------
 
-We use the [http://llvm.org/docs/CodingStandards.html](LLVM coding standards),
+We use the [LLVM coding standards](http://llvm.org/docs/CodingStandards.html),
 with the exception that we do allow 'return' after 'else' if it makes the code
 more readable.
 
