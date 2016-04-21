@@ -49,13 +49,6 @@
  * after which a connection is removed */
 #define CONNTIMEOUT 50
 
-/* Set to '0' when compiling for a system that uses Linux Capabilities,
- * like www.adamantix.org: in that case nethogs shouldn't check if it's
- * running as root. Take care to give it sufficient privileges though. */
-#ifndef NEEDROOT
-#define NEEDROOT 1
-#endif
-
 #define DEBUG 0
 
 #define REVERSEHACK 0

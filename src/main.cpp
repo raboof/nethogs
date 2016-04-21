@@ -2,6 +2,14 @@
 #include <fcntl.h>
 #include <vector>
 
+#ifdef __linux__
+#include <linux/limits.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/xattr.h>
+#include <linux/capability.h>
+#endif
+
 // The self_pipe is used to interrupt the select() in the main loop
 static std::pair<int, int> self_pipe = std::make_pair(-1, -1);
 static time_t last_refresh_time = 0;
@@ -173,8 +181,24 @@ int main(int argc, char **argv) {
     init_ui();
   }
 
-  if (NEEDROOT && (geteuid() != 0))
+  if (geteuid() != 0) {
+#ifdef __linux__
+    char exe_path[PATH_MAX];
+    ssize_t len;
+    unsigned int caps[5] = {0,0,0,0,0};
+
+    if ((len = readlink("/proc/self/exe", exe_path, PATH_MAX)) == -1)
+      forceExit(false, "Failed to locate nethogs binary.");
+    exe_path[len] = '\0';
+
+    getxattr(exe_path, "security.capability", (char *)caps, sizeof(caps));
+
+    if ((((caps[1] >> CAP_NET_ADMIN) & 1) != 1) || (((caps[1] >> CAP_NET_RAW) & 1) != 1))
+      forceExit(false, "To run nethogs without being root you need to enable capabilities on the program (cap_net_admin, cap_net_raw), see the documentation for details.");
+#else
     forceExit(false, "You need to be root to run NetHogs!");
+#endif
+  }
 
   // use the Self-Pipe trick to interrupt the select() in the main loop
   self_pipe = create_self_pipe();
