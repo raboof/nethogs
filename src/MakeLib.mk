@@ -20,7 +20,7 @@ ODIR_BASE := obj
 
 ifeq ($(DEBUG),1)
   # Debug mode options
-  $(info Bulding debug version)
+  $(info Building debug version)
   ODIR:=$(ODIR_BASE)/lib/debug
   CFLAGS?=-Wall -Wextra -O0 -g -fPIC $(VISIBILITY)
   CXXFLAGS?=-Wall -Wextra -Wno-missing-field-initializers --std=c++0x -O0 -g -fPIC $(VISIBILITY) $(CXXINCLUDES)

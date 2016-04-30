@@ -196,7 +196,7 @@ void reread_mapping() {
   DIR *proc = opendir("/proc");
 
   if (proc == 0) {
-    std::cerr << "Error reading /proc, neede to get inode-to-pid-maping\n";
+    std::cerr << "Error reading /proc, needed to get inode-to-pid-maping\n";
     exit(1);
   }
 

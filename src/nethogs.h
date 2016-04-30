@@ -41,11 +41,11 @@
 /* take the average speed over the last 5 seconds */
 #define PERIOD 5
 
-/* the amount of time after the last packet was recieved
+/* the amount of time after the last packet was received
  * after which a process is removed */
 #define PROCESSTIMEOUT 150
 
-/* the amount of time after the last packet was recieved
+/* the amount of time after the last packet was received
  * after which a connection is removed */
 #define CONNTIMEOUT 50
 
