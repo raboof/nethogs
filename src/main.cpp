@@ -27,7 +27,7 @@ static void help(bool iserror) {
   // output << "usage: nethogs [-V] [-b] [-d seconds] [-t] [-p] [-f (eth|ppp))]
   // [device [device [device ...]]]\n";
   output << "usage: nethogs [-V] [-h] [-b] [-d seconds] [-v mode] [-c count] "
-            "[-t] [-p] [-s] [device [device [device ...]]]\n";
+            "[-t] [-j] [-p] [-s] [device [device [device ...]]]\n";
   output << "		-V : prints version.\n";
   output << "		-h : prints this help.\n";
   output << "		-b : bughunt mode - implies tracemode.\n";
@@ -37,6 +37,7 @@ static void help(bool iserror) {
             "= total MB). default is 0.\n";
   output << "		-c : number of updates. default is 0 (unlimited).\n";
   output << "		-t : tracemode.\n";
+  output << "		-j : tracemode with data as newline-delimited json.\n";
   // output << "		-f : format of packets on interface, default is
   // eth.\n";
   output << "		-p : sniff in promiscious mode (not recommended).\n";
@@ -133,7 +134,7 @@ int main(int argc, char **argv) {
   bool all = false;
 
   int opt;
-  while ((opt = getopt(argc, argv, "Vahbtpd:v:c:sa")) != -1) {
+  while ((opt = getopt(argc, argv, "Vahbtjpd:v:c:sa")) != -1) {
     switch (opt) {
     case 'V':
       versiondisplay();
@@ -143,6 +144,10 @@ int main(int argc, char **argv) {
       exit(0);
     case 'b':
       bughuntmode = true;
+      tracemode = true;
+      break;
+    case 'j':
+      jsontrace = true;
       tracemode = true;
       break;
     case 't':

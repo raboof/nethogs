@@ -28,6 +28,7 @@
 #include "connection.h"
 
 extern bool tracemode;
+extern bool jsontrace;
 extern bool bughuntmode;
 
 void check_all_procs();

@@ -79,6 +79,7 @@ public:
 
   void show(int row, unsigned int proglen);
   void log();
+  void log_json();
 
   double sent_value;
   double recv_value;
@@ -199,6 +200,11 @@ void Line::log() {
             << "\t" << recv_value << std::endl;
 }
 
+void Line::log_json() {
+  printf("{\"name\":\"%s\",\"PID\":%d,\"UID\":%d,\"RX\":%f,\"TX\":%f }",
+        m_name, m_pid, m_uid, recv_value, sent_value);
+}
+
 int GreatestFirst(const void *ma, const void *mb) {
   Line **pa = (Line **)ma;
   Line **pb = (Line **)mb;
@@ -283,6 +289,17 @@ void show_trace(Line *lines[], int nproc) {
 
     curr_unknownconn = curr_unknownconn->getNext();
   }
+}
+
+void show_json_trace(Line *lines[], int nproc) {
+  /* print data */
+  std::cout << '[';
+  for (int i = 0; i < nproc; i++) {
+    lines[i]->log_json();
+    delete lines[i];
+    if (i != nproc - 1) std::cout << ',';
+  }
+  std::cout << ']' << std::endl;
 }
 
 void show_ncurses(Line *lines[], int nproc) {
@@ -396,7 +413,9 @@ void do_refresh() {
   /* sort the accumulated lines */
   qsort(lines, nproc, sizeof(Line *), GreatestFirst);
 
-  if (tracemode || DEBUG)
+  if (jsontrace)
+    show_json_trace(lines, nproc);
+  else if (tracemode || DEBUG)
     show_trace(lines, nproc);
   else
     show_ncurses(lines, nproc);

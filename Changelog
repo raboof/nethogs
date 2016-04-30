@@ -1,5 +1,9 @@
 Changelog
 
+30/04/16 (nemx)
+- added new command line switch:
+  -j Formats tracemode xfer data as newline delimited JSON (implies -t)
+
 12/05/13 (muzso)
 - added new command line switches:
   -s  Sorts output by the sent column.
