@@ -173,7 +173,7 @@ static void nethogsmonitor_handle_update(NethogsMonitorCallback cb) {
     assert(curproc->getVal() != NULL);
     assert(nproc == processes->size());
 
-    /* remove timed-out processes (unless it's one of the the unknown process)
+    /* remove timed-out processes (unless it's one of the unknown process)
      */
     if ((curproc->getVal()->getLastPacket() + PROCESSTIMEOUT <=
          curtime.tv_sec) &&

@@ -44,7 +44,7 @@ Changelog
 -using standard C++ maps instead of custom structures
 -many more code cleanups
 -documentation
--split up ui code in seperate module
+-split up ui code in separate module
 
 -------------------------------------------------
 

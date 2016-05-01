@@ -32,9 +32,9 @@ typedef struct NethogsMonitorRecord {
 
 /**
  * @brief Defines a callback to handle updates about applications
- * @param action NETHOGS_APP_ACTION_SET if data is beeing added or updated,
- *        NETHOGS_APP_ACTION_REMOVE if data is beeing removed.
- *        the record_id member is used to uniquely identify the data beeing
+ * @param action NETHOGS_APP_ACTION_SET if data is being added or updated,
+ *        NETHOGS_APP_ACTION_REMOVE if data is being removed.
+ *        the record_id member is used to uniquely identify the data being
  * update or removed.
  * @param data a pointer to an application usage data. the pointer remains valid
  * until

@@ -202,7 +202,7 @@ Connection *findConnection(Packet *packet) {
  * and removes 'old' packets.
  *
  * Returns sum of sent packages (by address)
- *	   sum of recieved packages (by address)
+ *	   sum of received packages (by address)
  */
 void Connection::sumanddel(timeval t, u_int32_t *recv, u_int32_t *sent) {
   (*sent) = (*recv) = 0;
