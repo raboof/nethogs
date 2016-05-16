@@ -28,7 +28,7 @@
 #include "nethogs.h"
 #include "conninode.h"
 
-#if defined __APPLE__
+#if defined(__APPLE__) || defined(__FreeBSD__)
 #ifndef s6_addr32
 #define s6_addr32 __u6_addr.__u6_addr32
 #endif
@@ -183,7 +183,7 @@ void refreshconninode() {
 // delete conninode;
 // conninode = new HashTable (256);
 
-#if defined(__APPLE__)
+#if defined(__APPLE__) || defined(__FreeBSD__)
   addprocinfo("net.inet.tcp.pcblist");
 #else
   if (!addprocinfo("/proc/net/tcp")) {

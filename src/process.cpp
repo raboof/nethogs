@@ -24,7 +24,7 @@
 #include <strings.h>
 #include <string>
 #include <ncurses.h>
-#ifndef __APPLE__
+#if !defined(__APPLE__) && !defined(__FreeBSD__)
 #include <asm/types.h>
 #endif
 #include <sys/types.h>

@@ -119,7 +119,7 @@ int process_tcp(u_char *userdata, const dp_header *header,
   Packet *packet;
   switch (args->sa_family) {
   case AF_INET:
-#ifdef __APPLE__
+#if defined(__APPLE__) || defined(__FreeBSD__)
     packet = new Packet(args->ip_src, ntohs(tcp->th_sport), args->ip_dst,
                         ntohs(tcp->th_dport), header->len, header->ts);
 #else
@@ -128,7 +128,7 @@ int process_tcp(u_char *userdata, const dp_header *header,
 #endif
     break;
   case AF_INET6:
-#ifdef __APPLE__
+#if defined(__APPLE__) || defined(__FreeBSD__)
     packet = new Packet(args->ip6_src, ntohs(tcp->th_sport), args->ip6_dst,
                         ntohs(tcp->th_dport), header->len, header->ts);
 #else
@@ -168,7 +168,7 @@ int process_udp(u_char *userdata, const dp_header *header,
   Packet *packet;
   switch (args->sa_family) {
   case AF_INET:
-#ifdef __APPLE__
+#if defined(__APPLE__) || defined(__FreeBSD__)
     packet = new Packet(args->ip_src, ntohs(udp->uh_sport), args->ip_dst,
                         ntohs(udp->uh_dport), header->len, header->ts);
 #else
@@ -177,7 +177,7 @@ int process_udp(u_char *userdata, const dp_header *header,
 #endif
     break;
   case AF_INET6:
-#ifdef __APPLE__
+#if defined(__APPLE__) || defined(__FreeBSD__)
     packet = new Packet(args->ip6_src, ntohs(udp->uh_sport), args->ip6_dst,
                         ntohs(udp->uh_dport), header->len, header->ts);
 #else

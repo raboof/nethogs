@@ -20,6 +20,7 @@
  *
  */
 
+#include <sys/types.h>
 #include <net/ethernet.h>
 #include <net/if.h>
 #include <netinet/in.h>

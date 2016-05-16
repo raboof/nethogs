@@ -1,6 +1,15 @@
 all:
 
-man8 := $(PREFIX)/share/man/man8
+UNAME_S := $(shell uname -s)
+ifeq ($(UNAME_S),FreeBSD)
+  ifeq ($(PREFIX),/usr/local)
+    man8 := $(PREFIX)/man/man8
+  else
+    man8 := $(PREFIX)/share/man/man8
+  endif
+else
+  man8 := $(PREFIX)/share/man/man8
+endif
 
 install: nethogs.8
 	install -d -m 755 $(DESTDIR)$(man8)

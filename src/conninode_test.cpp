@@ -13,7 +13,7 @@ int main() {
     return 2;
   }
 
-#if not defined(__APPLE__)
+#if !defined(__APPLE__) && !defined(__FreeBSD__)
   if (!addprocinfo("/proc/net/tcp")) {
     std::cerr << "Failed to load /proc/net/tcp" << std::endl;
     return 3;
