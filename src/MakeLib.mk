@@ -10,6 +10,8 @@ all: $(LIBNAME) libnethogs.a
 UNAME_S := $(shell uname -s)
 ifeq ($(UNAME_S),Linux)
   LDFLAGS:= -shared -Wl,-soname,$(SO_NAME)
+else ($(UNAME_S),FreeBSD)
+  LDFLAGS:= -shared -Wl,-soname,$(SO_NAME)
 else
   LDFLAGS:= -shared -Wl,-install_name,$(SO_NAME)
 endif
