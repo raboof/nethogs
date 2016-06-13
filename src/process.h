@@ -57,7 +57,7 @@ public:
   /* the process makes a copy of the name. the device name needs to be stable.
    */
   Process(const unsigned long m_inode, const char *m_devicename,
-          const char *m_name = NULL)
+          const char *m_name = NULL, const char *m_cmdline = NULL)
       : inode(m_inode) {
     // std::cout << "ARN: Process created with dev " << m_devicename <<
     // std::endl;
@@ -69,6 +69,11 @@ public:
     else
       name = strdup(m_name);
 
+    if (m_cmdline == NULL)
+      cmdline = NULL;
+    else
+      cmdline = strdup(m_cmdline);
+
     devicename = m_devicename;
     connections = NULL;
     pid = 0;
@@ -78,6 +83,7 @@ public:
 
   ~Process() {
     free(name);
+    free(cmdline);
     if (DEBUG)
       std::cout << "PROC: Process deleted at " << this << std::endl;
   }
@@ -90,6 +96,7 @@ public:
   void gettotalb(float *recvd, float *sent);
 
   char *name;
+  char *cmdline;
   const char *devicename;
   int pid;
 

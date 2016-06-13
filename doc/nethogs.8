@@ -15,6 +15,7 @@ nethogs \- Net top tool grouping bandwidth per process
 .RB [ "\-p" ]
 .RB [ "\-a" ]
 .RB [ "\-s" ]
+.RB [ "\-l" ]
 .RI [device(s)]
 .SH DESCRIPTION
 NetHogs is a small 'net top' tool. Instead of breaking the traffic down per protocol or per subnet, like most such tools do, it groups bandwidth by process - and does not rely on a special kernel module to be loaded. So if there's suddenly a lot of network traffic, you can fire up NetHogs and immediately see which PID is causing this, and if it's some kind of spinning process, kill it. 
@@ -47,6 +48,9 @@ limit number of refreshes
 .TP
 \fB-s\fP
 sort by traffic sent
+.TP
+\fB-l\fP
+display command line
 .PP
 .I device(s)
 to monitor. By default eth0 is being used
@@ -56,8 +60,11 @@ to monitor. By default eth0 is being used
 m
 cycle between display modes (KB/s, KB, B, MB)
 .TP
+l
+display command line
+.TP
 r
-sort by 'received' 
+sort by 'received'
 .TP
 s
 sort by 'sent'
