@@ -296,7 +296,7 @@ void show_ncurses(Line *lines[], int nproc) {
   getmaxyx(stdscr, rows, cols); /* find the boundaries of the screeen */
 
   if (cols < 62) {
-    clear();
+    erase();
     mvprintw(0, 0,
              "The terminal is too narrow! Please make it wider.\nI'll wait...");
     return;
@@ -307,7 +307,7 @@ void show_ncurses(Line *lines[], int nproc) {
 
   proglen = cols - 55;
 
-  clear();
+  erase();
   mvprintw(0, 0, "%s", caption->c_str());
   attron(A_REVERSE);
   mvprintw(2, 0,
