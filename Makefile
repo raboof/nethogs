@@ -1,6 +1,6 @@
 export VERSION      := 0
 export SUBVERSION   := 8
-export MINORVERSION := 2
+export MINORVERSION := 3-SNAPSHOT
 
 #export PREFIX := /usr
 export PREFIX ?= /usr/local
