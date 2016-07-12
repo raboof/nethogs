@@ -1,5 +1,1 @@
-- remove '-SNAPSHOT' from the version in the Makefile
-- commit this
-- create a signed tag for this release
-- increase the version number in the Makefile
-- consider https://wiki.debian.org/Creating%20signed%20GitHub%20releases
+RELEASE=0.8.4 make release
