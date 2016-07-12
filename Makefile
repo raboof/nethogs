@@ -1,13 +1,11 @@
-export VERSION      := $(shell ./determineVersion.sh)
+export VERSION := $(shell ./determineVersion.sh)
 
 #export PREFIX := /usr
 export PREFIX ?= /usr/local
 
-all: nethogs decpcap_test test
-	$(MAKE) -C src -f MakeApp.mk $@
-	$(MAKE) -C src -f MakeLib.mk $@
+all: decpcap_test test nethogs
 
-.PHONY: tgz release
+.PHONY: tgz release check install install_lib install_dev uninstall uninstall_lib nethogs libnethogs decpcap_test test clean all
 tgz: clean
 	git archive --prefix="nethogs-$(VERSION)/" -o "../nethogs-$(VERSION).tar.gz" HEAD
 
@@ -23,8 +21,10 @@ check:
 
 install:
 	$(MAKE) -C src -f MakeApp.mk $@
-	$(MAKE) -C src -f MakeLib.mk $@
 	$(MAKE) -C doc $@
+
+install_lib:
+	$(MAKE) -C src -f MakeLib.mk install
 
 install_dev:
 	$(MAKE) -C src -f MakeLib.mk $@
@@ -32,11 +32,16 @@ install_dev:
 
 uninstall:
 	$(MAKE) -C src -f MakeApp.mk $@
-	$(MAKE) -C src -f MakeLib.mk $@
 	$(MAKE) -C doc $@
+
+uninstall_lib:
+	$(MAKE) -C src -f MakeLib.mk uninstall
 
 nethogs:
 	$(MAKE) -C src -f MakeApp.mk $@
+
+libnethogs:
+	$(MAKE) -C src -f MakeLib.mk all
 
 decpcap_test:
 	$(MAKE) -C src -f MakeApp.mk $@

@@ -88,6 +88,8 @@ compatibility while we look for the right abstraction points. Packaging
 libnethogs as an independent package is currently discouraged, as the chance
 of different applications successfully using the same libnethogs are slim.
 
+Build it with `make libnethogs`, install with `make install_lib` or `make install_dev`.
+
 libnethogs is being used in https://github.com/mb-gh/gnethogs
 
 links
