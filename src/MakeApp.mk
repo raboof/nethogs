@@ -11,8 +11,6 @@ OBJS=packet.o connection.o process.o decpcap.o cui.o inode2prog.o conninode.o de
 
 NCURSES_LIBS?=-lncurses
 
-.PHONY: tgz
-
 .PHONY: check uninstall
 check:
 	@echo "Not implemented"
@@ -29,9 +27,9 @@ uninstall:
 	rm $(DESTDIR)$(sbin)/nethogs || true
 
 nethogs: main.cpp nethogs.cpp $(OBJS)
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(LDFLAGS) main.cpp $(OBJS) -o nethogs -lpcap -lm ${NCURSES_LIBS} -DVERSION=\"$(VERSION)\" -DSUBVERSION=\"$(SUBVERSION)\" -DMINORVERSION=\"$(MINORVERSION)\"
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(LDFLAGS) main.cpp $(OBJS) -o nethogs -lpcap -lm ${NCURSES_LIBS} -DVERSION=\"$(VERSION)\"
 nethogs_testsum: nethogs_testsum.cpp $(OBJS)
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(LDFLAGS) nethogs_testsum.cpp $(OBJS) -o nethogs_testsum -lpcap -lm ${NCURSES_LIBS} -DVERSION=\"$(VERSION)\" -DSUBVERSION=\"$(SUBVERSION)\" -DMINORVERSION=\"$(MINORVERSION)\"
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(LDFLAGS) nethogs_testsum.cpp $(OBJS) -o nethogs_testsum -lpcap -lm ${NCURSES_LIBS} -DVERSION=\"$(VERSION)\"
 
 decpcap_test: decpcap_test.cpp decpcap.o
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(LDFLAGS) decpcap_test.cpp decpcap.o -o decpcap_test -lpcap -lm
@@ -53,7 +51,7 @@ conninode.o: conninode.cpp nethogs.h conninode.h
 #devices.o: devices.cpp devices.h
 #	$(CXX) $(CXXFLAGS) -c devices.cpp
 cui.o: cui.cpp cui.h nethogs.h
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c cui.cpp -DVERSION=\"$(VERSION)\" -DSUBVERSION=\"$(SUBVERSION)\" -DMINORVERSION=\"$(MINORVERSION)\"
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c cui.cpp -DVERSION=\"$(VERSION)\"
 
 TESTS=conninode_test
 

@@ -61,7 +61,7 @@ bool bughuntmode = false;
 bool sortRecv = true;
 // viewMode: kb/s or total
 int viewMode = VIEWMODE_KBPS;
-const char version[] = " version " VERSION "." SUBVERSION "." MINORVERSION;
+const char version[] = " version " VERSION;
 
 timeval curtime;
 

@@ -1,6 +1,4 @@
-export VERSION      := 0
-export SUBVERSION   := 8
-export MINORVERSION := 3-SNAPSHOT
+export VERSION      := $(shell ./determineVersion.sh)
 
 #export PREFIX := /usr
 export PREFIX ?= /usr/local
@@ -9,9 +7,9 @@ all: nethogs decpcap_test test
 	$(MAKE) -C src -f MakeApp.mk $@
 	$(MAKE) -C src -f MakeLib.mk $@
 
-.PHONY:
+.PHONY: tgz
 tgz: clean
-	cd .. ; tar czvf nethogs-$(VERSION).$(SUBVERSION).$(MINORVERSION).tar.gz --exclude-vcs nethogs/*
+	git archive --prefix="nethogs-$(VERSION)/" -o "../nethogs-$(VERSION).tar.gz" HEAD
 
 check:
 	$(MAKE) -C src -f MakeApp.mk $@

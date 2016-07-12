@@ -1,5 +1,6 @@
 LIBRARY=libnethogs.so
-LIBNAME=$(LIBRARY).$(LIBVERSION).$(LIBSUBVERSION).$(LIBMINORVERSION)
+LIBVERSION=$(VERSION)
+LIBNAME=$(LIBRARY).$(LIBVERSION)
 SO_NAME=$(LIBRARY).$(LIBVERSION)
 
 libdir := $(PREFIX)/lib
@@ -37,8 +38,6 @@ OBJ_NAMES= libnethogs.o packet.o connection.o process.o decpcap.o inode2prog.o c
 OBJS=$(addprefix $(ODIR)/,$(OBJ_NAMES))
 
 #$(info $(OBJS))
-
-.PHONY: tgz
 
 .PHONY: uninstall
 
@@ -102,7 +101,7 @@ $(ODIR)/devices.o: devices.cpp devices.h
 
 $(ODIR)/libnethogs.o: libnethogs.cpp libnethogs.h
 	@mkdir -p $(ODIR)
-	$(CXX) $(CXXFLAGS) -o $@ -c libnethogs.cpp -DVERSION=\"$(LIBVERSION)\" -DSUBVERSION=\"$(LIBSUBVERSION)\" -DMINORVERSION=\"$(LIBMINORVERSION)\"
+	$(CXX) $(CXXFLAGS) -o $@ -c libnethogs.cpp -DVERSION=\"$(LIBVERSION)\"
 
 .PHONY: clean
 clean:
