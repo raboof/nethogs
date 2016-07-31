@@ -102,7 +102,6 @@ Nethogs monitors traffic going to/from a machine, per process. Other tools rathe
 * [darkstat](http://purl.org/net/darkstat/) breaks down traffic by host, protocol, etc. Geared towards analysing traffic gathered over a longer period, rather than `live' viewing.
 * [iftop](http://ex-parrot.com/~pdw/iftop/) shows network traffic by service and host
 * [ifstat](http://gael.roualland.free.fr/ifstat/) shows network traffic by interface in a vmstat/iostat-like manner
-* [BusyTasks](http://kde-apps.org/content/show.php?content=143833) KDE Plasmoid script using nethogs as a backend
 * [gnethogs](https://github.com/mbfoss/gnethogs) GTK-based GUI (work-in-progress)
 * [hogwatch](https://github.com/akshayKMR/hogwatch) A bandwidth monitor(per process) with graphs for desktop/web.
  
