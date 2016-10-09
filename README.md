@@ -40,10 +40,10 @@ The master branch is intended to be stable at all times:
 
 #### Building
 
-After that, simply 
+After that, simply
 
     make
-    sudo ./nethogs
+    sudo ./src/nethogs
 
 #### Installing
 
