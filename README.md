@@ -47,9 +47,17 @@ After that, simply
 
 #### Installing
 
+##### For all distributions
+
     sudo make install
     hash -r
     sudo nethogs
+    
+##### On Debian
+
+    sudo apt-get install checkinstall
+    sudo checkinstall -D make install
+    sudo dpkg -i nethogs*.deb
 
 #### Upgrading
 
