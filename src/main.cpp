@@ -260,9 +260,6 @@ int main(int argc, char **argv) {
 
   signal(SIGINT, &quit_cb);
 
-  fprintf(
-      stderr,
-      "Waiting for first packet to arrive (see sourceforge.net bug 1019381)\n");
   struct dpargs *userdata = (dpargs *)malloc(sizeof(struct dpargs));
 
   // Main loop:
