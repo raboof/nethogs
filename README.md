@@ -20,6 +20,11 @@ Nethogs is a mature piece of software included in most Linux distributions.
 
 Ideas for features, as well as [open bugs](https://github.com/raboof/nethogs/issues?q=is%3Aopen+is%3Aissue), can be found on  [issues' label:enhancement](https://github.com/raboof/nethogs/issues?q=is%3Aopen+is%3Aissue+label%3Aenhancement).
 
+### Downloading
+
+You can clone this repo or get a source release from
+https://github.com/raboof/nethogs/releases
+
 ### Building from source
 
 Nethogs depends on `ncurses` for the text-based interface and `libpcap` for user-level packet capture. So you need to install both **development libraries** before building nethogs. 
