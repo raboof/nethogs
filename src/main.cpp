@@ -272,8 +272,12 @@ int main(int argc, char **argv) {
       userdata->sa_family = AF_UNSPEC;
       int retval = dp_dispatch(current_handle->content, -1, (u_char *)userdata,
                                sizeof(struct dpargs));
-      if (retval < 0)
-        std::cerr << "Error dispatching: " << retval << std::endl;
+      if (retval == -1)
+        std::cerr << "Error dispatching for device " << current_handle->devicename <<
+          ": " << dp_geterr(current_handle->content) << std::endl;
+      else if (retval < 0)
+        std::cerr << "Error dispatching for device " << current_handle->devicename <<
+          ": " << retval << std::endl;
       else if (retval != 0)
         packets_read = true;
     }
