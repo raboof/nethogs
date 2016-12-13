@@ -13,6 +13,7 @@ nethogs \- Net top tool grouping bandwidth per process
 .RB [ "\-t" ]
 .RB [ "\-c" ]
 .RB [ "\-p" ]
+.RB [ "\-a" ]
 .RB [ "\-s" ]
 .RI [device(s)]
 .SH DESCRIPTION
@@ -34,6 +35,9 @@ select view mode
 .TP
 \fB-p\fP
 sniff in promiscious mode (not recommended)
+.TP
+\fB-a\fP
+monitor all devices, even loopback/stopped ones
 .TP
 \fB-t\fP
 tracemode
