@@ -116,6 +116,7 @@ Nethogs monitors traffic going to/from a machine, per process. Other tools rathe
 * [iftop](http://ex-parrot.com/~pdw/iftop/) shows network traffic by service and host
 * [ifstat](http://gael.roualland.free.fr/ifstat/) shows network traffic by interface in a vmstat/iostat-like manner
 * [gnethogs](https://github.com/mbfoss/gnethogs) GTK-based GUI (work-in-progress)
+* [nethogs-qt](http://slist.lilotux.net/linux/nethogs-qt/index_en.html) Qt-based GUI
 * [hogwatch](https://github.com/akshayKMR/hogwatch) A bandwidth monitor(per process) with graphs for desktop/web.
  
 License
