@@ -126,7 +126,7 @@ std::string getcmdline(pid_t pid) {
   std::string cmdline = read_file(filename);
 
   // join parameters, keep prgname separate, don't overwrite trailing null
-  for (int idx = 0; idx < (cmdline.length() - 1); idx++) {
+  for (size_t idx = 0; idx < (cmdline.length() - 1); idx++) {
     if (cmdline[idx] == 0x00) {
       if (replace_null) {
         cmdline[idx] = ' ';

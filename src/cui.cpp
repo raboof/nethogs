@@ -124,23 +124,6 @@ std::string uid2username(uid_t uid) {
 /**
  * Render the provided text at the specified location, truncating if the length
  * of the text exceeds a maximum. If the
- * text must be truncated, the string ".." will be rendered, followed by max_len
- * - 2 characters of the provided text.
- */
-static void mvaddstr_truncate_leading(int row, int col, const char *str,
-                                      std::size_t str_len,
-                                      std::size_t max_len) {
-  if (str_len < max_len) {
-    mvaddstr(row, col, str);
-  } else {
-    mvaddstr(row, col, "..");
-    addnstr(str + 2, max_len - 2);
-  }
-}
-
-/**
- * Render the provided text at the specified location, truncating if the length
- * of the text exceeds a maximum. If the
  * text must be truncated, the text will be rendered up to max_len - 2
  * characters and then ".." will be rendered.
  */
