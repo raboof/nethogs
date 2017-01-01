@@ -31,7 +31,7 @@
 struct prg_node {
   long inode;
   pid_t pid;
-  std::string name;
+  std::string cmdline;
 };
 
 struct prg_node *findPID(unsigned long inode);

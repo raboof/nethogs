@@ -45,6 +45,7 @@ extern Process *unknownip;
 extern bool sortRecv;
 
 extern int viewMode;
+extern bool showcommandline;
 
 extern unsigned refreshlimit;
 extern unsigned refreshcount;
@@ -64,11 +65,12 @@ const char *COLUMN_FORMAT_RECEIVED = "%11.3f";
 
 class Line {
 public:
-  Line(const char *name, double n_recv_value, double n_sent_value, pid_t pid,
-       uid_t uid, const char *n_devicename) {
+  Line(const char *name, const char *cmdline, double n_recv_value,
+       double n_sent_value, pid_t pid, uid_t uid, const char *n_devicename) {
     assert(pid >= 0);
     assert(pid <= PID_MAX);
     m_name = name;
+    m_cmdline = cmdline;
     sent_value = n_sent_value;
     recv_value = n_recv_value;
     devicename = n_devicename;
@@ -85,6 +87,7 @@ public:
 
 private:
   const char *m_name;
+  const char *m_cmdline;
   const char *devicename;
   pid_t m_pid;
   uid_t m_uid;
@@ -121,23 +124,6 @@ std::string uid2username(uid_t uid) {
 /**
  * Render the provided text at the specified location, truncating if the length
  * of the text exceeds a maximum. If the
- * text must be truncated, the string ".." will be rendered, followed by max_len
- * - 2 characters of the provided text.
- */
-static void mvaddstr_truncate_leading(int row, int col, const char *str,
-                                      std::size_t str_len,
-                                      std::size_t max_len) {
-  if (str_len < max_len) {
-    mvaddstr(row, col, str);
-  } else {
-    mvaddstr(row, col, "..");
-    addnstr(str + 2, max_len - 2);
-  }
-}
-
-/**
- * Render the provided text at the specified location, truncating if the length
- * of the text exceeds a maximum. If the
  * text must be truncated, the text will be rendered up to max_len - 2
  * characters and then ".." will be rendered.
  */
@@ -149,6 +135,43 @@ static void mvaddstr_truncate_trailing(int row, int col, const char *str,
   } else {
     mvaddnstr(row, col, str, max_len - 2);
     addstr("..");
+  }
+}
+
+/**
+ * Render the provided progname and cmdline at the specified location,
+ * truncating if the length of the values exceeds a maximum.
+ * If the text must be truncated, the text will be rendered up to max_len - 2
+ * characters and then ".." will be rendered.
+ * cmdline is truncated first and then progname.
+ */
+static void mvaddstr_truncate_cmdline(int row, int col, const char *progname,
+                                      const char *cmdline,
+                                      std::size_t max_len) {
+  std::size_t proglen = strlen(progname);
+  std::size_t max_cmdlen;
+
+  if (proglen > max_len) {
+    mvaddnstr(row, col, progname, max_len - 2);
+    addstr("..");
+    max_cmdlen = 0;
+  } else {
+    mvaddstr(row, col, progname);
+    max_cmdlen = max_len - proglen - 1;
+  }
+
+  if (showcommandline && cmdline) {
+
+    std::size_t cmdlinelen = strlen(cmdline);
+
+    if ((cmdlinelen + 1) > max_cmdlen) {
+      if (max_cmdlen >= 3) {
+        mvaddnstr(row, col + proglen + 1, cmdline, max_cmdlen - 3);
+        addstr("..");
+      }
+    } else {
+      mvaddstr(row, col + proglen + 1, cmdline);
+    }
   }
 }
 
@@ -175,7 +198,7 @@ void Line::show(int row, unsigned int proglen) {
   mvaddstr_truncate_trailing(row, column_offset_user, username.c_str(),
                              username.size(), COLUMN_WIDTH_USER);
 
-  mvaddstr_truncate_leading(row, column_offset_program, m_name, strlen(m_name),
+  mvaddstr_truncate_cmdline(row, column_offset_program, m_name, m_cmdline,
                             proglen);
 
   mvaddstr(row, column_offset_dev, devicename);
@@ -195,8 +218,10 @@ void Line::show(int row, unsigned int proglen) {
 }
 
 void Line::log() {
-  std::cout << m_name << '/' << m_pid << '/' << m_uid << "\t" << sent_value
-            << "\t" << recv_value << std::endl;
+  std::cout << m_name;
+  if (showcommandline && m_cmdline)
+    std::cout << ' ' << m_cmdline;
+  std::cout << '/' << m_pid << '/' << m_uid << "\t" << sent_value << "\t" << recv_value << std::endl;
 }
 
 int GreatestFirst(const void *ma, const void *mb) {
@@ -257,6 +282,10 @@ void ui_tick() {
   case 'r':
     /* sort on 'received' */
     sortRecv = true;
+    break;
+  case 'l':
+    /* show cmdline' */
+    showcommandline = !showcommandline;
     break;
   case 'm':
     /* switch mode: total vs kb/s */
@@ -386,9 +415,9 @@ void do_refresh() {
     assert(curproc->getVal()->pid >= 0);
     assert(n < nproc);
 
-    lines[n] =
-      new Line(curproc->getVal()->name, value_recv, value_sent,
-               curproc->getVal()->pid, uid, curproc->getVal()->devicename);
+    lines[n] = new Line(curproc->getVal()->name, curproc->getVal()->cmdline,
+                        value_recv, value_sent, curproc->getVal()->pid, uid,
+                        curproc->getVal()->devicename);
     curproc = curproc->next;
     n++;
   }

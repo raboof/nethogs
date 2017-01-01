@@ -27,7 +27,7 @@ static void help(bool iserror) {
   // output << "usage: nethogs [-V] [-b] [-d seconds] [-t] [-p] [-f (eth|ppp))]
   // [device [device [device ...]]]\n";
   output << "usage: nethogs [-V] [-h] [-b] [-d seconds] [-v mode] [-c count] "
-            "[-t] [-p] [-s] [-a] [device [device [device ...]]]\n";
+            "[-t] [-p] [-s] [-a] [-l] [device [device [device ...]]]\n";
   output << "		-V : prints version.\n";
   output << "		-h : prints this help.\n";
   output << "		-b : bughunt mode - implies tracemode.\n";
@@ -41,6 +41,7 @@ static void help(bool iserror) {
   // eth.\n";
   output << "		-p : sniff in promiscious mode (not recommended).\n";
   output << "		-s : sort output by sent column.\n";
+  output << "		-l : display command line.\n";
   output << "		-a : monitor all devices, even loopback/stopped ones.\n";
   output << "		device : device(s) to monitor. default is all "
             "interfaces up and running excluding loopback\n";
@@ -49,6 +50,7 @@ static void help(bool iserror) {
   output << " q: quit\n";
   output << " s: sort by SENT traffic\n";
   output << " r: sort by RECEIVE traffic\n";
+  output << " l: display command line\n";
   output << " m: switch between total (KB, B, MB) and KB/s mode\n";
 }
 
@@ -133,7 +135,7 @@ int main(int argc, char **argv) {
   bool all = false;
 
   int opt;
-  while ((opt = getopt(argc, argv, "Vhbtpsd:v:c:a")) != -1) {
+  while ((opt = getopt(argc, argv, "Vhbtpsd:v:c:la")) != -1) {
     switch (opt) {
     case 'V':
       versiondisplay();
@@ -162,6 +164,9 @@ int main(int argc, char **argv) {
       break;
     case 'c':
       refreshlimit = atoi(optarg);
+      break;
+    case 'l':
+      showcommandline = true;
       break;
     case 'a':
       all = true;
