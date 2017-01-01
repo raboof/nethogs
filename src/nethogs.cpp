@@ -51,7 +51,7 @@ extern "C" {
 
 extern Process *unknownudp;
 
-unsigned refreshdelay = 1;
+time_t refreshdelay = 1;
 unsigned refreshlimit = 0;
 unsigned refreshcount = 0;
 unsigned processlimit = 0;

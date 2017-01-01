@@ -157,7 +157,7 @@ int main(int argc, char **argv) {
       sortRecv = false;
       break;
     case 'd':
-      refreshdelay = atoi(optarg);
+      refreshdelay = (time_t) atoi(optarg);
       break;
     case 'v':
       viewMode = atoi(optarg) % VIEWMODE_COUNT;
