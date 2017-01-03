@@ -75,6 +75,12 @@ If you want to remove Nethogs from your system, you can:
 
     sudo make uninstall
 
+### Running without root
+
+In order to be run by a non-root user, nethogs needs the `cap_net_admin` and `cap_net_raw` capabilities. These can be set on the executable by using the `setcap` command, as follows:
+
+    sudo setcap "cap_net_admin,cap_net_raw+pe" /usr/local/sbin/nethogs
+
 Coding standards
 ----------------
 
