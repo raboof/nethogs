@@ -55,9 +55,12 @@ static void help(bool iserror) {
 }
 
 void quit_cb(int /* i */) {
+  fprintf(stderr, "Callback to quit triggered\n");
   if (self_pipe.second != -1) {
+    fprintf(stderr, "self_pipe.second is %d, writing a character to it\n", self_pipe.second);
     write(self_pipe.second, "x", 1);
   } else {
+    fprintf(stderr, "self_pipe.second is -1, exiting\n");
     exit(0);
   }
 }
@@ -90,9 +93,13 @@ std::pair<int, int> create_self_pipe() {
   if (fcntl(pfd[1], F_SETFL, fcntl(pfd[1], F_GETFL) | O_NONBLOCK) == -1)
     return std::make_pair(-1, -1);
 
+  fprintf(stderr, "Successfully created non-blocking pipe\n");
   return std::make_pair(pfd[0], pfd[1]);
 }
 
+/**
+ * @returns true to continue, false to quit
+ */
 bool wait_for_next_trigger() {
   if (pc_loop_use_select) {
     FD_ZERO(&pc_loop_fd_set);
@@ -104,10 +111,15 @@ bool wait_for_next_trigger() {
       FD_SET(fd, &pc_loop_fd_set);
     }
     timeval timeout = {refreshdelay, 0};
+    fprintf(stderr, "Caling 'select' to wait for data (or SIGINT)\n");
     if (select(nfds, &pc_loop_fd_set, 0, 0, &timeout) != -1) {
+      fprintf(stderr, "Selected first, returning false\n");
       if (FD_ISSET(self_pipe.first, &pc_loop_fd_set)) {
         return false;
       }
+    } else {
+      perror("select()");
+      //return false;
     }
   } else {
     // If select() not possible, pause to prevent 100%
@@ -299,10 +311,14 @@ int main(int argc, char **argv) {
 
     // if not packets, do a select() until next packet
     if (!packets_read)
-      if (!wait_for_next_trigger())
+      if (!wait_for_next_trigger()) {
+        fprintf(stderr, "Breaking out of main loop\n");
         // Shutdown requested - exit the loop
         break;
+      }
   }
 
+  fprintf(stderr, "Cleaning up\n");
   clean_up();
+  fprintf(stderr, "Done cleaning up\n");
 }
