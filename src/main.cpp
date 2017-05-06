@@ -101,6 +101,7 @@ std::pair<int, int> create_self_pipe() {
  * @returns true to continue, false to quit
  */
 bool wait_for_next_trigger() {
+  fprintf(stderr, "Waiting for next trigger. pc_loop_use_select: %d\n", pc_loop_use_select);
   if (pc_loop_use_select) {
     FD_ZERO(&pc_loop_fd_set);
     int nfds = 0;
@@ -113,8 +114,9 @@ bool wait_for_next_trigger() {
     timeval timeout = {refreshdelay, 0};
     fprintf(stderr, "Caling 'select' to wait for data (or SIGINT)\n");
     if (select(nfds, &pc_loop_fd_set, 0, 0, &timeout) != -1) {
-      fprintf(stderr, "Selected first, returning false\n");
+      fprintf(stderr, "Select returned\n");
       if (FD_ISSET(self_pipe.first, &pc_loop_fd_set)) {
+        fprintf(stderr, "Selected first, returning false\n");
         return false;
       }
     } else {

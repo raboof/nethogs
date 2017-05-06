@@ -293,6 +293,8 @@ int nethogsmonitor_loop(NethogsMonitorCallback cb) {
     while (current_handle != NULL) {
       userdata->device = current_handle->devicename;
       userdata->sa_family = AF_UNSPEC;
+
+      fprintf(stderr, "dispatching\n");
       int retval = dp_dispatch(current_handle->content, -1, (u_char *)userdata,
                                sizeof(struct dpargs));
       if (retval < 0) {
@@ -311,6 +313,7 @@ int nethogsmonitor_loop(NethogsMonitorCallback cb) {
       nethogsmonitor_handle_update(cb);
     }
 
+    fprintf(stderr, "%d packets read\n", packets_read);
     if (!packets_read) {
       if (!wait_for_next_trigger()) {
         break;
