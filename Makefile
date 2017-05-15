@@ -28,7 +28,6 @@ install_lib:
 
 install_dev:
 	$(MAKE) -C src -f MakeLib.mk $@
-	$(MAKE) -C doc $@
 
 uninstall:
 	$(MAKE) -C src -f MakeApp.mk $@
