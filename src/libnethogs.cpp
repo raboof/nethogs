@@ -213,6 +213,9 @@ static void nethogsmonitor_handle_update(NethogsMonitorCallback cb) {
       curproc->getVal()->getkbps(&recv_kbs, &sent_kbs);
       curproc->getVal()->gettotal(&recv_bytes, &sent_bytes);
       curproc->getVal()->gettotalbyclosedconns(&recv_by_closed_bytes, &sent_by_closed_bytes);
+      // add closed connections to open, to get same result as nethogs UI
+      sent_bytes += sent_by_closed_bytes;
+      recv_bytes += recv_by_closed_bytes;
 
       // notify update
       bool const new_data =
@@ -243,8 +246,6 @@ static void nethogsmonitor_handle_update(NethogsMonitorCallback cb) {
       NHM_UPDATE_ONE_FIELD(data.recv_bytes, recv_bytes)
       NHM_UPDATE_ONE_FIELD(data.sent_kbs, sent_kbs)
       NHM_UPDATE_ONE_FIELD(data.recv_kbs, recv_kbs)
-      NHM_UPDATE_ONE_FIELD(data.sent_by_closed_bytes, sent_by_closed_bytes)
-      NHM_UPDATE_ONE_FIELD(data.recv_by_closed_bytes, recv_by_closed_bytes)
 
 #undef NHM_UPDATE_ONE_FIELD
 

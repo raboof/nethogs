@@ -54,8 +54,6 @@ class NethogsMonitorRecord(ctypes.Structure):
                 ('recv_bytes', ctypes.c_uint32),
                 ('sent_kbs', ctypes.c_float),
                 ('recv_kbs', ctypes.c_float),
-                ('sent_by_closed_bytes', ctypes.c_uint32),
-                ('recv_by_closed_bytes', ctypes.c_uint32),
                 )
 
 
@@ -95,9 +93,6 @@ def network_activity_callback(action, data):
     print('Device name: {}'.format(data.contents.device_name.decode('ascii')))
     print('Sent/Recv bytes: {} / {}'.format(data.contents.sent_bytes, data.contents.recv_bytes))
     print('Sent/Recv kbs: {} / {}'.format(data.contents.sent_kbs, data.contents.recv_kbs))
-    print('Sent/Recv bytes from closed connections: {} / {}'.format(
-        data.contents.sent_by_closed_bytes, data.contents.recv_by_closed_bytes
-    ))
     print('-' * 30)
 
 #############       Main begins here      ##############
