@@ -78,6 +78,8 @@ public:
     connections = NULL;
     pid = 0;
     uid = 0;
+    sent_by_closed_bytes = 0;
+    rcvd_by_closed_bytes = 0;
   }
   void check() { assert(pid >= 0); }
 
@@ -99,6 +101,8 @@ public:
   char *cmdline;
   const char *devicename;
   int pid;
+  u_int32_t sent_by_closed_bytes;
+  u_int32_t rcvd_by_closed_bytes;
 
   ConnList *connections;
   uid_t getUid() { return uid; }
