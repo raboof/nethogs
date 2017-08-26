@@ -72,10 +72,10 @@ static bool wait_for_next_trigger() {
   return true;
 }
 
-static int nethogsmonitor_init() {
+static int nethogsmonitor_init(int devc, char **devicenames, bool all) {
   process_init();
 
-  device *devices = get_default_devices();
+  device *devices = get_devices(devc, devicenames, all);
   if (devices == NULL) {
     std::cerr << "No devices to monitor" << std::endl;
     return NETHOGS_STATUS_NO_DEVICE;
@@ -272,11 +272,16 @@ static void nethogsmonitor_clean_up() {
 }
 
 int nethogsmonitor_loop(NethogsMonitorCallback cb) {
+  return nethogsmonitor_loop_devices(cb, 0, NULL, false);
+}
+
+int nethogsmonitor_loop_devices(NethogsMonitorCallback cb,
+                                int devc, char **devicenames, bool all) {
   if (monitor_run_flag) {
     return NETHOGS_STATUS_FAILURE;
   }
 
-  int return_value = nethogsmonitor_init();
+  int return_value = nethogsmonitor_init(devc, devicenames, all);
   if (return_value != NETHOGS_STATUS_OK) {
     return return_value;
   }

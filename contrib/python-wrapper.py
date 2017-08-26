@@ -62,7 +62,29 @@ def signal_handler(signal, frame):
     lib.nethogsmonitor_breakloop()
 
 
-def run_monitor_loop(lib):
+def dev_args(devnames):
+    """
+    Return the appropriate ctypes arguments for a device name list, to pass
+    to libnethogs ``nethogsmonitor_loop_devices``. The return value is a
+    2-tuple of devc (``ctypes.c_int``) and devicenames (``ctypes.POINTER``)
+    to an array of ``ctypes.c_char``).
+
+    :param devnames: list of device names to monitor
+    :type devnames: list
+    :return: 2-tuple of devc, devicenames ctypes arguments
+    :rtype: tuple
+    """
+    devc = len(devnames)
+    devnames_type = ctypes.c_char_p * devc
+    devnames_arg = devnames_type()
+    for idx, val in enumerate(devnames):
+        devnames_arg[idx] = (val + chr(0)).encode('ascii')
+    return ctypes.c_int(devc), ctypes.cast(
+        devnames_arg, ctypes.POINTER(ctypes.c_char_p)
+    )
+
+
+def run_monitor_loop(lib, devnames):
     # Create a type for my callback func. The callback func returns void (None), and accepts as
     # params an int and a pointer to a NethogsMonitorRecord instance.
     # The params and return type of the callback function are mandated by nethogsmonitor_loop().
@@ -70,7 +92,19 @@ def run_monitor_loop(lib):
     CALLBACK_FUNC_TYPE = ctypes.CFUNCTYPE(ctypes.c_void_p, ctypes.c_int,
                                           ctypes.POINTER(NethogsMonitorRecord))
 
-    rc = lib.nethogsmonitor_loop(CALLBACK_FUNC_TYPE(network_activity_callback))
+    if len(devnames) < 1:
+        # monitor all devices
+        rc = lib.nethogsmonitor_loop(
+            CALLBACK_FUNC_TYPE(network_activity_callback)
+        )
+    else:
+        devc, devicenames = dev_args(devnames)
+        rc = lib.nethogsmonitor_loop_devices(
+            CALLBACK_FUNC_TYPE(network_activity_callback),
+            devc,
+            devicenames,
+            ctypes.c_bool(False)
+        )
 
     if rc != LoopStatus.OK:
         print('nethogsmonitor_loop returned {}'.format(LoopStatus.MAP[rc]))
@@ -102,7 +136,13 @@ signal.signal(signal.SIGTERM, signal_handler)
 
 lib = ctypes.CDLL(LIBRARY_NAME)
 
-monitor_thread = threading.Thread(target=run_monitor_loop, args=(lib,))
+device_names = []
+# You can use this to monitor only certain devices, like:
+# device_names = ['enp4s0', 'docker0']
+
+monitor_thread = threading.Thread(
+    target=run_monitor_loop, args=(lib, device_names,)
+)
 
 monitor_thread.start()
 
