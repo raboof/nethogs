@@ -102,6 +102,9 @@ void Process::getkbps(float *recvd, float *sent) {
   ConnList *previous = NULL;
   while (curconn != NULL) {
     if (curconn->getVal()->getLastPacket() <= curtime.tv_sec - CONNTIMEOUT) {
+      /* capture sent and received totals before deleting */
+      this->sent_by_closed_bytes += curconn->getVal()->sumSent;
+      this->rcvd_by_closed_bytes += curconn->getVal()->sumRecv;
       /* stalled connection, remove. */
       ConnList *todelete = curconn;
       Connection *conn_todelete = curconn->getVal();
@@ -139,6 +142,13 @@ void Process::gettotal(u_int32_t *recvd, u_int32_t *sent) {
   // std::cout << "Sum recv: " << sum_recv << std::endl;
   *recvd = sum_recv;
   *sent = sum_sent;
+}
+
+/** get total values for closed connections from this process */
+/* closed connections aren't counted in gettotal() */
+void Process::gettotalbyclosedconns(u_int32_t *recvd, u_int32_t *sent) {
+  *recvd = this->rcvd_by_closed_bytes;
+  *sent = this->sent_by_closed_bytes;
 }
 
 void Process::gettotalmb(float *recvd, float *sent) {
