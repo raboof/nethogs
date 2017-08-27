@@ -91,7 +91,7 @@ public:
   }
   int getLastPacket();
 
-  void gettotal(u_int32_t *recvd, u_int32_t *sent);
+  void gettotal(u_int64_t *recvd, u_int64_t *sent);
   void getkbps(float *recvd, float *sent);
   void gettotalmb(float *recvd, float *sent);
   void gettotalkb(float *recvd, float *sent);
@@ -101,8 +101,8 @@ public:
   char *cmdline;
   const char *devicename;
   int pid;
-  u_int32_t sent_by_closed_bytes;
-  u_int32_t rcvd_by_closed_bytes;
+  u_int64_t sent_by_closed_bytes;
+  u_int64_t rcvd_by_closed_bytes;
 
   ConnList *connections;
   uid_t getUid() { return uid; }

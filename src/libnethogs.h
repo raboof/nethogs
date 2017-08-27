@@ -24,8 +24,8 @@ typedef struct NethogsMonitorRecord {
   int pid;
   uint32_t uid;
   const char *device_name;
-  uint32_t sent_bytes;
-  uint32_t recv_bytes;
+  uint64_t sent_bytes;
+  uint64_t recv_bytes;
   float sent_kbs;
   float recv_kbs;
 } NethogsMonitorRecord;
