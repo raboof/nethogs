@@ -28,6 +28,8 @@ typedef struct NethogsMonitorRecord {
   uint32_t recv_bytes;
   float sent_kbs;
   float recv_kbs;
+  uint32_t sent_by_closed_bytes;
+  uint32_t recv_by_closed_bytes;
 } NethogsMonitorRecord;
 
 /**

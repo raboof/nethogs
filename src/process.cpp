@@ -144,6 +144,13 @@ void Process::gettotal(u_int32_t *recvd, u_int32_t *sent) {
   *sent = sum_sent + this->sent_by_closed_bytes;
 }
 
+/** get total values for closed connections from this process */
+/* closed connections aren't counted in gettotal() */
+void Process::gettotalbyclosedconns(u_int32_t *recvd, u_int32_t *sent) {
+  *recvd = this->rcvd_by_closed_bytes;
+  *sent = this->sent_by_closed_bytes;
+}
+
 void Process::gettotalmb(float *recvd, float *sent) {
   u_int32_t sum_sent = 0, sum_recv = 0;
   gettotal(&sum_recv, &sum_sent);
