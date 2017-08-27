@@ -27,7 +27,8 @@ static void help(bool iserror) {
   // output << "usage: nethogs [-V] [-b] [-d seconds] [-t] [-p] [-f (eth|ppp))]
   // [device [device [device ...]]]\n";
   output << "usage: nethogs [-V] [-h] [-b] [-d seconds] [-v mode] [-c count] "
-            "[-t] [-p] [-s] [-a] [-l] [device [device [device ...]]]\n";
+            "[-t] [-p] [-s] [-a] [-l] [-f filter] "
+            "[device [device [device ...]]]\n";
   output << "		-V : prints version.\n";
   output << "		-h : prints this help.\n";
   output << "		-b : bughunt mode - implies tracemode.\n";
@@ -43,6 +44,8 @@ static void help(bool iserror) {
   output << "		-s : sort output by sent column.\n";
   output << "		-l : display command line.\n";
   output << "		-a : monitor all devices, even loopback/stopped ones.\n";
+  output << "		-f : EXPERIMENTAL: specify string pcap filter (like tcpdump)."
+            " This may be removed or changed in a future version.\n";
   output << "		device : device(s) to monitor. default is all "
             "interfaces up and running excluding loopback\n";
   output << std::endl;
@@ -133,9 +136,10 @@ int main(int argc, char **argv) {
 
   int promisc = 0;
   bool all = false;
+  char *filter = NULL;
 
   int opt;
-  while ((opt = getopt(argc, argv, "Vhbtpsd:v:c:la")) != -1) {
+  while ((opt = getopt(argc, argv, "Vhbtpsd:v:c:laf:")) != -1) {
     switch (opt) {
     case 'V':
       versiondisplay();
@@ -170,6 +174,9 @@ int main(int argc, char **argv) {
       break;
     case 'a':
       all = true;
+      break;
+    case 'f':
+      filter = optarg;
       break;
     default:
       help(true);
@@ -216,16 +223,20 @@ int main(int argc, char **argv) {
 
   char errbuf[PCAP_ERRBUF_SIZE];
 
+  int nb_devices = 0;
+  int nb_failed_devices = 0;
+
   handle *handles = NULL;
   device *current_dev = devices;
   while (current_dev != NULL) {
+    ++nb_devices;
 
     if (!getLocal(current_dev->name, tracemode)) {
       forceExit(false, "getifaddrs failed while establishing local IP.");
     }
 
     dp_handle *newhandle =
-        dp_open_live(current_dev->name, BUFSIZ, promisc, 100, errbuf);
+        dp_open_live(current_dev->name, BUFSIZ, promisc, 100, filter, errbuf);
     if (newhandle != NULL) {
       dp_addcb(newhandle, dp_packet_ip, process_ip);
       dp_addcb(newhandle, dp_packet_ip6, process_ip6);
@@ -258,9 +269,14 @@ int main(int argc, char **argv) {
     } else {
       fprintf(stderr, "Error opening handler for device %s\n",
               current_dev->name);
+      ++nb_failed_devices;
     }
 
     current_dev = current_dev->next;
+  }
+
+  if (nb_devices == nb_failed_devices) {
+    forceExit(false, "Error opening pcap handlers for all devices.\n");
   }
 
   signal(SIGINT, &quit_cb);

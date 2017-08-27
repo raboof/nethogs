@@ -65,7 +65,7 @@ struct dp_handle {
 /* functions to set up a handle (which is basically just a pcap handle) */
 
 struct dp_handle *dp_open_live(const char *device, int snaplen, int promisc,
-                               int to_ms, char *errbuf);
+                               int to_ms, char *filter, char *errbuf);
 struct dp_handle *dp_open_offline(char *fname, char *ebuf);
 
 /* functions to add callbacks */

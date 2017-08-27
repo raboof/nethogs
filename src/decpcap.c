@@ -77,11 +77,40 @@ struct dp_handle *dp_open_offline(char *fname, char *ebuf) {
 }
 
 struct dp_handle *dp_open_live(const char *device, int snaplen, int promisc,
-                               int to_ms, char *errbuf) {
+                               int to_ms, char *filter, char *errbuf) {
+  struct bpf_program fp; // compiled filter program
+  bpf_u_int32 maskp; // subnet mask
+  bpf_u_int32 netp; // interface IP
+
   pcap_t *temp = pcap_open_live(device, snaplen, promisc, to_ms, errbuf);
 
   if (temp == NULL) {
     return NULL;
+  }
+
+  if (filter != NULL) {
+    pcap_lookupnet(device, &netp, &maskp, errbuf);
+
+    /* Compile the filter */
+    if(pcap_compile(temp, &fp, filter, 1, netp) == -1) {
+      fprintf(
+        stderr,
+        "Error calling pcap_compile for filter on device %s: %s\n",
+        device, pcap_geterr(temp)
+      );
+      return NULL;
+    }
+
+    /* set the filter */
+    if(pcap_setfilter(temp, &fp) == -1) {
+      fprintf(
+        stderr,
+        "Error setting capture filter on device %s: %s\n",
+        device, pcap_geterr(temp)
+      );
+      return NULL;
+    }
+
   }
 
   return dp_fillhandle(temp);
