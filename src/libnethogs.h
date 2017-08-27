@@ -58,6 +58,24 @@ typedef void (*NethogsMonitorCallback)(int action,
 NETHOGS_DSO_VISIBLE int nethogsmonitor_loop(NethogsMonitorCallback cb);
 
 /**
+ * @brief Enter the process monitoring loop and reports updates using the
+ * callback provided as parameter. Specify which network devices to monitor.
+ * All parameters other than cb are passed through to get_devices().
+ * This call will block until nethogsmonitor_breakloop() is called or a failure
+ * occurs.
+ * @param cb A pointer to a callback function following the
+ * NethogsMonitorCallback definition
+ * @param devc number of values in devicenames array
+ * @param devicenames pointer to array of devicenames (char arrays)
+ * @param all when false, loopback interface and down/not running interfaces
+ * will be avoided. When true, find all interfaces including down/not running.
+ */
+
+NETHOGS_DSO_VISIBLE int nethogsmonitor_loop_devices(NethogsMonitorCallback cb,
+                                                    int devc, char **devicenames,
+                                                    bool all);
+
+/**
  * @brief Makes the call to nethogsmonitor_loop return.
  */
 NETHOGS_DSO_VISIBLE void nethogsmonitor_breakloop();
