@@ -14,11 +14,28 @@ import threading
 # until network activity occurs and the callback is executed. By using 2 threads, we can have the
 # main thread listen for SIGINT while the secondary thread is blocked in the monitor loop.
 
+#######################
+# BEGIN CONFIGURATION #
+#######################
+
+# You can use this to monitor only certain devices, like:
+# device_names = ['enp4s0', 'docker0']
+device_names = []
 
 # LIBRARY_NAME has to be exact, although it doesn't need to include the full path.
 # The version tagged as 0.8.5 (download link below) builds a library with this name.
 # https://github.com/raboof/nethogs/archive/v0.8.5.tar.gz
 LIBRARY_NAME = 'libnethogs.so.0.8.5'
+
+# Optionally, specify a capture filter in pcap format (same as used by
+# tcpdump(1)) or None. See `man pcap-filter` for full information.
+# example:
+# FILTER = 'port 80 or port 8080 or port 443'
+FILTER = None
+
+#####################
+# END CONFIGURATION #
+#####################
 
 # Here are some definitions from libnethogs.h
 # https://github.com/raboof/nethogs/blob/master/src/libnethogs.h
@@ -89,18 +106,25 @@ def run_monitor_loop(lib, devnames):
     # params an int and a pointer to a NethogsMonitorRecord instance.
     # The params and return type of the callback function are mandated by nethogsmonitor_loop().
     # See libnethogs.h.
-    CALLBACK_FUNC_TYPE = ctypes.CFUNCTYPE(ctypes.c_void_p, ctypes.c_int,
-                                          ctypes.POINTER(NethogsMonitorRecord))
+    CALLBACK_FUNC_TYPE = ctypes.CFUNCTYPE(
+        ctypes.c_void_p, ctypes.c_int, ctypes.POINTER(NethogsMonitorRecord)
+    )
+
+    filter_arg = FILTER
+    if filter_arg is not None:
+        filter_arg = ctypes.c_char_p(filter_arg.encode('ascii'))
 
     if len(devnames) < 1:
         # monitor all devices
         rc = lib.nethogsmonitor_loop(
-            CALLBACK_FUNC_TYPE(network_activity_callback)
+            CALLBACK_FUNC_TYPE(network_activity_callback),
+            filter_arg
         )
     else:
         devc, devicenames = dev_args(devnames)
         rc = lib.nethogsmonitor_loop_devices(
             CALLBACK_FUNC_TYPE(network_activity_callback),
+            filter_arg,
             devc,
             devicenames,
             ctypes.c_bool(False)
@@ -135,10 +159,6 @@ signal.signal(signal.SIGINT, signal_handler)
 signal.signal(signal.SIGTERM, signal_handler)
 
 lib = ctypes.CDLL(LIBRARY_NAME)
-
-device_names = []
-# You can use this to monitor only certain devices, like:
-# device_names = ['enp4s0', 'docker0']
 
 monitor_thread = threading.Thread(
     target=run_monitor_loop, args=(lib, device_names,)
