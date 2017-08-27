@@ -50,8 +50,8 @@ class NethogsMonitorRecord(ctypes.Structure):
                 ('pid', ctypes.c_int),
                 ('uid', ctypes.c_uint32),
                 ('device_name', ctypes.c_char_p),
-                ('sent_bytes', ctypes.c_uint32),
-                ('recv_bytes', ctypes.c_uint32),
+                ('sent_bytes', ctypes.c_uint64),
+                ('recv_bytes', ctypes.c_uint64),
                 ('sent_kbs', ctypes.c_float),
                 ('recv_kbs', ctypes.c_float),
                 )

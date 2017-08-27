@@ -65,10 +65,10 @@ Process *unknownudp;
 Process *unknownip;
 ProcList *processes;
 
-float tomb(u_int32_t bytes) { return ((double)bytes) / 1024 / 1024; }
-float tokb(u_int32_t bytes) { return ((double)bytes) / 1024; }
+float tomb(u_int64_t bytes) { return ((double)bytes) / 1024 / 1024; }
+float tokb(u_int64_t bytes) { return ((double)bytes) / 1024; }
 
-float tokbps(u_int32_t bytes) { return (((double)bytes) / PERIOD) / 1024; }
+float tokbps(u_int64_t bytes) { return (((double)bytes) / PERIOD) / 1024; }
 
 void process_init() {
   unknowntcp = new Process(0, "", "unknown TCP");
@@ -94,7 +94,7 @@ int Process::getLastPacket() {
 
 /** Get the kb/s values for this process */
 void Process::getkbps(float *recvd, float *sent) {
-  u_int32_t sum_sent = 0, sum_recv = 0;
+  u_int64_t sum_sent = 0, sum_recv = 0;
 
   /* walk though all this process's connections, and sum
    * them up */
@@ -116,7 +116,7 @@ void Process::getkbps(float *recvd, float *sent) {
       delete (todelete);
       delete (conn_todelete);
     } else {
-      u_int32_t sent = 0, recv = 0;
+      u_int64_t sent = 0, recv = 0;
       curconn->getVal()->sumanddel(curtime, &recv, &sent);
       sum_sent += sent;
       sum_recv += recv;
@@ -129,8 +129,8 @@ void Process::getkbps(float *recvd, float *sent) {
 }
 
 /** get total values for this process */
-void Process::gettotal(u_int32_t *recvd, u_int32_t *sent) {
-  u_int32_t sum_sent = 0, sum_recv = 0;
+void Process::gettotal(u_int64_t *recvd, u_int64_t *sent) {
+  u_int64_t sum_sent = 0, sum_recv = 0;
   ConnList *curconn = this->connections;
   while (curconn != NULL) {
     Connection *conn = curconn->getVal();
@@ -145,7 +145,7 @@ void Process::gettotal(u_int32_t *recvd, u_int32_t *sent) {
 }
 
 void Process::gettotalmb(float *recvd, float *sent) {
-  u_int32_t sum_sent = 0, sum_recv = 0;
+  u_int64_t sum_sent = 0, sum_recv = 0;
   gettotal(&sum_recv, &sum_sent);
   *recvd = tomb(sum_recv);
   *sent = tomb(sum_sent);
@@ -153,14 +153,14 @@ void Process::gettotalmb(float *recvd, float *sent) {
 
 /** get total values for this process */
 void Process::gettotalkb(float *recvd, float *sent) {
-  u_int32_t sum_sent = 0, sum_recv = 0;
+  u_int64_t sum_sent = 0, sum_recv = 0;
   gettotal(&sum_recv, &sum_sent);
   *recvd = tokb(sum_recv);
   *sent = tokb(sum_sent);
 }
 
 void Process::gettotalb(float *recvd, float *sent) {
-  u_int32_t sum_sent = 0, sum_recv = 0;
+  u_int64_t sum_sent = 0, sum_recv = 0;
   gettotal(&sum_recv, &sum_sent);
   // std::cout << "Total sent: " << sum_sent << std::endl;
   *sent = sum_sent;

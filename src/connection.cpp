@@ -51,8 +51,8 @@ void PackList::add(Packet *p) {
 }
 
 /* sums up the total bytes used and removes 'old' packets */
-u_int32_t PackList::sumanddel(timeval t) {
-  u_int32_t retval = 0;
+u_int64_t PackList::sumanddel(timeval t) {
+  u_int64_t retval = 0;
   PackListNode *current = content;
   PackListNode *previous = NULL;
 
@@ -206,7 +206,7 @@ Connection *findConnection(Packet *packet) {
  * Returns sum of sent packages (by address)
  *	   sum of received packages (by address)
  */
-void Connection::sumanddel(timeval t, u_int32_t *recv, u_int32_t *sent) {
+void Connection::sumanddel(timeval t, u_int64_t *recv, u_int64_t *sent) {
   (*sent) = (*recv) = 0;
 
   *sent = sent_packets->sumanddel(t);

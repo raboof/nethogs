@@ -204,8 +204,8 @@ static void nethogsmonitor_handle_update(NethogsMonitorCallback cb) {
       // continue;
     } else {
       const u_int32_t uid = curproc->getVal()->getUid();
-      u_int32_t sent_bytes;
-      u_int32_t recv_bytes;
+      u_int64_t sent_bytes;
+      u_int64_t recv_bytes;
       float sent_kbs;
       float recv_kbs;
       curproc->getVal()->getkbps(&recv_kbs, &sent_kbs);

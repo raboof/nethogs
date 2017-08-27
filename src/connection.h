@@ -53,7 +53,7 @@ public:
   }
 
   /* sums up the total bytes used and removes 'old' packets */
-  u_int32_t sumanddel(timeval t);
+  u_int64_t sumanddel(timeval t);
 
   /* calling code may delete packet */
   void add(Packet *p);
@@ -83,15 +83,15 @@ public:
 
   /* sums up the total bytes used
    * and removes 'old' packets. */
-  void sumanddel(timeval curtime, u_int32_t *recv, u_int32_t *sent);
+  void sumanddel(timeval curtime, u_int64_t *recv, u_int64_t *sent);
 
   /* for checking if a packet is part of this connection */
   /* the reference packet is always *outgoing*. */
   Packet *refpacket;
 
   /* total sum or sent/received bytes */
-  u_int32_t sumSent;
-  u_int32_t sumRecv;
+  u_int64_t sumSent;
+  u_int64_t sumRecv;
 
 private:
   PackList *sent_packets;
