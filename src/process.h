@@ -96,6 +96,7 @@ public:
   void gettotalmb(float *recvd, float *sent);
   void gettotalkb(float *recvd, float *sent);
   void gettotalb(float *recvd, float *sent);
+  void gettotalbyclosedconns(u_int32_t *recvd, u_int32_t *sent);
 
   char *name;
   char *cmdline;

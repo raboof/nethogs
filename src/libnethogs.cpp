@@ -206,10 +206,16 @@ static void nethogsmonitor_handle_update(NethogsMonitorCallback cb) {
       const u_int32_t uid = curproc->getVal()->getUid();
       u_int32_t sent_bytes;
       u_int32_t recv_bytes;
+      u_int32_t sent_by_closed_bytes;
+      u_int32_t recv_by_closed_bytes;
       float sent_kbs;
       float recv_kbs;
       curproc->getVal()->getkbps(&recv_kbs, &sent_kbs);
       curproc->getVal()->gettotal(&recv_bytes, &sent_bytes);
+      curproc->getVal()->gettotalbyclosedconns(&recv_by_closed_bytes, &sent_by_closed_bytes);
+      // add closed connections to open, to get same result as nethogs UI
+      sent_bytes += sent_by_closed_bytes;
+      recv_bytes += recv_by_closed_bytes;
 
       // notify update
       bool const new_data =
