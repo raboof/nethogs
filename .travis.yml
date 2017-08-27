@@ -5,7 +5,7 @@ addons:
     packages:
     - libpcap0.8-dev
 
-script: make
+script: make && make libnethogs
 
 os:
   - linux
