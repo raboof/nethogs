@@ -27,8 +27,10 @@ device_names = []
 # https://github.com/raboof/nethogs/archive/v0.8.5.tar.gz
 LIBRARY_NAME = 'libnethogs.so.0.8.5'
 
-# Optionally, specify a capture filter in pcap format (same as used by
-# tcpdump(1)) or None. See `man pcap-filter` for full information.
+# EXPERIMENTAL: Optionally, specify a capture filter in pcap format (same as
+# used by tcpdump(1)) or None. See `man pcap-filter` for full information.
+# Note that this feature is EXPERIMENTAL (in libnethogs) and may be removed or
+# changed in an incompatible way in a future release.
 # example:
 # FILTER = 'port 80 or port 8080 or port 443'
 FILTER = None

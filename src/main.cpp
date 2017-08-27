@@ -44,9 +44,10 @@ static void help(bool iserror) {
   output << "		-s : sort output by sent column.\n";
   output << "		-l : display command line.\n";
   output << "		-a : monitor all devices, even loopback/stopped ones.\n";
+  output << "		-f : EXPERIMENTAL: specify string pcap filter (like tcpdump)."
+            " This may be removed or changed in a future version.\n";
   output << "		device : device(s) to monitor. default is all "
             "interfaces up and running excluding loopback\n";
-  output << "		-f : specify string pcap filter (like tcpdump).\n";
   output << std::endl;
   output << "When nethogs is running, press:\n";
   output << " q: quit\n";

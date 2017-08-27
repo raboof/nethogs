@@ -53,9 +53,11 @@ typedef void (*NethogsMonitorCallback)(int action,
  * occurs.
  * @param cb A pointer to a callback function following the
  * NethogsMonitorCallback definition
- * @param filter A string (char array) pcap filter to restrict what packets
- * are captured, or NULL. The filter string format is the same as that of
- * tcpdump(1); for full details, see the man page for pcap-filter(7).
+ * @param filter EXPERIMENTAL: A string (char array) pcap filter to restrict
+ * what packets are captured, or NULL. The filter string format is the same as
+ * that of tcpdump(1); for full details, see the man page for pcap-filter(7).
+ * Note that this is EXPERIMENTAL, and may be removed or changed in a future
+ * version.
  */
 
 NETHOGS_DSO_VISIBLE int nethogsmonitor_loop(NethogsMonitorCallback cb,
@@ -69,9 +71,11 @@ NETHOGS_DSO_VISIBLE int nethogsmonitor_loop(NethogsMonitorCallback cb,
  * occurs.
  * @param cb A pointer to a callback function following the
  * NethogsMonitorCallback definition
- * @param filter A string (char array) pcap filter to restrict what packets
- * are captured, or NULL. The filter string format is the same as that of
- * tcpdump(1); for full details, see the man page for pcap-filter(7).
+ * @param filter EXPERIMENTAL: A string (char array) pcap filter to restrict
+ * what packets are captured, or NULL. The filter string format is the same as
+ * that of tcpdump(1); for full details, see the man page for pcap-filter(7).
+ * Note that this is EXPERIMENTAL, and may be removed or changed in a future
+ * version.
  * @param devc number of values in devicenames array
  * @param devicenames pointer to array of devicenames (char arrays)
  * @param all when false, loopback interface and down/not running interfaces
