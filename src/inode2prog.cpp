@@ -80,50 +80,41 @@ int str2int(const char *ptr) {
   return retval;
 }
 
-static std::string read_file(int fd) {
+static bool read_file(int fd, std::string& content) {
   char buf[255];
-  std::string content;
 
-  for (int length; (length = read(fd, buf, sizeof(buf))) > 0;) {
-    if (length < 0) {
-      std::fprintf(stderr, "Error reading file: %s\n", std::strerror(errno));
-      std::exit(34);
-    }
+  int length;
+  while ((length = read(fd, buf, sizeof(buf))) > 0) {
     content.append(buf, length);
   }
 
-  return content;
+  return length >= 0;
 }
 
-static std::string read_file(const char *filepath) {
+static bool read_file(const char *filepath, std::string& content) {
   int fd = open(filepath, O_RDONLY);
 
   if (fd < 0) {
-    std::fprintf(stderr, "Error opening %s: %s\n", filepath,
-                 std::strerror(errno));
-    std::exit(3);
-    return NULL;
+    return false;
   }
 
-  std::string contents = read_file(fd);
+  bool result = read_file(fd, content);
+  close(fd);
 
-  if (close(fd)) {
-    std::fprintf(stderr, "Error opening %s: %s\n", filepath,
-                 std::strerror(errno));
-    std::exit(34);
-  }
-
-  return contents;
+  return result;
 }
 
-std::string getcmdline(pid_t pid) {
+bool getcmdline(pid_t pid, std::string& cmdline) {
   const int maxfilenamelen = 14 + MAX_PID_LENGTH + 1;
   char filename[maxfilenamelen];
 
   std::snprintf(filename, maxfilenamelen, "/proc/%d/cmdline", pid);
 
   bool replace_null = false;
-  std::string cmdline = read_file(filename);
+  cmdline.clear();
+  if (!read_file(filename, cmdline)) {
+    return false;
+  }
 
   if (cmdline.empty() || cmdline[cmdline.length() - 1] != '\0') {
     // invalid content of cmdline file. Add null char to allow further
@@ -141,7 +132,7 @@ std::string getcmdline(pid_t pid) {
     }
   }
 
-  return cmdline;
+  return true;
 }
 
 void setnode(unsigned long inode, pid_t pid) {
@@ -151,9 +142,21 @@ void setnode(unsigned long inode, pid_t pid) {
     prg_node *newnode = new prg_node;
     newnode->inode = inode;
     newnode->pid = pid;
-    newnode->cmdline = getcmdline(pid);
+    bool result = getcmdline(pid, newnode->cmdline);
+    if (result) {
+      inodeproc[inode] = newnode;
+    } else {
+      inodeproc.erase(inode);
+      if (bughuntmode) {
+        if (errno == ENOENT || errno == ESRCH) {
+          std::cout << "Process " << pid << " exited during getcmdline()\n";
+        } else {
+          std::cerr << "Error getcmdline() on process " << pid << ": "
+                    << strerror(errno) << std::endl;
+        }
+      }
+    }
 
-    inodeproc[inode] = newnode;
     delete current_value;
   }
 }
