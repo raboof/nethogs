@@ -54,7 +54,7 @@ extern unsigned refreshcount;
 
 const int COLUMN_WIDTH_PID = 7;
 const int COLUMN_WIDTH_USER = 8;
-const int COLUMN_WIDTH_DEV = 5;
+const int COLUMN_WIDTH_DEV = 15;
 const int COLUMN_WIDTH_SENT = 11;
 const int COLUMN_WIDTH_RECEIVED = 11;
 const int COLUMN_WIDTH_UNIT = 6;
@@ -334,14 +334,14 @@ void show_ncurses(Line *lines[], int nproc) {
   if (cols > PROGNAME_WIDTH)
     cols = PROGNAME_WIDTH;
 
-  proglen = cols - 55;
+  proglen = cols - 65;
 
   erase();
   mvprintw(0, 0, "%s", caption->c_str());
   attron(A_REVERSE);
   mvprintw(2, 0,
-           "    PID USER     %-*.*s  DEV        SENT      RECEIVED       ",
-           proglen, proglen, "PROGRAM");
+           "    PID USER     %-*.*s  %-*.*s       SENT      RECEIVED       ",
+           proglen, proglen, "PROGRAM",15,15,"DEV");
   attroff(A_REVERSE);
 
   /* print them */
@@ -353,11 +353,10 @@ void show_ncurses(Line *lines[], int nproc) {
     sent_global += lines[i]->sent_value;
     delete lines[i];
   }
-
   attron(A_REVERSE);
   int totalrow = std::min(rows - 1, 3 + 1 + i);
-  mvprintw(totalrow, 0, "  TOTAL        %-*.*s          %11.3f %11.3f ",
-           proglen, proglen, " ", sent_global, recv_global);
+  mvprintw(totalrow, 0, "  TOTAL        %-*.*s %-*.*s    %11.3f %11.3f ",
+           proglen, proglen, "", 15,15, "", sent_global, recv_global);
   if (viewMode == VIEWMODE_KBPS) {
     mvprintw(3 + 1 + i, cols - COLUMN_WIDTH_UNIT, "KB/sec ");
   } else if (viewMode == VIEWMODE_TOTAL_B) {
