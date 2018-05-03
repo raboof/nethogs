@@ -176,7 +176,7 @@ static void mvaddstr_truncate_cmdline(int row, int col, const char *progname,
   }
 }
 
-void Line::show(int row, unsigned int proglen,unsigned int devlen) {
+void Line::show(int row, unsigned int proglen, unsigned int devlen) {
   assert(m_pid >= 0);
   assert(m_pid <= PID_MAX);
 
@@ -224,6 +224,25 @@ void Line::log() {
     std::cout << ' ' << m_cmdline;
   std::cout << '/' << m_pid << '/' << m_uid << "\t" << sent_value << "\t" << recv_value << std::endl;
 }
+
+int get_devlen(Line *lines[], int nproc, int rows)
+{
+  int devlen = MIN_COLUMN_WIDTH_DEV; int curlen;
+  for (int i = 0; i < nproc; i++) {
+    if (i + 3 < rows)
+	{
+		curlen = strlen(lines[i]->devicename);
+		if(curlen > devlen)
+			curlen = devlen;
+	}
+ }
+
+ if(devlen > MAX_COLUMN_WIDTH_DEV)
+	devlen = MAX_COLUMN_WIDTH_DEV;
+  
+ return devlen;
+}
+
 
 int GreatestFirst(const void *ma, const void *mb) {
   Line **pa = (Line **)ma;
@@ -336,21 +355,8 @@ void show_ncurses(Line *lines[], int nproc) {
     cols = PROGNAME_WIDTH;
 
 
- //issue #110 - dynamic length devicename
- int devlen = MIN_COLUMN_WIDTH_DEV; int curlen;
-
- for (int i = 0; i < nproc; i++) {
-    if (i + 3 < rows)
-	{
-		curlen = strlen(lines[i]->devicename);
-		if(curlen > devlen)
-			curlen = devlen;
-	}
- }
-
- if(devlen > MAX_COLUMN_WIDTH_DEV)
-	devlen = MAX_COLUMN_WIDTH_DEV;
-  
+ //issue #110 - maximum devicename length min=5, max=15 
+ int devlen = get_devlen(lines, nproc, rows);  
 
   proglen = cols - 50 - devlen;
 
