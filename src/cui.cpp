@@ -54,7 +54,8 @@ extern unsigned refreshcount;
 
 const int COLUMN_WIDTH_PID = 7;
 const int COLUMN_WIDTH_USER = 8;
-const int COLUMN_WIDTH_DEV = 15;
+const int MAX_COLUMN_WIDTH_DEV = 15;
+const int MIN_COLUMN_WIDTH_DEV = 5;
 const int COLUMN_WIDTH_SENT = 11;
 const int COLUMN_WIDTH_RECEIVED = 11;
 const int COLUMN_WIDTH_UNIT = 6;
@@ -79,16 +80,16 @@ public:
     assert(m_pid >= 0);
   }
 
-  void show(int row, unsigned int proglen);
+  void show(int row, unsigned int proglen, unsigned int devlen);
   void log();
 
   double sent_value;
   double recv_value;
+  const char *devicename;
 
 private:
   const char *m_name;
   const char *m_cmdline;
-  const char *devicename;
   pid_t m_pid;
   uid_t m_uid;
 };
@@ -175,7 +176,7 @@ static void mvaddstr_truncate_cmdline(int row, int col, const char *progname,
   }
 }
 
-void Line::show(int row, unsigned int proglen) {
+void Line::show(int row, unsigned int proglen,unsigned int devlen) {
   assert(m_pid >= 0);
   assert(m_pid <= PID_MAX);
 
@@ -183,7 +184,7 @@ void Line::show(int row, unsigned int proglen) {
   const int column_offset_user = column_offset_pid + COLUMN_WIDTH_PID + 1;
   const int column_offset_program = column_offset_user + COLUMN_WIDTH_USER + 1;
   const int column_offset_dev = column_offset_program + proglen + 2;
-  const int column_offset_sent = column_offset_dev + COLUMN_WIDTH_DEV + 1;
+  const int column_offset_sent = column_offset_dev + devlen + 1;
   const int column_offset_received = column_offset_sent + COLUMN_WIDTH_SENT + 1;
   const int column_offset_unit =
       column_offset_received + COLUMN_WIDTH_RECEIVED + 1;
@@ -334,21 +335,38 @@ void show_ncurses(Line *lines[], int nproc) {
   if (cols > PROGNAME_WIDTH)
     cols = PROGNAME_WIDTH;
 
-  proglen = cols - 65;
+
+ //issue #110 - dynamic length devicename
+ int devlen = MIN_COLUMN_WIDTH_DEV; int curlen;
+
+ for (int i = 0; i < nproc; i++) {
+    if (i + 3 < rows)
+	{
+		curlen = strlen(lines[i]->devicename);
+		if(curlen > devlen)
+			curlen = devlen;
+	}
+ }
+
+ if(devlen > MAX_COLUMN_WIDTH_DEV)
+	devlen = MAX_COLUMN_WIDTH_DEV;
+  
+
+  proglen = cols - 50 - devlen;
 
   erase();
   mvprintw(0, 0, "%s", caption->c_str());
   attron(A_REVERSE);
   mvprintw(2, 0,
            "    PID USER     %-*.*s  %-*.*s       SENT      RECEIVED       ",
-           proglen, proglen, "PROGRAM",15,15,"DEV");
+           proglen, proglen, "PROGRAM",devlen,devlen,"DEV");
   attroff(A_REVERSE);
 
   /* print them */
   int i;
   for (i = 0; i < nproc; i++) {
     if (i + 3 < rows)
-      lines[i]->show(i + 3, proglen);
+      lines[i]->show(i + 3, proglen,devlen);
     recv_global += lines[i]->recv_value;
     sent_global += lines[i]->sent_value;
     delete lines[i];
@@ -356,7 +374,7 @@ void show_ncurses(Line *lines[], int nproc) {
   attron(A_REVERSE);
   int totalrow = std::min(rows - 1, 3 + 1 + i);
   mvprintw(totalrow, 0, "  TOTAL        %-*.*s %-*.*s    %11.3f %11.3f ",
-           proglen, proglen, "", 15,15, "", sent_global, recv_global);
+           proglen, proglen, "", devlen,devlen, "", sent_global, recv_global);
   if (viewMode == VIEWMODE_KBPS) {
     mvprintw(3 + 1 + i, cols - COLUMN_WIDTH_UNIT, "KB/sec ");
   } else if (viewMode == VIEWMODE_TOTAL_B) {
