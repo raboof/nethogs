@@ -63,7 +63,6 @@ bool showcommandline = false;
 // viewMode: kb/s or total
 int viewMode = VIEWMODE_KBPS;
 const char version[] = " version " VERSION;
-
 timeval curtime;
 
 bool local_addr::contains(const in_addr_t &n_addr) {
@@ -143,7 +142,7 @@ int process_tcp(u_char *userdata, const dp_header *header,
     return true;
   }
 
-  Connection *connection = findConnection(packet);
+  Connection *connection = findConnection(packet, IPPROTO_TCP);
 
   if (connection != NULL) {
     /* add packet to the connection */
@@ -195,7 +194,7 @@ int process_udp(u_char *userdata, const dp_header *header,
   // if (DEBUG)
   //	std::cout << "Got packet from " << packet->gethashstring() << std::endl;
 
-  Connection *connection = findConnection(packet);
+  Connection *connection = findConnection(packet, IPPROTO_UDP);
 
   if (connection != NULL) {
     /* add packet to the connection */
@@ -203,7 +202,8 @@ int process_udp(u_char *userdata, const dp_header *header,
   } else {
     /* else: unknown connection, create new */
     connection = new Connection(packet);
-    getProcess(connection, args->device);
+    unknownudp->connections = new ConnList(connection, unknownudp->connections);
+    //getProcess(connection, args->device);
   }
   delete packet;
 

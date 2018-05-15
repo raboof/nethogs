@@ -32,7 +32,7 @@
 #include "decpcap.h"
 
 #define DP_DEBUG 0
-
+bool catchall = false;
 /* functions to set up a handle (which is basically just a pcap handle) */
 
 struct dp_handle *dp_fillhandle(pcap_t *phandle) {
@@ -139,6 +139,20 @@ void dp_parse_tcp(struct dp_handle *handle, const dp_header *header,
   // TODO: maybe `pass on' payload to lower-level protocol parsing
 }
 
+void dp_parse_udp(struct dp_handle *handle, const dp_header *header,
+                  const u_char *packet) {
+  // const struct tcphdr * tcp = (struct tcphdr *) packet;
+  // u_char * payload = (u_char *) packet + sizeof (struct tcphdr);
+
+  if (handle->callback[dp_packet_udp] != NULL) {
+    int done =
+        (handle->callback[dp_packet_udp])(handle->userdata, header, packet);
+    if (done)
+      return;
+  }
+  // TODO: maybe `pass on' payload to lower-level protocol parsing
+}
+
 void dp_parse_ip(struct dp_handle *handle, const dp_header *header,
                  const u_char *packet) {
   const struct ip *ip = (struct ip *)packet;
@@ -156,6 +170,11 @@ void dp_parse_ip(struct dp_handle *handle, const dp_header *header,
   switch (ip->ip_p) {
   case IPPROTO_TCP:
     dp_parse_tcp(handle, header, payload);
+    break;
+  case IPPROTO_UDP:
+    if(catchall)
+      dp_parse_udp(handle, header, payload);
+    //fprintf(stdout, "udp packet...................\n");
     break;
   default:
     // TODO: maybe support for non-tcp IP packets
@@ -178,6 +197,11 @@ void dp_parse_ip6(struct dp_handle *handle, const dp_header *header,
   case IPPROTO_TCP:
     dp_parse_tcp(handle, header, payload);
     break;
+  case IPPROTO_UDP:
+    if(catchall)
+      dp_parse_udp(handle, header, payload);
+    //fprintf(stdout, "udp packet...................\n");
+    break;
   default:
     // TODO: maybe support for non-tcp ipv6 packets
     break;
@@ -194,6 +218,7 @@ void dp_parse_ethernet(struct dp_handle *handle, const dp_header *header,
   if (handle->callback[dp_packet_ethernet] != NULL) {
     int done = (handle->callback[dp_packet_ethernet])(handle->userdata, header,
                                                       packet);
+
 
     /* return if handle decides we're done */
     if (done)

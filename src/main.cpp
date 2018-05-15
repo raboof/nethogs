@@ -27,7 +27,7 @@ static void help(bool iserror) {
   // output << "usage: nethogs [-V] [-b] [-d seconds] [-t] [-p] [-f (eth|ppp))]
   // [device [device [device ...]]]\n";
   output << "usage: nethogs [-V] [-h] [-b] [-d seconds] [-v mode] [-c count] "
-            "[-t] [-p] [-s] [-a] [-l] [-f filter] "
+            "[-t] [-p] [-s] [-a] [-l] [-f filter] [-C catchall]"
             "[device [device [device ...]]]\n";
   output << "		-V : prints version.\n";
   output << "		-h : prints this help.\n";
@@ -54,6 +54,7 @@ static void help(bool iserror) {
   output << " s: sort by SENT traffic\n";
   output << " r: sort by RECEIVE traffic\n";
   output << " l: display command line\n";
+  output << " C: capture all packets\n";
   output << " m: switch between total (KB, B, MB) and KB/s mode\n";
 }
 
@@ -139,7 +140,7 @@ int main(int argc, char **argv) {
   char *filter = NULL;
 
   int opt;
-  while ((opt = getopt(argc, argv, "Vhbtpsd:v:c:laf:")) != -1) {
+  while ((opt = getopt(argc, argv, "Vhbtpsd:v:c:laf:C")) != -1) {
     switch (opt) {
     case 'V':
       versiondisplay();
@@ -178,12 +179,16 @@ int main(int argc, char **argv) {
     case 'f':
       filter = optarg;
       break;
+    case 'C':
+      catchall = true;
+      break;
     default:
       help(true);
       exit(EXIT_FAILURE);
     }
   }
 
+  process_init();
   device *devices = get_devices(argc - optind, argv + optind, all);
   if (devices == NULL)
     forceExit(false, "No devices to monitor. Use '-a' to allow monitoring "
