@@ -45,7 +45,7 @@ static void help(bool iserror) {
   output << "		-l : display command line.\n";
   output << "		-a : monitor all devices, even loopback/stopped ones.\n";
   output << "		-C : capture TCP and UDP.\n";  
-  output << "		-f : EXPRIMENTAL: specify string pcap filter (like tcpdump)."
+  output << "		-f : EXPERIMENTAL: specify string pcap filter (like tcpdump)."
             " This may be removed or changed in a future version.\n";
   output << "		device : device(s) to monitor. default is all "
             "interfaces up and running excluding loopback\n";
