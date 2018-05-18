@@ -27,7 +27,7 @@ static void help(bool iserror) {
   // output << "usage: nethogs [-V] [-b] [-d seconds] [-t] [-p] [-f (eth|ppp))]
   // [device [device [device ...]]]\n";
   output << "usage: nethogs [-V] [-h] [-b] [-d seconds] [-v mode] [-c count] "
-            "[-t] [-p] [-s] [-a] [-l] [-f filter] [-C catchall]"
+            "[-t] [-p] [-s] [-a] [-l] [-f filter] [-C]"
             "[device [device [device ...]]]\n";
   output << "		-V : prints version.\n";
   output << "		-h : prints this help.\n";
@@ -44,7 +44,8 @@ static void help(bool iserror) {
   output << "		-s : sort output by sent column.\n";
   output << "		-l : display command line.\n";
   output << "		-a : monitor all devices, even loopback/stopped ones.\n";
-  output << "		-f : EXPERIMENTAL: specify string pcap filter (like tcpdump)."
+  output << "		-C : capture TCP and UDP.\n";  
+  output << "		-f : EXPRIMENTAL: specify string pcap filter (like tcpdump)."
             " This may be removed or changed in a future version.\n";
   output << "		device : device(s) to monitor. default is all "
             "interfaces up and running excluding loopback\n";
@@ -54,7 +55,6 @@ static void help(bool iserror) {
   output << " s: sort by SENT traffic\n";
   output << " r: sort by RECEIVE traffic\n";
   output << " l: display command line\n";
-  output << " C: capture all packets\n";
   output << " m: switch between total (KB, B, MB) and KB/s mode\n";
 }
 
@@ -133,7 +133,6 @@ void clean_up() {
 }
 
 int main(int argc, char **argv) {
-  process_init();
 
   int promisc = 0;
   bool all = false;

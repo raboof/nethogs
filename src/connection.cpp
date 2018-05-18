@@ -155,70 +155,61 @@ void Connection::add(Packet *packet) {
 Connection *findConnectionWithMatchingSource(Packet *packet, short int packettype) {
   assert(packet->Outgoing());
 
+  ConnList *current = NULL;
   switch(packettype)
   {
     case IPPROTO_TCP:
-      {   //std::cout<<"hell.......o"<<std::endl;
-          ConnList *current = connections;
-          while (current != NULL) {
-            /* the reference packet is always outgoing */
-            if (packet->matchSource(current->getVal()->refpacket)) {
-              return current->getVal();
-            }
-
-            current = current->getNext();
-          }
-          return NULL;
+      {
+          current = connections;
+          break;
       }
-      break;
 
     case IPPROTO_UDP:
       {
-          ConnList *current = unknownudp->connections;
-          while (current != NULL) {
-            /* the reference packet is always outgoing */
-            if (packet->matchSource(current->getVal()->refpacket)) {
-              return current->getVal();
-            }
-
-            current = current->getNext();
-          }
-          return NULL;
+          current = unknownudp->connections;
+          break;
       }
-      break;
 
   }
+
+  while (current != NULL) {
+    /* the reference packet is always outgoing */
+    if (packet->matchSource(current->getVal()->refpacket)) {
+      return current->getVal();
+    }
+
+    current = current->getNext();
+  }
+  
+  return NULL;
   
 }
 
 Connection *findConnectionWithMatchingRefpacketOrSource(Packet *packet, short int packettype) {
   
+  ConnList *current = NULL;
   switch(packettype)
   {
     case IPPROTO_TCP:
-      {  ConnList *current = connections;
-         while (current != NULL) {
-            /* the reference packet is always *outgoing* */
-            if (packet->match(current->getVal()->refpacket)) {
-              return current->getVal();
-            }
-
-            current = current->getNext();
-         }
+      {  
+        current = connections;
+        break;
       }
-         break;
+
     case IPPROTO_UDP:
-      {  ConnList *current = unknownudp->connections;
-        while (current != NULL) {
-          /* the reference packet is always *outgoing* */
-          if (packet->match(current->getVal()->refpacket)) {
-            return current->getVal();
-          }
-
-          current = current->getNext();
-        }
+      {  
+          current = unknownudp->connections;
+          break;
+        
       }
-      break;
+  }
+
+  while (current != NULL) {
+    /* the reference packet is always *outgoing* */
+    if (packet->match(current->getVal()->refpacket)) {
+      return current->getVal();
+    }
+    current = current->getNext();
   }
 
   return findConnectionWithMatchingSource(packet, packettype);
