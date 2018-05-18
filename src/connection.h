@@ -101,6 +101,6 @@ private:
 
 /* Find the connection this packet belongs to */
 /* (the calling code may free the packet afterwards) */
-Connection *findConnection(Packet *packet);
+Connection *findConnection(Packet *packet, short int packettype);
 
 #endif

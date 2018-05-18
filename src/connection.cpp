@@ -34,6 +34,7 @@
 #include "process.h"
 
 ConnList *connections = NULL;
+extern Process *unknownudp;
 
 void PackList::add(Packet *p) {
   if (content == NULL) {
@@ -151,10 +152,26 @@ void Connection::add(Packet *packet) {
   }
 }
 
-Connection *findConnectionWithMatchingSource(Packet *packet) {
+Connection *findConnectionWithMatchingSource(Packet *packet, short int packettype) {
   assert(packet->Outgoing());
 
-  ConnList *current = connections;
+  ConnList *current = NULL;
+  switch(packettype)
+  {
+    case IPPROTO_TCP:
+      {
+          current = connections;
+          break;
+      }
+
+    case IPPROTO_UDP:
+      {
+          current = unknownudp->connections;
+          break;
+      }
+
+  }
+
   while (current != NULL) {
     /* the reference packet is always outgoing */
     if (packet->matchSource(current->getVal()->refpacket)) {
@@ -163,20 +180,39 @@ Connection *findConnectionWithMatchingSource(Packet *packet) {
 
     current = current->getNext();
   }
+  
   return NULL;
+  
 }
 
-Connection *findConnectionWithMatchingRefpacketOrSource(Packet *packet) {
-  ConnList *current = connections;
+Connection *findConnectionWithMatchingRefpacketOrSource(Packet *packet, short int packettype) {
+  
+  ConnList *current = NULL;
+  switch(packettype)
+  {
+    case IPPROTO_TCP:
+      {  
+        current = connections;
+        break;
+      }
+
+    case IPPROTO_UDP:
+      {  
+          current = unknownudp->connections;
+          break;
+        
+      }
+  }
+
   while (current != NULL) {
     /* the reference packet is always *outgoing* */
     if (packet->match(current->getVal()->refpacket)) {
       return current->getVal();
     }
-
     current = current->getNext();
   }
-  return findConnectionWithMatchingSource(packet);
+
+  return findConnectionWithMatchingSource(packet, packettype);
 }
 
 /*
@@ -184,13 +220,13 @@ Connection *findConnectionWithMatchingRefpacketOrSource(Packet *packet) {
  * a packet belongs to a connection if it matches
  * to its reference packet
  */
-Connection *findConnection(Packet *packet) {
+Connection *findConnection(Packet *packet, short int packettype) {
   if (packet->Outgoing())
-    return findConnectionWithMatchingRefpacketOrSource(packet);
+    return findConnectionWithMatchingRefpacketOrSource(packet, packettype);
   else {
     Packet *invertedPacket = packet->newInverted();
     Connection *result =
-        findConnectionWithMatchingRefpacketOrSource(invertedPacket);
+        findConnectionWithMatchingRefpacketOrSource(invertedPacket, packettype);
 
     delete invertedPacket;
     return result;

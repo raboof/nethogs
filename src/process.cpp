@@ -41,7 +41,7 @@
 #include "conninode.h"
 
 extern timeval curtime;
-
+extern bool catchall;
 /*
  * connection-inode table. takes information from /proc/net/tcp.
  * key contains source ip, source port, destination ip, destination
@@ -72,11 +72,15 @@ float tokbps(u_int64_t bytes) { return (((double)bytes) / PERIOD) / 1024; }
 
 void process_init() {
   unknowntcp = new Process(0, "", "unknown TCP");
-  // unknownudp = new Process (0, "", "unknown UDP");
-  // unknownip = new Process (0, "", "unknown IP");
   processes = new ProcList(unknowntcp, NULL);
-  // processes = new ProcList (unknownudp, processes);
-  // processes = new ProcList (unknownip, processes);
+
+  if(catchall)
+  { 
+    unknownudp = new Process (0, "", "unknown UDP");
+    processes = new ProcList (unknownudp, processes);
+    // unknownip = new Process (0, "", "unknown IP");
+    // processes = new ProcList (unknownip, processes);
+  }
 }
 
 int Process::getLastPacket() {

@@ -25,9 +25,10 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <pcap.h>
+#include <stdbool.h>
 
 #define DP_ERRBUF_SIZE PCAP_ERRBUF_SIZE
-
+extern bool catchall;
 /* definitions */
 
 enum dp_packet_type {
