@@ -259,10 +259,14 @@ static void nethogsmonitor_handle_update(NethogsMonitorCallback cb) {
 static void nethogsmonitor_clean_up() {
   // clean up
   handle *current_handle = handles;
+  handle *rem;
   while (current_handle != NULL) {
     pcap_close(current_handle->content->pcap_handle);
+    rem = current_handle;
     current_handle = current_handle->next;
+    free(rem);
   }
+  handles = NULL;
 
   // close file descriptors
   for (std::vector<int>::const_iterator it = pc_loop_fd_list.begin();
