@@ -35,7 +35,7 @@ static void help(bool iserror) {
   output << "		-d : delay for update refresh rate in seconds. default "
             "is 1.\n";
   output << "		-v : view mode (0 = KB/s, 1 = total KB, 2 = total B, 3 "
-            "= total MB). default is 0.\n";
+            "= total MB, 4 = MB/s, 5 = GB/s). default is 0.\n";
   output << "		-c : number of updates. default is 0 (unlimited).\n";
   output << "		-t : tracemode.\n";
   // output << "		-f : format of packets on interface, default is
@@ -44,7 +44,7 @@ static void help(bool iserror) {
   output << "		-s : sort output by sent column.\n";
   output << "		-l : display command line.\n";
   output << "		-a : monitor all devices, even loopback/stopped ones.\n";
-  output << "		-C : capture TCP and UDP.\n";  
+  output << "		-C : capture TCP and UDP.\n";
   output << "		-f : EXPERIMENTAL: specify string pcap filter (like tcpdump)."
             " This may be removed or changed in a future version.\n";
   output << "		device : device(s) to monitor. default is all "
@@ -55,7 +55,7 @@ static void help(bool iserror) {
   output << " s: sort by SENT traffic\n";
   output << " r: sort by RECEIVE traffic\n";
   output << " l: display command line\n";
-  output << " m: switch between total (KB, B, MB) and KB/s mode\n";
+  output << " m: switch between total (KB, B, MB) and throughput (KB/s, MB/s, GB/s) mode\n";
 }
 
 void quit_cb(int /* i */) {

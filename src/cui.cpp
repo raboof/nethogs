@@ -64,6 +64,9 @@ const char *COLUMN_FORMAT_PID = "%7d";
 const char *COLUMN_FORMAT_SENT = "%11.3f";
 const char *COLUMN_FORMAT_RECEIVED = "%11.3f";
 
+// All descriptions are padded to 6 characters in length with spaces
+const char* const desc_view_mode[VIEWMODE_COUNT] = {"KB/sec", "KB    ", "B     ", "MB    ", "MB/sec", "GB/sec"};
+
 class Line {
 public:
   Line(const char *name, const char *cmdline, double n_recv_value,
@@ -207,15 +210,7 @@ void Line::show(int row, unsigned int proglen, unsigned int devlen) {
   mvprintw(row, column_offset_sent, COLUMN_FORMAT_SENT, sent_value);
 
   mvprintw(row, column_offset_received, COLUMN_FORMAT_RECEIVED, recv_value);
-  if (viewMode == VIEWMODE_KBPS) {
-    mvaddstr(row, column_offset_unit, "KB/sec");
-  } else if (viewMode == VIEWMODE_TOTAL_MB) {
-    mvaddstr(row, column_offset_unit, "MB    ");
-  } else if (viewMode == VIEWMODE_TOTAL_KB) {
-    mvaddstr(row, column_offset_unit, "KB    ");
-  } else if (viewMode == VIEWMODE_TOTAL_B) {
-    mvaddstr(row, column_offset_unit, "B     ");
-  }
+  mvaddstr(row, column_offset_unit, desc_view_mode[viewMode]);
 }
 
 void Line::log() {
@@ -239,7 +234,7 @@ int get_devlen(Line *lines[], int nproc, int rows)
 
  if(devlen > MAX_COLUMN_WIDTH_DEV)
 	devlen = MAX_COLUMN_WIDTH_DEV;
-  
+
  return devlen;
 }
 
@@ -355,8 +350,8 @@ void show_ncurses(Line *lines[], int nproc) {
     cols = PROGNAME_WIDTH;
 
 
- //issue #110 - maximum devicename length min=5, max=15 
- int devlen = get_devlen(lines, nproc, rows);  
+ //issue #110 - maximum devicename length min=5, max=15
+ int devlen = get_devlen(lines, nproc, rows);
 
   proglen = cols - 50 - devlen;
 
@@ -381,15 +376,7 @@ void show_ncurses(Line *lines[], int nproc) {
   int totalrow = std::min(rows - 1, 3 + 1 + i);
   mvprintw(totalrow, 0, "  TOTAL        %-*.*s %-*.*s    %11.3f %11.3f ",
            proglen, proglen, "", devlen,devlen, "", sent_global, recv_global);
-  if (viewMode == VIEWMODE_KBPS) {
-    mvprintw(3 + 1 + i, cols - COLUMN_WIDTH_UNIT, "KB/sec ");
-  } else if (viewMode == VIEWMODE_TOTAL_B) {
-    mvprintw(3 + 1 + i, cols - COLUMN_WIDTH_UNIT, "B      ");
-  } else if (viewMode == VIEWMODE_TOTAL_KB) {
-    mvprintw(3 + 1 + i, cols - COLUMN_WIDTH_UNIT, "KB     ");
-  } else if (viewMode == VIEWMODE_TOTAL_MB) {
-    mvprintw(3 + 1 + i, cols - COLUMN_WIDTH_UNIT, "MB     ");
-  }
+  mvprintw(3 + 1 + i, cols - COLUMN_WIDTH_UNIT, desc_view_mode[viewMode]);
   attroff(A_REVERSE);
   mvprintw(totalrow + 1, 0, "");
   refresh();
@@ -400,7 +387,7 @@ void do_refresh() {
   refreshconninode();
   refreshcount++;
 
-  if (viewMode == VIEWMODE_KBPS) {
+  if (viewMode == VIEWMODE_KBPS  || viewMode == VIEWMODE_MBPS || viewMode == VIEWMODE_GBPS) {
     remove_timed_out_processes();
   }
 
@@ -425,6 +412,10 @@ void do_refresh() {
 
     if (viewMode == VIEWMODE_KBPS) {
       curproc->getVal()->getkbps(&value_recv, &value_sent);
+    } else if (viewMode == VIEWMODE_MBPS) {
+      curproc->getVal()->getmbps(&value_recv, &value_sent);
+    } else if (viewMode == VIEWMODE_GBPS) {
+      curproc->getVal()->getgbps(&value_recv, &value_sent);
     } else if (viewMode == VIEWMODE_TOTAL_KB) {
       curproc->getVal()->gettotalkb(&value_recv, &value_sent);
     } else if (viewMode == VIEWMODE_TOTAL_MB) {

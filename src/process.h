@@ -93,6 +93,8 @@ public:
 
   void gettotal(u_int64_t *recvd, u_int64_t *sent);
   void getkbps(float *recvd, float *sent);
+  void getmbps(float *recvd, float *sent);
+  void getgbps(float *recvd, float *sent);
   void gettotalmb(float *recvd, float *sent);
   void gettotalkb(float *recvd, float *sent);
   void gettotalb(float *recvd, float *sent);
