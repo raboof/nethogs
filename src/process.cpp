@@ -65,17 +65,23 @@ Process *unknownudp;
 Process *unknownip;
 ProcList *processes;
 
-float tomb(u_int64_t bytes) { return ((double)bytes) / 1024 / 1024; }
-float tokb(u_int64_t bytes) { return ((double)bytes) / 1024; }
+#define KB (1UL << 10)
+#define MB (1UL << 20)
+#define GB (1UL << 30)
 
-float tokbps(u_int64_t bytes) { return (((double)bytes) / PERIOD) / 1024; }
+float tomb(u_int64_t bytes) { return ((double)bytes) / MB; }
+float tokb(u_int64_t bytes) { return ((double)bytes) / KB; }
+
+float tokbps(u_int64_t bytes) { return (((double)bytes) / PERIOD) / KB; }
+float tombps(u_int64_t bytes) { return (((double)bytes) / PERIOD) / MB; }
+float togbps(u_int64_t bytes) { return (((double)bytes) / PERIOD) / GB; }
 
 void process_init() {
   unknowntcp = new Process(0, "", "unknown TCP");
   processes = new ProcList(unknowntcp, NULL);
 
   if(catchall)
-  { 
+  {
     unknownudp = new Process (0, "", "unknown UDP");
     processes = new ProcList (unknownudp, processes);
     // unknownip = new Process (0, "", "unknown IP");
@@ -96,25 +102,23 @@ int Process::getLastPacket() {
   return lastpacket;
 }
 
-/** Get the kb/s values for this process */
-void Process::getkbps(float *recvd, float *sent) {
-  u_int64_t sum_sent = 0, sum_recv = 0;
-
-  /* walk though all this process's connections, and sum
+/** get total values for this process for only active connections */
+static void sum_active_connections(Process* process_ptr, u_int64_t& sum_sent, u_int64_t& sum_recv) {
+  /* walk though all process_ptr process's connections, and sum
    * them up */
-  ConnList *curconn = this->connections;
+  ConnList *curconn = process_ptr->connections;
   ConnList *previous = NULL;
   while (curconn != NULL) {
     if (curconn->getVal()->getLastPacket() <= curtime.tv_sec - CONNTIMEOUT) {
       /* capture sent and received totals before deleting */
-      this->sent_by_closed_bytes += curconn->getVal()->sumSent;
-      this->rcvd_by_closed_bytes += curconn->getVal()->sumRecv;
+      process_ptr->sent_by_closed_bytes += curconn->getVal()->sumSent;
+      process_ptr->rcvd_by_closed_bytes += curconn->getVal()->sumRecv;
       /* stalled connection, remove. */
       ConnList *todelete = curconn;
       Connection *conn_todelete = curconn->getVal();
       curconn = curconn->getNext();
-      if (todelete == this->connections)
-        this->connections = curconn;
+      if (todelete == process_ptr->connections)
+        process_ptr->connections = curconn;
       if (previous != NULL)
         previous->setNext(curconn);
       delete (todelete);
@@ -128,8 +132,33 @@ void Process::getkbps(float *recvd, float *sent) {
       curconn = curconn->getNext();
     }
   }
+}
+
+/** Get the kb/s values for this process */
+void Process::getkbps(float *recvd, float *sent) {
+  u_int64_t sum_sent = 0, sum_recv = 0;
+
+  sum_active_connections(this, sum_sent, sum_recv);
   *recvd = tokbps(sum_recv);
   *sent = tokbps(sum_sent);
+}
+
+/** Get the mb/s values for this process */
+void Process::getmbps(float *recvd, float *sent) {
+  u_int64_t sum_sent = 0, sum_recv = 0;
+
+  sum_active_connections(this, sum_sent, sum_recv);
+  *recvd = tombps(sum_recv);
+  *sent = tombps(sum_sent);
+}
+
+/** Get the gb/s values for this process */
+void Process::getgbps(float *recvd, float *sent) {
+  u_int64_t sum_sent = 0, sum_recv = 0;
+
+  sum_active_connections(this, sum_sent, sum_recv);
+  *recvd = togbps(sum_recv);
+  *sent = togbps(sum_sent);
 }
 
 /** get total values for this process */
