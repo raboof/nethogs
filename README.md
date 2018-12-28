@@ -35,7 +35,7 @@ Nethogs depends on `ncurses` for the text-based interface and `libpcap` for user
 
 #### Yum-based distro's
 
-    yum install gcc-c++ libpcap-devel.x86_64 libpcap.x86_64 ncurses*
+    yum install gcc-c++ libpcap-devel.x86_64 libpcap.x86_64 ncurses\*
 
 #### Getting the source
 
