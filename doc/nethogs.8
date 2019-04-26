@@ -72,6 +72,24 @@ sort by 'sent'
 q
 quit
 .RE
+
+.SH "RUNNING WITHOUT ROOT"
+In order to be run by an unprivileged user,
+.B nethogs
+needs the
+.I cap_net_admin
+and
+.I cap_net_raw
+capabilities. These can be set on the executable by using the
+.BR setcap (8)
+command, as follows:
+.PP
+.in +4n
+.EX
+sudo setcap "cap_net_admin,cap_net_raw+pe" /usr/local/sbin/nethogs
+.EE
+.in
+
 .SH "SEE ALSO"
 .I netstat(8) tcpdump(1) pcap(3)
 .SH AUTHOR
