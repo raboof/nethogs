@@ -121,9 +121,21 @@ std::string getcmdline(pid_t pid) {
   char filename[maxfilenamelen];
 
   std::snprintf(filename, maxfilenamelen, "/proc/%d/cmdline", pid);
-
+  std::string cmdline;
   bool replace_null = false;
-  std::string cmdline = read_file(filename);
+  try {
+   cmdline = read_file(filename);
+  } catch (int e) {
+      std::fprintf(stderr, "An exception occurred. Exception Nr %i \n", e);
+      cmdline = "";
+  }
+
+  if (cmdline.empty() || cmdline[cmdline.length() - 1] != '\0') {
+    // invalid content of cmdline file. Add null char to allow further
+    // processing.
+    cmdline.append(1, '\0');
+    return cmdline;
+  }
 
   // join parameters, keep prgname separate, don't overwrite trailing null
   for (size_t idx = 0; idx < (cmdline.length() - 1); idx++) {
@@ -134,13 +146,6 @@ std::string getcmdline(pid_t pid) {
       replace_null = true;
     }
   }
-
-  if (cmdline.length() == 0 || (cmdline[cmdline.length() - 1] != 0x00)) {
-    // invalid content of cmdline file. Add null char to allow further
-    // processing.
-    cmdline.append("\0");
-  }
-
   return cmdline;
 }
 
