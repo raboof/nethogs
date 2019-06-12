@@ -21,24 +21,24 @@
  */
 
 #include <iostream>
-#include <strings.h>
-#include <string>
 #include <ncurses.h>
+#include <string>
+#include <strings.h>
 #if !defined(__APPLE__) && !defined(__FreeBSD__)
 #include <asm/types.h>
 #endif
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <unistd.h>
-#include <sys/socket.h>
-#include <stdlib.h>
-#include <pwd.h>
 #include <map>
+#include <pwd.h>
+#include <stdlib.h>
+#include <sys/socket.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <unistd.h>
 
-#include "process.h"
-#include "nethogs.h"
-#include "inode2prog.h"
 #include "conninode.h"
+#include "inode2prog.h"
+#include "nethogs.h"
+#include "process.h"
 
 extern timeval curtime;
 extern bool catchall;
@@ -80,10 +80,9 @@ void process_init() {
   unknowntcp = new Process(0, "", "unknown TCP");
   processes = new ProcList(unknowntcp, NULL);
 
-  if(catchall)
-  {
-    unknownudp = new Process (0, "", "unknown UDP");
-    processes = new ProcList (unknownudp, processes);
+  if (catchall) {
+    unknownudp = new Process(0, "", "unknown UDP");
+    processes = new ProcList(unknownudp, processes);
     // unknownip = new Process (0, "", "unknown IP");
     // processes = new ProcList (unknownip, processes);
   }
@@ -103,7 +102,8 @@ int Process::getLastPacket() {
 }
 
 /** get total values for this process for only active connections */
-static void sum_active_connections(Process* process_ptr, u_int64_t& sum_sent, u_int64_t& sum_recv) {
+static void sum_active_connections(Process *process_ptr, u_int64_t &sum_sent,
+                                   u_int64_t &sum_recv) {
   /* walk though all process_ptr process's connections, and sum
    * them up */
   ConnList *curconn = process_ptr->connections;
@@ -313,8 +313,8 @@ Process *getProcess(Connection *connection, const char *devicename) {
     // no? refresh and check conn/inode table
     if (bughuntmode) {
       std::cout << "?  new connection not in connection-to-inode table before "
-                   "refresh, hash " << connection->refpacket->gethashstring()
-                << std::endl;
+                   "refresh, hash "
+                << connection->refpacket->gethashstring() << std::endl;
     }
 // refresh the inode->pid table first. Presumably processing the renewed
 // connection->inode table
@@ -390,7 +390,8 @@ void procclean() {
 void remove_timed_out_processes() {
   ProcList *previousproc = NULL;
 
-  for (ProcList *curproc = processes; curproc != NULL; curproc = curproc->next) {
+  for (ProcList *curproc = processes; curproc != NULL;
+       curproc = curproc->next) {
     if ((curproc->getVal()->getLastPacket() + PROCESSTIMEOUT <=
          curtime.tv_sec) &&
         (curproc->getVal() != unknowntcp) &&

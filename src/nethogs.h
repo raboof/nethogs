@@ -23,12 +23,12 @@
 #ifndef __NETHOGS_H
 #define __NETHOGS_H
 
-#include <netinet/in.h>
-#include <sys/types.h>
-#include <sys/socket.h>
 #include <arpa/inet.h>
 #include <cassert>
 #include <cstring>
+#include <netinet/in.h>
+#include <sys/socket.h>
+#include <sys/types.h>
 #ifdef __APPLE__
 #include <sys/malloc.h>
 #elif __FreeBSD__

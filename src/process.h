@@ -23,9 +23,9 @@
 #ifndef __PROCESS_H
 #define __PROCESS_H
 
-#include <cassert>
-#include "nethogs.h"
 #include "connection.h"
+#include "nethogs.h"
+#include <cassert>
 
 extern bool tracemode;
 extern bool bughuntmode;

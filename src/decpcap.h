@@ -22,10 +22,10 @@
 #ifndef __DECPCAP_H
 #define __DECPCAP_H
 
-#include <stdlib.h>
-#include <stdio.h>
 #include <pcap.h>
 #include <stdbool.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 #define DP_ERRBUF_SIZE PCAP_ERRBUF_SIZE
 extern bool catchall;

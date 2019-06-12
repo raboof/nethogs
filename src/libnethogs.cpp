@@ -3,13 +3,13 @@ extern "C" {
 }
 
 #include "nethogs.cpp"
-#include <iostream>
-#include <memory>
-#include <map>
-#include <vector>
 #include <cstring>
-#include <fcntl.h>
 #include <errno.h>
+#include <fcntl.h>
+#include <iostream>
+#include <map>
+#include <memory>
+#include <vector>
 
 //////////////////////////////
 extern ProcList *processes;
@@ -72,8 +72,8 @@ static bool wait_for_next_trigger() {
   return true;
 }
 
-static int nethogsmonitor_init(int devc, char **devicenames,
-                               bool all, char *filter) {
+static int nethogsmonitor_init(int devc, char **devicenames, bool all,
+                               char *filter) {
   process_init();
 
   device *devices = get_devices(devc, devicenames, all);
@@ -100,9 +100,8 @@ static int nethogsmonitor_init(int devc, char **devicenames,
     }
 
     char errbuf[PCAP_ERRBUF_SIZE];
-    dp_handle *newhandle =
-        dp_open_live(current_dev->name, BUFSIZ, promiscuous,
-                     100, filter, errbuf);
+    dp_handle *newhandle = dp_open_live(current_dev->name, BUFSIZ, promiscuous,
+                                        100, filter, errbuf);
     if (newhandle != NULL) {
       dp_addcb(newhandle, dp_packet_ip, process_ip);
       dp_addcb(newhandle, dp_packet_ip6, process_ip6);

@@ -3,11 +3,11 @@
 #include <vector>
 
 #ifdef __linux__
+#include <linux/capability.h>
 #include <linux/limits.h>
-#include <unistd.h>
 #include <sys/types.h>
 #include <sys/xattr.h>
-#include <linux/capability.h>
+#include <unistd.h>
 #endif
 
 // The self_pipe is used to interrupt the select() in the main loop
@@ -43,9 +43,11 @@ static void help(bool iserror) {
   output << "		-p : sniff in promiscious mode (not recommended).\n";
   output << "		-s : sort output by sent column.\n";
   output << "		-l : display command line.\n";
-  output << "		-a : monitor all devices, even loopback/stopped ones.\n";
+  output << "		-a : monitor all devices, even loopback/stopped "
+            "ones.\n";
   output << "		-C : capture TCP and UDP.\n";
-  output << "		-f : EXPERIMENTAL: specify string pcap filter (like tcpdump)."
+  output << "		-f : EXPERIMENTAL: specify string pcap filter (like "
+            "tcpdump)."
             " This may be removed or changed in a future version.\n";
   output << "		device : device(s) to monitor. default is all "
             "interfaces up and running excluding loopback\n";
@@ -55,7 +57,8 @@ static void help(bool iserror) {
   output << " s: sort by SENT traffic\n";
   output << " r: sort by RECEIVE traffic\n";
   output << " l: display command line\n";
-  output << " m: switch between total (KB, B, MB) and throughput (KB/s, MB/s, GB/s) mode\n";
+  output << " m: switch between total (KB, B, MB) and throughput (KB/s, MB/s, "
+            "GB/s) mode\n";
 }
 
 void quit_cb(int /* i */) {
@@ -161,7 +164,7 @@ int main(int argc, char **argv) {
       sortRecv = false;
       break;
     case 'd':
-      refreshdelay = (time_t) atoi(optarg);
+      refreshdelay = (time_t)atoi(optarg);
       break;
     case 'v':
       viewMode = atoi(optarg) % VIEWMODE_COUNT;
@@ -201,7 +204,7 @@ int main(int argc, char **argv) {
 #ifdef __linux__
     char exe_path[PATH_MAX];
     ssize_t len;
-    unsigned int caps[5] = {0,0,0,0,0};
+    unsigned int caps[5] = {0, 0, 0, 0, 0};
 
     if ((len = readlink("/proc/self/exe", exe_path, PATH_MAX)) == -1)
       forceExit(false, "Failed to locate nethogs binary.");
@@ -209,8 +212,11 @@ int main(int argc, char **argv) {
 
     getxattr(exe_path, "security.capability", (char *)caps, sizeof(caps));
 
-    if ((((caps[1] >> CAP_NET_ADMIN) & 1) != 1) || (((caps[1] >> CAP_NET_RAW) & 1) != 1))
-      forceExit(false, "To run nethogs without being root you need to enable capabilities on the program (cap_net_admin, cap_net_raw), see the documentation for details.");
+    if ((((caps[1] >> CAP_NET_ADMIN) & 1) != 1) ||
+        (((caps[1] >> CAP_NET_RAW) & 1) != 1))
+      forceExit(false, "To run nethogs without being root you need to enable "
+                       "capabilities on the program (cap_net_admin, "
+                       "cap_net_raw), see the documentation for details.");
 #else
     forceExit(false, "You need to be root to run NetHogs!");
 #endif
@@ -298,11 +304,12 @@ int main(int argc, char **argv) {
       int retval = dp_dispatch(current_handle->content, -1, (u_char *)userdata,
                                sizeof(struct dpargs));
       if (retval == -1)
-        std::cerr << "Error dispatching for device " << current_handle->devicename <<
-          ": " << dp_geterr(current_handle->content) << std::endl;
+        std::cerr << "Error dispatching for device "
+                  << current_handle->devicename << ": "
+                  << dp_geterr(current_handle->content) << std::endl;
       else if (retval < 0)
-        std::cerr << "Error dispatching for device " << current_handle->devicename <<
-          ": " << retval << std::endl;
+        std::cerr << "Error dispatching for device "
+                  << current_handle->devicename << ": " << retval << std::endl;
       else if (retval != 0)
         packets_read = true;
     }
