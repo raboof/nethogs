@@ -5,8 +5,8 @@
 extern "C" {
 #endif
 
-#include <stdint.h>
 #include <stdbool.h>
+#include <stdint.h>
 
 #define NETHOGS_DSO_VISIBLE __attribute__((visibility("default")))
 #define NETHOGS_DSO_HIDDEN __attribute__((visibility("hidden")))

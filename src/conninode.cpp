@@ -20,13 +20,13 @@
  *
  */
 
-#include <netinet/in.h>
-#include <map>
 #include <cstdio>
+#include <map>
+#include <netinet/in.h>
 #include <stdlib.h>
 
-#include "nethogs.h"
 #include "conninode.h"
+#include "nethogs.h"
 
 #if defined(__APPLE__) || defined(__FreeBSD__)
 #ifndef s6_addr32
@@ -73,8 +73,9 @@ void addtoconninode(char *buffer) {
   }
   unsigned long inode;
 
-  int matches = sscanf(buffer, "%*d: %64[0-9A-Fa-f]:%X %64[0-9A-Fa-f]:%X %*X "
-                               "%*X:%*X %*X:%*X %*X %*d %*d %ld %*512s\n",
+  int matches = sscanf(buffer,
+                       "%*d: %64[0-9A-Fa-f]:%X %64[0-9A-Fa-f]:%X %*X "
+                       "%*X:%*X %*X:%*X %*X %*d %*d %ld %*512s\n",
                        local_addr, &local_port, rem_addr, &rem_port, &inode);
 
   if (matches != 5) {
@@ -102,7 +103,7 @@ void addtoconninode(char *buffer) {
     if ((in6_local.s6_addr32[0] == 0x0) && (in6_local.s6_addr32[1] == 0x0) &&
         (in6_local.s6_addr32[2] == 0xFFFF0000)) {
       /* IPv4-compatible address */
-      result_addr_local.s6_addr32[0]  = in6_local.s6_addr32[3];
+      result_addr_local.s6_addr32[0] = in6_local.s6_addr32[3];
       result_addr_remote.s6_addr32[0] = in6_remote.s6_addr32[3];
       sa_family = AF_INET;
     } else {
@@ -179,9 +180,9 @@ int addprocinfo(const char *filename) {
 }
 
 void refreshconninode() {
-/* we don't forget old mappings, just overwrite */
-// delete conninode;
-// conninode = new HashTable (256);
+  /* we don't forget old mappings, just overwrite */
+  // delete conninode;
+  // conninode = new HashTable (256);
 
 #if defined(__APPLE__) || defined(__FreeBSD__)
   addprocinfo("net.inet.tcp.pcblist");

@@ -20,8 +20,8 @@
  *
  */
 
-#include <iostream>
 #include <cassert>
+#include <iostream>
 #ifdef __APPLE__
 #include <sys/malloc.h>
 #elif __FreeBSD__
@@ -29,8 +29,8 @@
 #else
 #include <malloc.h>
 #endif
-#include "nethogs.h"
 #include "connection.h"
+#include "nethogs.h"
 #include "process.h"
 
 ConnList *connections = NULL;
@@ -152,24 +152,21 @@ void Connection::add(Packet *packet) {
   }
 }
 
-Connection *findConnectionWithMatchingSource(Packet *packet, short int packettype) {
+Connection *findConnectionWithMatchingSource(Packet *packet,
+                                             short int packettype) {
   assert(packet->Outgoing());
 
   ConnList *current = NULL;
-  switch(packettype)
-  {
-    case IPPROTO_TCP:
-      {
-          current = connections;
-          break;
-      }
+  switch (packettype) {
+  case IPPROTO_TCP: {
+    current = connections;
+    break;
+  }
 
-    case IPPROTO_UDP:
-      {
-          current = unknownudp->connections;
-          break;
-      }
-
+  case IPPROTO_UDP: {
+    current = unknownudp->connections;
+    break;
+  }
   }
 
   while (current != NULL) {
@@ -180,28 +177,24 @@ Connection *findConnectionWithMatchingSource(Packet *packet, short int packettyp
 
     current = current->getNext();
   }
-  
+
   return NULL;
-  
 }
 
-Connection *findConnectionWithMatchingRefpacketOrSource(Packet *packet, short int packettype) {
-  
-  ConnList *current = NULL;
-  switch(packettype)
-  {
-    case IPPROTO_TCP:
-      {  
-        current = connections;
-        break;
-      }
+Connection *findConnectionWithMatchingRefpacketOrSource(Packet *packet,
+                                                        short int packettype) {
 
-    case IPPROTO_UDP:
-      {  
-          current = unknownudp->connections;
-          break;
-        
-      }
+  ConnList *current = NULL;
+  switch (packettype) {
+  case IPPROTO_TCP: {
+    current = connections;
+    break;
+  }
+
+  case IPPROTO_UDP: {
+    current = unknownudp->connections;
+    break;
+  }
   }
 
   while (current != NULL) {

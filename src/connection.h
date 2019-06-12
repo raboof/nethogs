@@ -22,8 +22,8 @@
 #ifndef __CONNECTION_H
 #define __CONNECTION_H
 
-#include <iostream>
 #include "packet.h"
+#include <iostream>
 
 class PackListNode {
 public:

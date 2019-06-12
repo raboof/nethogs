@@ -22,12 +22,12 @@
 
 #include "devices.h"
 
-#include <iostream>
 #include <cstring>
+#include <iostream>
 
-#include <sys/socket.h>
-#include <net/if.h>
 #include <ifaddrs.h>
+#include <net/if.h>
+#include <sys/socket.h>
 
 bool selected(int devc, char **devicenames, char *devicename) {
   if (devc == 0)

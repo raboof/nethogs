@@ -20,12 +20,12 @@
  *
  */
 
+#include "packet.h"
 #include "nethogs.h"
 #include <iostream>
-#include "packet.h"
-#include <stdio.h>
-#include <netinet/tcp.h>
 #include <netinet/in.h>
+#include <netinet/tcp.h>
+#include <stdio.h>
 #ifdef __APPLE__
 #include <sys/malloc.h>
 #elif __FreeBSD__
@@ -34,12 +34,12 @@
 #include <malloc.h>
 #endif
 #include <cassert>
-#include <net/if.h>
+#include <ifaddrs.h>
 #include <net/ethernet.h>
+#include <net/if.h>
 #include <netinet/ip.h>
 #include <netinet/ip6.h>
 #include <sys/ioctl.h>
-#include <ifaddrs.h>
 // #include "inet6.c"
 
 local_addr *local_addrs = NULL;

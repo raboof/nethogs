@@ -26,10 +26,10 @@
 #define _BSD_SOURCE 1
 #include <net/ethernet.h>
 
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
 #include "nethogs.h"
+#include <arpa/inet.h>
+#include <netinet/in.h>
+#include <sys/socket.h>
 
 enum direction { dir_unknown, dir_incoming, dir_outgoing };
 

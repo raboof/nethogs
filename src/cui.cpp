@@ -21,17 +21,16 @@
  */
 
 /* NetHogs console UI */
-#include <string>
-#include <pwd.h>
-#include <sys/types.h>
-#include <cstdlib>
+#include <algorithm>
 #include <cerrno>
 #include <cstdlib>
-#include <algorithm>
+#include <pwd.h>
+#include <string>
+#include <sys/types.h>
 
-#include <ncurses.h>
 #include "nethogs.h"
 #include "process.h"
+#include <ncurses.h>
 
 std::string *caption;
 extern const char version[];
@@ -65,7 +64,8 @@ const char *COLUMN_FORMAT_SENT = "%11.3f";
 const char *COLUMN_FORMAT_RECEIVED = "%11.3f";
 
 // All descriptions are padded to 6 characters in length with spaces
-const char* const desc_view_mode[VIEWMODE_COUNT] = {"KB/sec", "KB    ", "B     ", "MB    ", "MB/sec", "GB/sec"};
+const char *const desc_view_mode[VIEWMODE_COUNT] = {
+    "KB/sec", "KB    ", "B     ", "MB    ", "MB/sec", "GB/sec"};
 
 class Line {
 public:
@@ -217,27 +217,26 @@ void Line::log() {
   std::cout << m_name;
   if (showcommandline && m_cmdline)
     std::cout << ' ' << m_cmdline;
-  std::cout << '/' << m_pid << '/' << m_uid << "\t" << sent_value << "\t" << recv_value << std::endl;
+  std::cout << '/' << m_pid << '/' << m_uid << "\t" << sent_value << "\t"
+            << recv_value << std::endl;
 }
 
-int get_devlen(Line *lines[], int nproc, int rows)
-{
-  int devlen = MIN_COLUMN_WIDTH_DEV; int curlen;
+int get_devlen(Line *lines[], int nproc, int rows) {
+  int devlen = MIN_COLUMN_WIDTH_DEV;
+  int curlen;
   for (int i = 0; i < nproc; i++) {
-    if (i + 3 < rows)
-	{
-		curlen = strlen(lines[i]->devicename);
-		if(curlen > devlen)
-			curlen = devlen;
-	}
- }
+    if (i + 3 < rows) {
+      curlen = strlen(lines[i]->devicename);
+      if (curlen > devlen)
+        curlen = devlen;
+    }
+  }
 
- if(devlen > MAX_COLUMN_WIDTH_DEV)
-	devlen = MAX_COLUMN_WIDTH_DEV;
+  if (devlen > MAX_COLUMN_WIDTH_DEV)
+    devlen = MAX_COLUMN_WIDTH_DEV;
 
- return devlen;
+  return devlen;
 }
-
 
 int GreatestFirst(const void *ma, const void *mb) {
   Line **pa = (Line **)ma;
@@ -349,9 +348,8 @@ void show_ncurses(Line *lines[], int nproc) {
   if (cols > PROGNAME_WIDTH)
     cols = PROGNAME_WIDTH;
 
-
- //issue #110 - maximum devicename length min=5, max=15
- int devlen = get_devlen(lines, nproc, rows);
+  // issue #110 - maximum devicename length min=5, max=15
+  int devlen = get_devlen(lines, nproc, rows);
 
   proglen = cols - 50 - devlen;
 
@@ -360,14 +358,14 @@ void show_ncurses(Line *lines[], int nproc) {
   attron(A_REVERSE);
   mvprintw(2, 0,
            "    PID USER     %-*.*s  %-*.*s       SENT      RECEIVED       ",
-           proglen, proglen, "PROGRAM",devlen,devlen,"DEV");
+           proglen, proglen, "PROGRAM", devlen, devlen, "DEV");
   attroff(A_REVERSE);
 
   /* print them */
   int i;
   for (i = 0; i < nproc; i++) {
     if (i + 3 < rows)
-      lines[i]->show(i + 3, proglen,devlen);
+      lines[i]->show(i + 3, proglen, devlen);
     recv_global += lines[i]->recv_value;
     sent_global += lines[i]->sent_value;
     delete lines[i];
@@ -375,7 +373,7 @@ void show_ncurses(Line *lines[], int nproc) {
   attron(A_REVERSE);
   int totalrow = std::min(rows - 1, 3 + 1 + i);
   mvprintw(totalrow, 0, "  TOTAL        %-*.*s %-*.*s    %11.3f %11.3f ",
-           proglen, proglen, "", devlen,devlen, "", sent_global, recv_global);
+           proglen, proglen, "", devlen, devlen, "", sent_global, recv_global);
   mvprintw(3 + 1 + i, cols - COLUMN_WIDTH_UNIT, desc_view_mode[viewMode]);
   attroff(A_REVERSE);
   mvprintw(totalrow + 1, 0, "");
@@ -387,7 +385,8 @@ void do_refresh() {
   refreshconninode();
   refreshcount++;
 
-  if (viewMode == VIEWMODE_KBPS  || viewMode == VIEWMODE_MBPS || viewMode == VIEWMODE_GBPS) {
+  if (viewMode == VIEWMODE_KBPS || viewMode == VIEWMODE_MBPS ||
+      viewMode == VIEWMODE_GBPS) {
     remove_timed_out_processes();
   }
 

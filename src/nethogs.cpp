@@ -22,16 +22,16 @@
 
 #include "nethogs.h"
 
-#include <iostream>
+#include <cassert>
+#include <csignal>
+#include <cstdarg>
 #include <cstdio>
 #include <cstdlib>
-#include <cassert>
-#include <unistd.h>
-#include <csignal>
-#include <string>
 #include <cstring>
 #include <getopt.h>
-#include <cstdarg>
+#include <iostream>
+#include <string>
+#include <unistd.h>
 
 #include <netinet/ip.h>
 #include <netinet/ip6.h>
@@ -44,10 +44,10 @@ extern "C" {
 #include "decpcap.h"
 }
 
-#include "packet.h"
 #include "connection.h"
-#include "process.h"
 #include "devices.h"
+#include "packet.h"
+#include "process.h"
 
 extern Process *unknownudp;
 
@@ -203,7 +203,7 @@ int process_udp(u_char *userdata, const dp_header *header,
     /* else: unknown connection, create new */
     connection = new Connection(packet);
     unknownudp->connections = new ConnList(connection, unknownudp->connections);
-    //getProcess(connection, args->device);
+    // getProcess(connection, args->device);
   }
   delete packet;
 

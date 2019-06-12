@@ -20,20 +20,20 @@
  *
  */
 
-#include <sys/types.h>
 #include <cerrno>
-#include <cstring>
-#include <dirent.h>
-#include <ctype.h>
-#include <cstdlib>
-#include <iostream>
-#include <cstdio>
-#include <unistd.h>
-#include <string>
-#include <map>
-#include <sys/stat.h>
-#include <fcntl.h>
 #include <climits>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include <ctype.h>
+#include <dirent.h>
+#include <fcntl.h>
+#include <iostream>
+#include <map>
+#include <string>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <unistd.h>
 
 #include "inode2prog.h"
 
@@ -124,10 +124,10 @@ std::string getcmdline(pid_t pid) {
   std::string cmdline;
   bool replace_null = false;
   try {
-   cmdline = read_file(filename);
+    cmdline = read_file(filename);
   } catch (int e) {
-      std::fprintf(stderr, "An exception occurred. Exception Nr %i \n", e);
-      cmdline = "";
+    std::fprintf(stderr, "An exception occurred. Exception Nr %i \n", e);
+    cmdline = "";
   }
 
   if (cmdline.empty() || cmdline[cmdline.length() - 1] != '\0') {
