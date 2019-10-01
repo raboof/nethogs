@@ -58,10 +58,12 @@ typedef void (*NethogsMonitorCallback)(int action,
  * that of tcpdump(1); for full details, see the man page for pcap-filter(7).
  * Note that this is EXPERIMENTAL, and may be removed or changed in a future
  * version.
+ * @param to_ms: <insert documentation>
  */
 
 NETHOGS_DSO_VISIBLE int nethogsmonitor_loop(NethogsMonitorCallback cb,
-                                            char *filter);
+                                            char *filter,
+                                            int to_ms);
 
 /**
  * @brief Enter the process monitoring loop and reports updates using the
@@ -85,7 +87,8 @@ NETHOGS_DSO_VISIBLE int nethogsmonitor_loop(NethogsMonitorCallback cb,
 NETHOGS_DSO_VISIBLE int nethogsmonitor_loop_devices(NethogsMonitorCallback cb,
                                                     char *filter, int devc,
                                                     char **devicenames,
-                                                    bool all);
+                                                    bool all,
+                                                    int to_ms);
 
 /**
  * @brief Makes the call to nethogsmonitor_loop return.
