@@ -10,3 +10,7 @@ script: make && make libnethogs
 os:
   - linux
   - osx
+
+arch:
+  - amd64
+  - ppc64le
