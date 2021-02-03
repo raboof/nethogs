@@ -47,7 +47,8 @@ extern bool catchall;
  * key contains source ip, source port, destination ip, destination
  * port in format: '1.2.3.4:5-1.2.3.4:5'
  */
-extern std::map<std::string, unsigned long> conninode;
+extern std::map<std::string, unsigned long> conninode_tcp;
+extern std::map<std::string, unsigned long> conninode_udp;
 
 /* this file includes:
  * - calls to inodeproc to get the pid that belongs to that inode
@@ -306,7 +307,10 @@ Process *getProcess(unsigned long inode, const char *devicename) {
  * is made. If no process can be found even then, it's added to the
  * 'unknown' process.
  */
-Process *getProcess(Connection *connection, const char *devicename) {
+Process *getProcess(Connection *connection, const char *devicename,
+                    short int packettype) {
+  std::map<std::string, unsigned long> &conninode =
+      (packettype == IPPROTO_TCP) ? conninode_tcp : conninode_udp;
   unsigned long inode = conninode[connection->refpacket->gethashstring()];
 
   if (inode == 0) {

@@ -150,7 +150,7 @@ int process_tcp(u_char *userdata, const dp_header *header,
   } else {
     /* else: unknown connection, create new */
     connection = new Connection(packet);
-    getProcess(connection, args->device);
+    getProcess(connection, args->device, IPPROTO_TCP);
   }
   delete packet;
 
@@ -202,8 +202,7 @@ int process_udp(u_char *userdata, const dp_header *header,
   } else {
     /* else: unknown connection, create new */
     connection = new Connection(packet);
-    unknownudp->connections = new ConnList(connection, unknownudp->connections);
-    // getProcess(connection, args->device);
+    getProcess(connection, args->device, IPPROTO_UDP);
   }
   delete packet;
 
