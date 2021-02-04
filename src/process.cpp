@@ -374,8 +374,15 @@ Process *getProcess(Connection *connection, const char *devicename,
   }
 
   Process *proc = NULL;
-  if (inode != 0)
+  if (inode != 0) {
     proc = getProcess(inode, devicename);
+  } else {
+    if (packettype == IPPROTO_TCP) {
+      proc = unknowntcp;
+    } else {
+      proc = unknownudp;
+    }
+  }
 
   if (proc == NULL) {
     proc = new Process(inode, "", connection->refpacket->gethashstring());
