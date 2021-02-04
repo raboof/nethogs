@@ -36,6 +36,7 @@
 
 extern local_addr *local_addrs;
 extern bool bughuntmode;
+extern bool catchall;
 /*
  * connection-inode table. takes information from /proc/net/tcp.
  * key contains source ip, source port, destination ip, destination
@@ -197,15 +198,17 @@ void refreshconninode() {
   addprocinfo("/proc/net/tcp6", conninode_tcp);
 #endif
 
+  if (catchall) {
 #if defined(__APPLE__) || defined(__FreeBSD__)
-  addprocinfo("net.inet.udp.pcblist", conninode_udp);
+    addprocinfo("net.inet.udp.pcblist", conninode_udp);
 #else
-  if (!addprocinfo("/proc/net/udp", conninode_udp)) {
-    std::cout << "Error: couldn't open /proc/net/udp\n";
-    exit(0);
-  }
-  addprocinfo("/proc/net/udp6", conninode_udp);
+    if (!addprocinfo("/proc/net/udp", conninode_udp)) {
+      std::cout << "Error: couldn't open /proc/net/udp\n";
+      exit(0);
+    }
+    addprocinfo("/proc/net/udp6", conninode_udp);
 #endif
+  }
 
   // if (DEBUG)
   //	reviewUnknown();
