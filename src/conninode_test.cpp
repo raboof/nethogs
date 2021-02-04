@@ -2,6 +2,7 @@
 
 local_addr *local_addrs = NULL;
 bool bughuntmode = false;
+bool catchall = false;
 
 int main() {
   if (!addprocinfo("testfiles/proc_net_tcp", conninode_tcp)) {
