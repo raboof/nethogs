@@ -134,7 +134,8 @@ private:
   Process *val;
 };
 
-Process *getProcess(Connection *connection, const char *devicename = NULL);
+Process *getProcess(Connection *connection, const char *devicename = NULL,
+                    short int packettype = IPPROTO_TCP);
 
 void process_init();
 

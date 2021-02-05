@@ -36,12 +36,14 @@
 
 extern local_addr *local_addrs;
 extern bool bughuntmode;
+extern bool catchall;
 /*
  * connection-inode table. takes information from /proc/net/tcp.
  * key contains source ip, source port, destination ip, destination
  * port in format: '1.2.3.4:5-1.2.3.4:5'
  */
-std::map<std::string, unsigned long> conninode;
+std::map<std::string, unsigned long> conninode_tcp;
+std::map<std::string, unsigned long> conninode_udp;
 
 /*
  * parses a /proc/net/tcp-line of the form:
@@ -58,7 +60,8 @@ std::map<std::string, unsigned long> conninode;
  *00000000     0        0 2525 2 c732eca0 201 40 1 2 -1
  *
  */
-void addtoconninode(char *buffer) {
+void addtoconninode(char *buffer,
+                    std::map<std::string, unsigned long> &conninode) {
   short int sa_family;
   struct in6_addr result_addr_local = {};
   struct in6_addr result_addr_remote = {};
@@ -159,7 +162,8 @@ void addtoconninode(char *buffer) {
 }
 
 /* opens /proc/net/tcp[6] and adds its contents line by line */
-int addprocinfo(const char *filename) {
+int addprocinfo(const char *filename,
+                std::map<std::string, unsigned long> &conninode) {
   FILE *procinfo = fopen(filename, "r");
 
   char buffer[8192];
@@ -171,7 +175,7 @@ int addprocinfo(const char *filename) {
 
   do {
     if (fgets(buffer, sizeof(buffer), procinfo))
-      addtoconninode(buffer);
+      addtoconninode(buffer, conninode);
   } while (!feof(procinfo));
 
   fclose(procinfo);
@@ -185,14 +189,26 @@ void refreshconninode() {
   // conninode = new HashTable (256);
 
 #if defined(__APPLE__) || defined(__FreeBSD__)
-  addprocinfo("net.inet.tcp.pcblist");
+  addprocinfo("net.inet.tcp.pcblist", conninode_tcp);
 #else
-  if (!addprocinfo("/proc/net/tcp")) {
+  if (!addprocinfo("/proc/net/tcp", conninode_tcp)) {
     std::cout << "Error: couldn't open /proc/net/tcp\n";
     exit(0);
   }
-  addprocinfo("/proc/net/tcp6");
+  addprocinfo("/proc/net/tcp6", conninode_tcp);
 #endif
+
+  if (catchall) {
+#if defined(__APPLE__) || defined(__FreeBSD__)
+    addprocinfo("net.inet.udp.pcblist", conninode_udp);
+#else
+    if (!addprocinfo("/proc/net/udp", conninode_udp)) {
+      std::cout << "Error: couldn't open /proc/net/udp\n";
+      exit(0);
+    }
+    addprocinfo("/proc/net/udp6", conninode_udp);
+#endif
+  }
 
   // if (DEBUG)
   //	reviewUnknown();
