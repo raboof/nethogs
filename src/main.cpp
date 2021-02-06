@@ -55,7 +55,7 @@ static void help(bool iserror) {
   output << "When nethogs is running, press:\n";
   output << " q: quit\n";
   output << " s: sort by SENT traffic\n";
-  output << " r: sort by RECEIVE traffic\n";
+  output << " r: sort by RECEIVED traffic\n";
   output << " l: display command line\n";
   output << " m: switch between total (KB, B, MB) and throughput (KB/s, MB/s, "
             "GB/s) mode\n";
