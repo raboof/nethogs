@@ -126,6 +126,10 @@ Nethogs monitors traffic going to/from a machine, per process. Other tools rathe
 * [gnethogs](https://github.com/mbfoss/gnethogs) GTK-based GUI (work-in-progress)
 * [nethogs-qt](http://slist.lilotux.net/linux/nethogs-qt/index_en.html) Qt-based GUI
 * [hogwatch](https://github.com/akshayKMR/hogwatch) A bandwidth monitor(per process) with graphs for desktop/web.
+* [iptraf-ng](https://github.com/iptraf-ng/iptraf-ng) is a console-based network monitoring program for Linux that displays information about IP traffic.
+* [nettop (by Emanuele Oriani)](http://nettop.youlink.org/) is a simple process/network usage report for Linux.
+* [iptstate](https://www.phildev.net/iptstate/index.shtml) is a top-like interface to your netfilter connection-tracking table.
+* [flowtop](http://netsniff-ng.org/) is a top-like netfilter connection tracking tool.
  
 License
 -------
