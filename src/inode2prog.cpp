@@ -20,6 +20,7 @@
  *
  */
 
+#include <algorithm>
 #include <cerrno>
 #include <climits>
 #include <cstdio>
@@ -30,6 +31,7 @@
 #include <fcntl.h>
 #include <iostream>
 #include <map>
+#include <set>
 #include <sstream>
 #include <string>
 #include <sys/stat.h>
@@ -222,6 +224,73 @@ void get_info_for_pid(const char *pid) {
     get_info_by_linkname(pid, linkname);
   }
   closedir(dir);
+}
+
+static quad_t get_ms() {
+  struct timespec ts;
+  clock_gettime(CLOCK_MONOTONIC, &ts);
+  return static_cast<quad_t>(ts.tv_sec) * 1000 + ts.tv_nsec / 1000000;
+}
+
+static void get_pids(std::set<pid_t> *pids) {
+  DIR *proc = opendir("/proc");
+  if (proc == 0) {
+    std::cerr << "Error reading /proc, needed to get inode-to-pid-maping\n";
+    exit(1);
+  }
+  dirent *entry;
+
+  while ((entry = readdir(proc))) {
+    if (entry->d_type != DT_DIR)
+      continue;
+
+    if (!is_number(entry->d_name))
+      continue;
+
+    pids->insert(str2int(entry->d_name));
+  }
+  closedir(proc);
+}
+
+void garbage_collect_inodeproc() {
+  static quad_t last_ms = 0;
+  quad_t start_ms = 0;
+  if (bughuntmode) {
+    start_ms = get_ms();
+    if (last_ms) {
+      std::cout << "PERF: GC interval: " << start_ms - last_ms << "[ms]"
+                << std::endl;
+    }
+  }
+
+  std::set<pid_t> pids;
+  get_pids(&pids);
+  if (pids.size() == 0) {
+    return;
+  }
+
+  for (std::map<unsigned long, prg_node *>::iterator it = inodeproc.begin();
+       it != inodeproc.end();) {
+    if (!it->second || pids.find(it->second->pid) != pids.end()) {
+      ++it;
+      continue;
+    }
+
+    if (bughuntmode) {
+      std::cout << "GC prg_node (inode=" << it->first
+                << ", pid=" << it->second->pid
+                << ", cmdline=" << it->second->cmdline.c_str() << ")"
+                << std::endl;
+    }
+    delete it->second;
+    inodeproc.erase(it++);
+  }
+
+  if (bughuntmode) {
+    last_ms = get_ms();
+    std::cout << "PERF: GC proctime: " << last_ms - start_ms << "[ms]"
+              << std::endl;
+  }
 }
 
 /* updates the `inodeproc' inode-to-prg_node mapping

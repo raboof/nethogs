@@ -322,6 +322,7 @@ int main(int argc, char **argv) {
         ui_tick();
       }
       do_refresh();
+      garbage_collect_processes();
     }
 
     // if not packets, do a select() until next packet

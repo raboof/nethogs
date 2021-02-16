@@ -41,4 +41,6 @@ void prg_cache_clear();
 // reread the inode-to-prg_node-mapping
 void reread_mapping();
 
+void garbage_collect_inodeproc();
+
 #endif
