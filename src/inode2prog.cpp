@@ -235,8 +235,7 @@ static quad_t get_ms() {
 static void get_pids(std::set<pid_t> *pids) {
   DIR *proc = opendir("/proc");
   if (proc == 0) {
-    std::cerr << "Error reading /proc, needed to get inode-to-pid-mapping"
-              << std::endl;
+    std::cerr << "Error reading /proc, needed to get pid set" << std::endl;
     exit(1);
   }
   dirent *entry;
