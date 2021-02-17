@@ -46,6 +46,8 @@ static void help(bool iserror) {
   output << "		-a : monitor all devices, even loopback/stopped "
             "ones.\n";
   output << "		-C : capture TCP and UDP.\n";
+  output << "		-g : garbage collection period in number of refresh. "
+            "default is 50.\n";
   output << "		-f : EXPERIMENTAL: specify string pcap filter (like "
             "tcpdump)."
             " This may be removed or changed in a future version.\n";
@@ -140,9 +142,10 @@ int main(int argc, char **argv) {
   int promisc = 0;
   bool all = false;
   char *filter = NULL;
+  int garbage_collection_period = 50;
 
   int opt;
-  while ((opt = getopt(argc, argv, "Vhbtpsd:v:c:laf:C")) != -1) {
+  while ((opt = getopt(argc, argv, "Vhbtpsd:v:c:laf:Cg:")) != -1) {
     switch (opt) {
     case 'V':
       versiondisplay();
@@ -183,6 +186,9 @@ int main(int argc, char **argv) {
       break;
     case 'C':
       catchall = true;
+      break;
+    case 'g':
+      garbage_collection_period = (time_t)atoi(optarg);
       break;
     default:
       help(true);
@@ -294,6 +300,7 @@ int main(int argc, char **argv) {
   struct dpargs *userdata = (dpargs *)malloc(sizeof(struct dpargs));
 
   // Main loop:
+  int refresh_count = 0;
   while (1) {
     bool packets_read = false;
 
@@ -322,7 +329,12 @@ int main(int argc, char **argv) {
         ui_tick();
       }
       do_refresh();
-      garbage_collect_processes();
+      ++refresh_count;
+
+      if ((garbage_collection_period > 0) &&
+          (refresh_count % garbage_collection_period == 0)) {
+        garbage_collect_processes();
+      }
     }
 
     // if not packets, do a select() until next packet
