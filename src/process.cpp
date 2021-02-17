@@ -424,3 +424,5 @@ void remove_timed_out_processes() {
     previousproc = curproc;
   }
 }
+
+void garbage_collect_processes() { garbage_collect_inodeproc(); }

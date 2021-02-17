@@ -145,4 +145,6 @@ void procclean();
 
 void remove_timed_out_processes();
 
+void garbage_collect_processes();
+
 #endif
