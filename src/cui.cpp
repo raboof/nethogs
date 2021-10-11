@@ -374,9 +374,9 @@ void show_ncurses(Line *lines[], int nproc) {
   int totalrow = std::min(rows - 1, 3 + 1 + i);
   mvprintw(totalrow, 0, "  TOTAL        %-*.*s %-*.*s    %11.3f %11.3f ",
            proglen, proglen, "", devlen, devlen, "", sent_global, recv_global);
-  mvprintw(3 + 1 + i, cols - COLUMN_WIDTH_UNIT, desc_view_mode[viewMode]);
+  mvprintw(3 + 1 + i, cols - COLUMN_WIDTH_UNIT, "%s", desc_view_mode[viewMode]);
   attroff(A_REVERSE);
-  mvprintw(totalrow + 1, 0, "");
+  mvprintw(totalrow + 1, 0, "%s", "");
   refresh();
 }
 
