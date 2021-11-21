@@ -131,6 +131,8 @@ Nethogs monitors traffic going to/from a machine, per process. Other tools rathe
 * [iptstate](https://www.phildev.net/iptstate/index.shtml) is a top-like interface to your netfilter connection-tracking table.
 * [flowtop](http://netsniff-ng.org/) is a top-like netfilter connection tracking tool. 
 * [BusyTasks](https://www.pling.com/p/1201835) is a Java-based app using top, iotop and nethogs as backend.
+* [bandwhich](https://github.com/imsnif/bandwhich) is a terminal bandwidth utilization tool.
+* [sniffer](https://github.com/chenjiandongx/sniffer) is a modern alternative network traffic sniffer.
 
 License
 -------
