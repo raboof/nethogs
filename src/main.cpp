@@ -26,12 +26,12 @@ static void help(bool iserror) {
 
   // output << "usage: nethogs [-V] [-b] [-d seconds] [-t] [-p] [-f (eth|ppp))]
   // [device [device [device ...]]]\n";
-  output << "usage: nethogs [-V] [-h] [-b] [-d seconds] [-v mode] [-c count] "
+  output << "usage: nethogs [-V] [-h] [-x] [-d seconds] [-v mode] [-c count] "
             "[-t] [-p] [-s] [-a] [-l] [-f filter] [-C]"
             "[device [device [device ...]]]\n";
   output << "		-V : prints version.\n";
   output << "		-h : prints this help.\n";
-  output << "		-b : bughunt mode - implies tracemode.\n";
+  output << "		-x : bughunt mode - implies tracemode.\n";
   output << "		-d : delay for update refresh rate in seconds. default "
             "is 1.\n";
   output << "		-v : view mode (0 = KB/s, 1 = total KB, 2 = total B, 3 "
@@ -145,7 +145,7 @@ int main(int argc, char **argv) {
   int garbage_collection_period = 50;
 
   int opt;
-  while ((opt = getopt(argc, argv, "Vhbtpsd:v:c:laf:Cg:")) != -1) {
+  while ((opt = getopt(argc, argv, "Vhxtpsd:v:c:laf:Cg:")) != -1) {
     switch (opt) {
     case 'V':
       versiondisplay();
@@ -153,7 +153,7 @@ int main(int argc, char **argv) {
     case 'h':
       help(false);
       exit(0);
-    case 'b':
+    case 'x':
       bughuntmode = true;
       tracemode = true;
       break;
