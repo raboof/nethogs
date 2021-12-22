@@ -26,6 +26,7 @@
 #include <cstdlib>
 #include <pwd.h>
 #include <string>
+#include <strings.h>
 #include <sys/types.h>
 
 #include "nethogs.h"
@@ -45,6 +46,7 @@ extern bool sortRecv;
 
 extern int viewMode;
 extern bool showcommandline;
+extern bool showBasename;
 
 extern unsigned refreshlimit;
 extern unsigned refreshcount;
@@ -66,6 +68,8 @@ const char *COLUMN_FORMAT_RECEIVED = "%11.3f";
 // All descriptions are padded to 6 characters in length with spaces
 const char *const desc_view_mode[VIEWMODE_COUNT] = {
     "KB/sec", "KB    ", "B     ", "MB    ", "MB/sec", "GB/sec"};
+
+constexpr char FILE_SEPARATOR = '/';
 
 class Line {
 public:
@@ -152,6 +156,12 @@ static void mvaddstr_truncate_trailing(int row, int col, const char *str,
 static void mvaddstr_truncate_cmdline(int row, int col, const char *progname,
                                       const char *cmdline,
                                       std::size_t max_len) {
+  if (showBasename) {
+    if (index(progname, FILE_SEPARATOR) != NULL) {
+      progname = rindex(progname, FILE_SEPARATOR) + 1;
+    } 
+  }                                      
+
   std::size_t proglen = strlen(progname);
   std::size_t max_cmdlen;
 
@@ -304,6 +314,10 @@ void ui_tick() {
   case 'm':
     /* switch mode: total vs kb/s */
     viewMode = (viewMode + 1) % VIEWMODE_COUNT;
+    break;
+  case 'b':
+    /* show only the process basename */
+    showBasename = !showBasename;
     break;
   }
 }

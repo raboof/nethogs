@@ -19,6 +19,7 @@ nethogs \- Net top tool grouping bandwidth per process
 .RB [ "\-l" ]
 .RB [ "\-f filter" ]
 .RB [ "\-C" ]
+.RB [ "\-b" ]
 .RB [ "\-g period" ]
 .RI [device(s)]
 .SH DESCRIPTION
@@ -62,6 +63,9 @@ monitor all devices, even loopback/stopped ones.
 \fB-C\fP
 capture TCP and UDP.
 .TP
+\fB-b\fP
+Display the program basename.
+.TP
 \fB-g\fP
 garbage collection period in number of refresh. default is 50.
 .TP
@@ -85,6 +89,9 @@ sort by RECEIVED traffic
 .TP
 l
 display command line
+.TP
+b
+display the program basename
 .TP
 m
 switch between total (KB, B, MB) and throughput (KB/s, MB/s, GB/s) mode
