@@ -22,6 +22,7 @@
 
 #include <iostream>
 #include <ncurses.h>
+#include <set>
 #include <string>
 #include <strings.h>
 #if !defined(__APPLE__) && !defined(__FreeBSD__)
@@ -34,6 +35,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <signal.h>
 
 #include "conninode.h"
 #include "inode2prog.h"
@@ -66,6 +68,8 @@ Process *unknownudp;
 Process *unknownip;
 ProcList *processes;
 
+extern std::set<pid_t> pidsToWatch;
+
 #define KB (1UL << 10)
 #define MB (1UL << 20)
 #define GB (1UL << 30)
@@ -77,6 +81,7 @@ float tokbps(u_int64_t bytes) { return (((double)bytes) / PERIOD) / KB; }
 float tombps(u_int64_t bytes) { return (((double)bytes) / PERIOD) / MB; }
 float togbps(u_int64_t bytes) { return (((double)bytes) / PERIOD) / GB; }
 
+
 void process_init() {
   unknowntcp = new Process(0, "", "unknown TCP");
   processes = new ProcList(unknowntcp, NULL);
@@ -87,6 +92,7 @@ void process_init() {
     // unknownip = new Process (0, "", "unknown IP");
     // processes = new ProcList (unknownip, processes);
   }
+
 }
 
 int Process::getLastPacket() {
@@ -262,6 +268,10 @@ Process *getProcess(unsigned long inode, const char *devicename) {
   if (proc != NULL)
     return proc;
 
+  if ( !(pidsToWatch.empty()) && pidsToWatch.find(node->pid) == pidsToWatch.end() ) {    
+    return NULL;
+  }
+
   // extract program name and command line from data read from cmdline file
   const char *prgname = node->cmdline.c_str();
   const char *cmdline = prgname + strlen(prgname) + 1;
@@ -384,6 +394,10 @@ Process *getProcess(Connection *connection, const char *devicename,
     }
   }
 
+  if (!(pidsToWatch.empty()) && proc == NULL) {
+    proc = (packettype == IPPROTO_TCP) ? unknowntcp : unknownudp;
+  }
+
   if (proc == NULL) {
     proc = new Process(inode, "", connection->refpacket->gethashstring());
     processes = new ProcList(proc, processes);
@@ -426,3 +440,4 @@ void remove_timed_out_processes() {
 }
 
 void garbage_collect_processes() { garbage_collect_inodeproc(); }
+

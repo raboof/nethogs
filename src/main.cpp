@@ -1,5 +1,6 @@
 #include "nethogs.cpp"
 #include <fcntl.h>
+#include <set>
 #include <vector>
 
 #ifdef __linux__
@@ -14,6 +15,8 @@
 static std::pair<int, int> self_pipe = std::make_pair(-1, -1);
 static time_t last_refresh_time = 0;
 
+std::set<pid_t> pidsToWatch;
+
 // selectable file descriptors for the main loop
 static fd_set pc_loop_fd_set;
 static std::vector<int> pc_loop_fd_list;
@@ -27,7 +30,7 @@ static void help(bool iserror) {
   // output << "usage: nethogs [-V] [-b] [-d seconds] [-t] [-p] [-f (eth|ppp))]
   // [device [device [device ...]]]\n";
   output << "usage: nethogs [-V] [-h] [-x] [-d seconds] [-v mode] [-c count] "
-            "[-t] [-p] [-s] [-a] [-l] [-f filter] [-C] [-b]"
+            "[-t] [-p] [-s] [-a] [-l] [-f filter] [-C] [-b] [-P pid] "
             "[device [device [device ...]]]\n";
   output << "		-V : prints version.\n";
   output << "		-h : prints this help.\n";
@@ -54,6 +57,7 @@ static void help(bool iserror) {
             " This may be removed or changed in a future version.\n";
   output << "		device : device(s) to monitor. default is all "
             "interfaces up and running excluding loopback\n";
+  output << "		-P : Show only processes.\n";
   output << std::endl;
   output << "When nethogs is running, press:\n";
   output << " q: quit\n";
@@ -146,8 +150,9 @@ int main(int argc, char **argv) {
   char *filter = NULL;
   int garbage_collection_period = 50;
 
+
   int opt;
-  while ((opt = getopt(argc, argv, "Vhxtpsd:v:c:laf:Cbg:")) != -1) {
+  while ((opt = getopt(argc, argv, "Vhxtpsd:v:c:laf:Cbg:P:")) != -1) {
     switch (opt) {
     case 'V':
       versiondisplay();
@@ -194,6 +199,9 @@ int main(int argc, char **argv) {
       break;
     case 'g':
       garbage_collection_period = (time_t)atoi(optarg);
+      break;
+    case 'P':
+      pidsToWatch.insert((pid_t) atoi(optarg));
       break;
     default:
       help(true);
