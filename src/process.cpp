@@ -268,7 +268,7 @@ Process *getProcess(unsigned long inode, const char *devicename) {
   if (proc != NULL)
     return proc;
 
-  if ( !(pidsToWatch.empty()) && pidsToWatch.find(node->pid) == pidsToWatch.end() ) {    
+  if ( !(pidsToWatch.empty()) && pidsToWatch.find(node->pid) == pidsToWatch.end() ) {
     return NULL;
   }
 
@@ -440,4 +440,3 @@ void remove_timed_out_processes() {
 }
 
 void garbage_collect_processes() { garbage_collect_inodeproc(); }
-

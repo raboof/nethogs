@@ -8,3 +8,5 @@ nethogs.project
 libnethogs.so.*
 libnethogs.a
 results/
+build/
+nethogs.egg-info
