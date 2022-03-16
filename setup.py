@@ -11,7 +11,7 @@ _version_info = subprocess.run(['bash', "./determineVersion.sh"], stdout=subproc
 __version__ = _version_info.stdout.decode("utf-8").rstrip("\n").split("-")[0] if _version_info else "0.0.0"
 
 OBJS = [
-    "src/bindings.cpp",
+    "python/bindings.cpp",
     "src/libnethogs.cpp",
     "src/packet.cpp",
     "src/connection.cpp",
