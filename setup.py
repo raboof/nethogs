@@ -44,6 +44,7 @@ ext_modules = [
     Pybind11Extension(
         "nethogs",
         sources = OBJS,
+        include_dirs = ["src/"],
         extra_compile_args = FLAGS,
         libraries = ["pcap"]
     ),
