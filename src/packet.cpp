@@ -299,5 +299,8 @@ bool Packet::match(Packet *other) {
 }
 
 bool Packet::matchSource(Packet *other) {
-  return (sport == other->sport) && (sameinaddr(sip, other->sip));
+  return sa_family == other->sa_family && (sport == other->sport) &&
+         (sa_family == AF_INET
+              ? (sameinaddr(sip, other->sip))
+              : (samein6addr(sip6, other->sip6)));
 }
