@@ -97,13 +97,10 @@ void process_init() {
 
 int Process::getLastPacket() {
   int lastpacket = 0;
-  ConnList *curconn = connections;
-  while (curconn != NULL) {
-    assert(curconn != NULL);
-    assert(curconn->getVal() != NULL);
-    if (curconn->getVal()->getLastPacket() > lastpacket)
-      lastpacket = curconn->getVal()->getLastPacket();
-    curconn = curconn->getNext();
+  for (auto it = connections.begin(); it != connections.end(); ++it) {
+    assert(*it != NULL);
+    if ((*it)->getLastPacket() > lastpacket)
+      lastpacket = (*it)->getLastPacket();
   }
   return lastpacket;
 }
@@ -113,30 +110,20 @@ static void sum_active_connections(Process *process_ptr, u_int64_t &sum_sent,
                                    u_int64_t &sum_recv) {
   /* walk though all process_ptr process's connections, and sum
    * them up */
-  ConnList *curconn = process_ptr->connections;
-  ConnList *previous = NULL;
-  while (curconn != NULL) {
-    if (curconn->getVal()->getLastPacket() <= curtime.tv_sec - CONNTIMEOUT) {
+  for (auto it = process_ptr->connections.begin(); it != process_ptr->connections.end(); ) {
+    if ((*it)->getLastPacket() <= curtime.tv_sec - CONNTIMEOUT) {
       /* capture sent and received totals before deleting */
-      process_ptr->sent_by_closed_bytes += curconn->getVal()->sumSent;
-      process_ptr->rcvd_by_closed_bytes += curconn->getVal()->sumRecv;
+      process_ptr->sent_by_closed_bytes += (*it)->sumSent;
+      process_ptr->rcvd_by_closed_bytes += (*it)->sumRecv;
       /* stalled connection, remove. */
-      ConnList *todelete = curconn;
-      Connection *conn_todelete = curconn->getVal();
-      curconn = curconn->getNext();
-      if (todelete == process_ptr->connections)
-        process_ptr->connections = curconn;
-      if (previous != NULL)
-        previous->setNext(curconn);
-      delete (todelete);
-      delete (conn_todelete);
+      delete (*it);
+      it = process_ptr->connections.erase(it);
     } else {
       u_int64_t sent = 0, recv = 0;
-      curconn->getVal()->sumanddel(curtime, &recv, &sent);
+      (*it)->sumanddel(curtime, &recv, &sent);
       sum_sent += sent;
       sum_recv += recv;
-      previous = curconn;
-      curconn = curconn->getNext();
+      ++it;
     }
   }
 }
@@ -171,12 +158,10 @@ void Process::getgbps(float *recvd, float *sent) {
 /** get total values for this process */
 void Process::gettotal(u_int64_t *recvd, u_int64_t *sent) {
   u_int64_t sum_sent = 0, sum_recv = 0;
-  ConnList *curconn = this->connections;
-  while (curconn != NULL) {
-    Connection *conn = curconn->getVal();
+  for (auto it = this->connections.begin(); it != this->connections.end(); ++it) {
+    Connection *conn = (*it);
     sum_sent += conn->sumSent;
     sum_recv += conn->sumRecv;
-    curconn = curconn->getNext();
   }
   // std::cout << "Sum sent: " << sum_sent << std::endl;
   // std::cout << "Sum recv: " << sum_recv << std::endl;
@@ -403,7 +388,7 @@ Process *getProcess(Connection *connection, const char *devicename,
     processes = new ProcList(proc, processes);
   }
 
-  proc->connections = new ConnList(connection, proc->connections);
+  proc->connections.insert(connection);
   return proc;
 }
 

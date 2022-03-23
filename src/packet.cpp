@@ -289,7 +289,7 @@ char *Packet::gethashstring() {
 
 /* 2 packets match if they have the same
  * source and destination ports and IP's. */
-bool Packet::match(Packet *other) {
+bool Packet::match(const Packet *other) const {
   return sa_family == other->sa_family && (sport == other->sport) &&
          (dport == other->dport) &&
          (sa_family == AF_INET
@@ -298,9 +298,46 @@ bool Packet::match(Packet *other) {
                     (samein6addr(dip6, other->dip6)));
 }
 
-bool Packet::matchSource(Packet *other) {
+bool Packet::matchSource(const Packet *other) const {
   return sa_family == other->sa_family && (sport == other->sport) &&
          (sa_family == AF_INET
               ? (sameinaddr(sip, other->sip))
               : (samein6addr(sip6, other->sip6)));
+}
+
+Packet Packet::onlySource() const {
+  Packet p = *this;
+  std::fill(std::begin(p.dip6.s6_addr), std::end(p.dip6.s6_addr), 0);
+  p.dip.s_addr = 0;
+  p.dport = 0;
+  return p;
+}
+
+bool Packet::operator< (const Packet& other) const {
+  if (sa_family != other.sa_family)
+    return dir < other.sa_family;
+  /* source address first */
+  if (sport != other.sport)
+    return sport < other.sport;
+  if (sa_family == AF_INET) {
+    if (sip.s_addr != other.sip.s_addr)
+      return sip.s_addr < other.sip.s_addr;
+  } else {
+    for (int i = 0; i < 16; i++)
+      if (sip6.s6_addr[i] != other.sip6.s6_addr[i])
+        return sip6.s6_addr[i] < other.sip6.s6_addr[i];
+  }
+  /* destination address second */
+  if (dport != other.dport)
+    return dport < other.dport;
+  if (sa_family == AF_INET) {
+    if (dip.s_addr != other.dip.s_addr)
+      return dip.s_addr < other.dip.s_addr;
+  } else {
+    for (int i = 0; i < 16; i++)
+      if (dip6.s6_addr[i] != other.dip6.s6_addr[i])
+        return dip6.s6_addr[i] < other.dip6.s6_addr[i];
+  }
+  /* equal */
+  return false;
 }
