@@ -33,7 +33,7 @@
 #include "nethogs.h"
 #include "process.h"
 
-ConnList *connections = NULL;
+ConnList connections;
 extern Process *unknownudp;
 
 void PackList::add(Packet *p) {
@@ -78,7 +78,6 @@ u_int64_t PackList::sumanddel(timeval t) {
 /* packet may be deleted by caller */
 Connection::Connection(Packet *packet) {
   assert(packet != NULL);
-  connections = new ConnList(this, connections);
   sent_packets = new PackList();
   recv_packets = new PackList();
   sumSent = 0;
@@ -96,6 +95,7 @@ Connection::Connection(Packet *packet) {
     recv_packets->add(packet);
     refpacket = packet->newInverted();
   }
+  connections.insert(this);
   lastpacket = packet->time.tv_sec;
   if (DEBUG)
     std::cout << "New reference packet created at " << refpacket << std::endl;
@@ -104,6 +104,13 @@ Connection::Connection(Packet *packet) {
 Connection::~Connection() {
   if (DEBUG)
     std::cout << "Deleting connection" << std::endl;
+  auto r = connections.equal_range(this);
+  for (auto it = r.first; it != r.second; ++it) {
+    if (*it == this) {
+      connections.erase(it);
+      break;
+    }
+  }
   /* refpacket is not a pointer to one of the packets in the lists
    * so deleted */
   delete (refpacket);
@@ -111,24 +118,6 @@ Connection::~Connection() {
     delete sent_packets;
   if (recv_packets != NULL)
     delete recv_packets;
-
-  ConnList *curr_conn = connections;
-  ConnList *prev_conn = NULL;
-  while (curr_conn != NULL) {
-    if (curr_conn->getVal() == this) {
-      ConnList *todelete = curr_conn;
-      curr_conn = curr_conn->getNext();
-      if (prev_conn == NULL) {
-        connections = curr_conn;
-      } else {
-        prev_conn->setNext(curr_conn);
-      }
-      delete (todelete);
-    } else {
-      prev_conn = curr_conn;
-      curr_conn = curr_conn->getNext();
-    }
-  }
 }
 
 /* the packet will be freed by the calling code */
@@ -156,26 +145,24 @@ Connection *findConnectionWithMatchingSource(Packet *packet,
                                              short int packettype) {
   assert(packet->Outgoing());
 
-  ConnList *current = NULL;
+  ConnList *connList = NULL;
   switch (packettype) {
   case IPPROTO_TCP: {
-    current = connections;
+    connList = &connections;
     break;
   }
 
   case IPPROTO_UDP: {
-    current = unknownudp->connections;
+    connList = &unknownudp->connections;
     break;
   }
   }
 
-  while (current != NULL) {
-    /* the reference packet is always outgoing */
-    if (packet->matchSource(current->getVal()->refpacket)) {
-      return current->getVal();
-    }
-
-    current = current->getNext();
+  Packet p = packet->onlySource();
+  auto it = connList->lower_bound(&p);
+  /* the reference packet is always outgoing */
+  if (it != connList->end() && packet->matchSource((*it)->refpacket)) {
+    return *it;
   }
 
   return NULL;
@@ -184,25 +171,23 @@ Connection *findConnectionWithMatchingSource(Packet *packet,
 Connection *findConnectionWithMatchingRefpacketOrSource(Packet *packet,
                                                         short int packettype) {
 
-  ConnList *current = NULL;
+  ConnList *connList = NULL;
   switch (packettype) {
   case IPPROTO_TCP: {
-    current = connections;
+    connList = &connections;
     break;
   }
 
   case IPPROTO_UDP: {
-    current = unknownudp->connections;
+    connList = &unknownudp->connections;
     break;
   }
   }
 
-  while (current != NULL) {
-    /* the reference packet is always *outgoing* */
-    if (packet->match(current->getVal()->refpacket)) {
-      return current->getVal();
-    }
-    current = current->getNext();
+  auto it = connList->lower_bound(packet);
+  /* the reference packet is always *outgoing* */
+  if (it != connList->end() && packet->match((*it)->refpacket)) {
+    return *it;
   }
 
   return findConnectionWithMatchingSource(packet, packettype);

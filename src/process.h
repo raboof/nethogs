@@ -26,31 +26,29 @@
 #include "connection.h"
 #include "nethogs.h"
 #include <cassert>
+#include <set>
 
 extern bool tracemode;
 extern bool bughuntmode;
 
 void check_all_procs();
 
-class ConnList {
-public:
-  ConnList(Connection *m_val, ConnList *m_next) {
-    assert(m_val != NULL);
-    val = m_val;
-    next = m_next;
+/* compares Connection pointers by their refpacket */
+struct ConnectionComparator {
+  using is_transparent = void;
+  bool operator()(const Connection* l, const Connection* r) const {
+    return *l->refpacket < *r->refpacket;
   }
-  ~ConnList() {
-    /* does not delete its value, to allow a connection to
-     * remove itself from the global connlist in its destructor */
+  bool operator()(const Packet* l, const Connection* r) const {
+    return *l < *r->refpacket;
   }
-  Connection *getVal() { return val; }
-  void setNext(ConnList *m_next) { next = m_next; }
-  ConnList *getNext() { return next; }
-
-private:
-  Connection *val;
-  ConnList *next;
+  bool operator()(const Connection* l, const Packet* r) const {
+    return *l->refpacket < *r;
+  }
 };
+
+/* ordered set of Connection pointers */
+typedef std::multiset<Connection*, ConnectionComparator> ConnList;
 
 class Process {
 public:
@@ -75,7 +73,6 @@ public:
       cmdline = strdup(m_cmdline);
 
     devicename = m_devicename;
-    connections = NULL;
     pid = 0;
     uid = 0;
     sent_by_closed_bytes = 0;
@@ -106,7 +103,7 @@ public:
   u_int64_t sent_by_closed_bytes;
   u_int64_t rcvd_by_closed_bytes;
 
-  ConnList *connections;
+  ConnList connections;
   uid_t getUid() { return uid; }
 
   void setUid(uid_t m_uid) { uid = m_uid; }

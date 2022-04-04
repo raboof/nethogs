@@ -70,8 +70,11 @@ public:
   /* is this packet coming from the local host? */
   bool Outgoing();
 
-  bool match(Packet *other);
-  bool matchSource(Packet *other);
+  bool match(const Packet *other) const;
+  bool matchSource(const Packet *other) const;
+  /* returns a copy with destination information stripped (for comparisons) */
+  Packet onlySource() const;
+  bool operator< (const Packet& other) const;
   /* returns '1.2.3.4:5-1.2.3.4:6'-style string */
   char *gethashstring();
 
