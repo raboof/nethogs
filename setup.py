@@ -26,8 +26,8 @@ FLAGS = [
     "-Wall",
     "-Wextra",
     "-Wno-missing-field-initializers",
-    "--std=c++0x",
-    "-O3",
+    "--std=c++17",
+    "-O2",
     "-fPIC",
     '-DVERSION="{}"'.format(__version__)
 ]
