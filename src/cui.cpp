@@ -34,6 +34,7 @@
 #include <ncurses.h>
 
 std::string *caption;
+static int cursOrig;
 extern const char version[];
 extern ProcList *processes;
 extern timeval curtime;
@@ -278,6 +279,7 @@ int GreatestFirst(const void *ma, const void *mb) {
 
 void init_ui() {
   WINDOW *screen = initscr();
+  cursOrig = curs_set(0);
   raw();
   noecho();
   cbreak();
@@ -291,6 +293,8 @@ void exit_ui() {
   clear();
   endwin();
   delete caption;
+  if (cursOrig != ERR)
+    curs_set(cursOrig);
 }
 
 void ui_tick() {
