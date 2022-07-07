@@ -79,9 +79,9 @@ If you want to remove Nethogs from your system, you can:
 
 ### Running without root
 
-In order to be run by a non-root user, nethogs needs the `cap_net_admin` and `cap_net_raw` capabilities. These can be set on the executable by using the `setcap` command, as follows:
+In order to be run by a non-root user, nethogs needs the `cap_net_admin` and `cap_net_raw` capabilities; additionally, to read and display process names, `cap_dac_read_search` and `cap_sys_ptrace` capabilities are required. These can be set on the executable by using the `setcap` command, as follows:
 
-    sudo setcap "cap_net_admin,cap_net_raw+pe" /usr/local/sbin/nethogs
+    sudo setcap "cap_net_admin,cap_net_raw,cap_dac_read_search,cap_sys_ptrace+pe" /usr/local/sbin/nethogs
 
 Coding standards
 ----------------
