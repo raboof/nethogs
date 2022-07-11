@@ -215,15 +215,12 @@ int main(int argc, char **argv) {
     forceExit(false, "No devices to monitor. Use '-a' to allow monitoring "
                      "loopback interfaces or devices that are not up/running");
 
-  if ((!tracemode) && (!DEBUG)) {
-    init_ui();
-  }
-
 #ifndef __linux__
   if (geteuid() != 0)
     forceExit(false, "You need to be root to run NetHogs!");
 #endif
-  // on Linux, we can run as non-root given the cap_net_admin and cap_net_raw capabilities
+  // on Linux, we can run as non-root given the cap_net_admin, cap_net_raw,
+  // cap_dac_read_search and cap_sys_ptrace capabilities
 
   // use the Self-Pipe trick to interrupt the select() in the main loop
   self_pipe = create_self_pipe();
@@ -291,7 +288,8 @@ int main(int argc, char **argv) {
   if (nb_devices == nb_failed_devices) {
     if (geteuid() != 0)
       fprintf(stderr, "To run nethogs without being root, you need to enable "
-                      "capabilities on the program (cap_net_admin, cap_new_raw). "
+                      "capabilities on the program (cap_net_admin, cap_net_raw, "
+                      "cap_dac_read_search, cap_sys_ptrace). "
                       "See the documentation for details.\n");
     forceExit(false, "Error opening pcap handlers for all devices.\n");
   }
@@ -299,6 +297,10 @@ int main(int argc, char **argv) {
   signal(SIGINT, &quit_cb);
 
   struct dpargs *userdata = (dpargs *)malloc(sizeof(struct dpargs));
+
+  if ((!tracemode) && (!DEBUG)) {
+    init_ui();
+  }
 
   // Main loop:
   int refresh_count = 0;
