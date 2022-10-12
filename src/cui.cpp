@@ -160,8 +160,8 @@ static void mvaddstr_truncate_cmdline(int row, int col, const char *progname,
   if (showBasename) {
     if (index(progname, FILE_SEPARATOR) != NULL) {
       progname = rindex(progname, FILE_SEPARATOR) + 1;
-    } 
-  }                                      
+    }
+  }
 
   std::size_t proglen = strlen(progname);
   std::size_t max_cmdlen;
