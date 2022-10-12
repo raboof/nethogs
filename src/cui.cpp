@@ -351,7 +351,7 @@ void show_ncurses(Line *lines[], int nproc) {
   double sent_global = 0;
   double recv_global = 0;
 
-  getmaxyx(stdscr, rows, cols); /* find the boundaries of the screeen */
+  getmaxyx(stdscr, rows, cols); /* find the boundaries of the screen */
 
   if (cols < 62) {
     erase();
