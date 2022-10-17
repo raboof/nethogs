@@ -68,7 +68,7 @@ const char *COLUMN_FORMAT_RECEIVED = "%11.3f";
 
 // All descriptions are padded to 6 characters in length with spaces
 const char *const desc_view_mode[VIEWMODE_COUNT] = {
-    "KB/sec", "KB    ", "B     ", "MB    ", "MB/sec", "GB/sec"};
+    "KB/s  ", "KB    ", "B     ", "MB    ", "MB/s  ", "GB/s  "};
 
 constexpr char FILE_SEPARATOR = '/';
 
@@ -160,8 +160,8 @@ static void mvaddstr_truncate_cmdline(int row, int col, const char *progname,
   if (showBasename) {
     if (index(progname, FILE_SEPARATOR) != NULL) {
       progname = rindex(progname, FILE_SEPARATOR) + 1;
-    } 
-  }                                      
+    }
+  }
 
   std::size_t proglen = strlen(progname);
   std::size_t max_cmdlen;
@@ -351,7 +351,7 @@ void show_ncurses(Line *lines[], int nproc) {
   double sent_global = 0;
   double recv_global = 0;
 
-  getmaxyx(stdscr, rows, cols); /* find the boundaries of the screeen */
+  getmaxyx(stdscr, rows, cols); /* find the boundaries of the screen */
 
   if (cols < 62) {
     erase();
