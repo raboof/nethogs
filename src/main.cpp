@@ -51,7 +51,8 @@ static void help(bool iserror) {
   output << "		-C : capture TCP and UDP.\n";
   output << "		-g : garbage collection period in number of refresh. "
             "default is 50.\n";
-  output << "		-b : Short program name. Displays only the program name.\n";
+  output << "		-b : Short program name. Displays only the program "
+            "name.\n";
   output << "		-f : EXPERIMENTAL: specify string pcap filter (like "
             "tcpdump)."
             " This may be removed or changed in a future version.\n";
@@ -150,7 +151,6 @@ int main(int argc, char **argv) {
   char *filter = NULL;
   int garbage_collection_period = 50;
 
-
   int opt;
   while ((opt = getopt(argc, argv, "Vhxtpsd:v:c:laf:Cbg:P:")) != -1) {
     switch (opt) {
@@ -201,7 +201,7 @@ int main(int argc, char **argv) {
       garbage_collection_period = (time_t)atoi(optarg);
       break;
     case 'P':
-      pidsToWatch.insert((pid_t) atoi(optarg));
+      pidsToWatch.insert((pid_t)atoi(optarg));
       break;
     default:
       help(true);
@@ -287,10 +287,11 @@ int main(int argc, char **argv) {
 
   if (nb_devices == nb_failed_devices) {
     if (geteuid() != 0)
-      fprintf(stderr, "To run nethogs without being root, you need to enable "
-                      "capabilities on the program (cap_net_admin, cap_net_raw, "
-                      "cap_dac_read_search, cap_sys_ptrace). "
-                      "See the documentation for details.\n");
+      fprintf(stderr,
+              "To run nethogs without being root, you need to enable "
+              "capabilities on the program (cap_net_admin, cap_net_raw, "
+              "cap_dac_read_search, cap_sys_ptrace). "
+              "See the documentation for details.\n");
     forceExit(false, "Error opening pcap handlers for all devices.\n");
   }
 

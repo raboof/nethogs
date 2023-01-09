@@ -36,19 +36,19 @@ void check_all_procs();
 /* compares Connection pointers by their refpacket */
 struct ConnectionComparator {
   using is_transparent = void;
-  bool operator()(const Connection* l, const Connection* r) const {
+  bool operator()(const Connection *l, const Connection *r) const {
     return *l->refpacket < *r->refpacket;
   }
-  bool operator()(const Packet* l, const Connection* r) const {
+  bool operator()(const Packet *l, const Connection *r) const {
     return *l < *r->refpacket;
   }
-  bool operator()(const Connection* l, const Packet* r) const {
+  bool operator()(const Connection *l, const Packet *r) const {
     return *l->refpacket < *r;
   }
 };
 
 /* ordered set of Connection pointers */
-typedef std::multiset<Connection*, ConnectionComparator> ConnList;
+typedef std::multiset<Connection *, ConnectionComparator> ConnList;
 
 class Process {
 public:

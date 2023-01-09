@@ -336,9 +336,9 @@ void show_trace(Line *lines[], int nproc) {
   }
 
   /* print the 'unknown' connections, for debugging */
-  for (auto it = unknowntcp->connections.begin(); it != unknowntcp->connections.end(); ++it) {
-    std::cout << "Unknown connection: "
-              << (*it)->refpacket->gethashstring()
+  for (auto it = unknowntcp->connections.begin();
+       it != unknowntcp->connections.end(); ++it) {
+    std::cout << "Unknown connection: " << (*it)->refpacket->gethashstring()
               << std::endl;
   }
 }

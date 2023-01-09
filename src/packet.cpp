@@ -300,9 +300,8 @@ bool Packet::match(const Packet *other) const {
 
 bool Packet::matchSource(const Packet *other) const {
   return sa_family == other->sa_family && (sport == other->sport) &&
-         (sa_family == AF_INET
-              ? (sameinaddr(sip, other->sip))
-              : (samein6addr(sip6, other->sip6)));
+         (sa_family == AF_INET ? (sameinaddr(sip, other->sip))
+                               : (samein6addr(sip6, other->sip6)));
 }
 
 Packet Packet::onlySource() const {
@@ -313,7 +312,7 @@ Packet Packet::onlySource() const {
   return p;
 }
 
-bool Packet::operator< (const Packet& other) const {
+bool Packet::operator<(const Packet &other) const {
   if (sa_family != other.sa_family)
     return dir < other.sa_family;
   /* source address first */
