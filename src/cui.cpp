@@ -485,7 +485,7 @@ void do_refresh() {
 // . Returns a String with a nice representation of the floating point value 'val'
 // . There will be 'decimals' number of digits after the decimal point 
 // . There will be thousand separators as "'", independent of the user locale
-// . String wiil have width 'maxWidth', the value is aligned to the right, the padding
+// . String will have width 'maxWidth', the value is aligned to the right, the padding
 //   values at the left are white spaces.
 // . If the the resulting number-string is bigger in than 'maxWidth' a 
 //   default string "ERR:tooBig" is returned, padded to maxWidth.
