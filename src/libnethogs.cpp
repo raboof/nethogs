@@ -277,11 +277,12 @@ static void nethogsmonitor_clean_up() {
 }
 
 int nethogsmonitor_loop(NethogsMonitorCallback cb, char *filter, int to_ms) {
-    return nethogsmonitor_loop_devices(cb, filter, 0, NULL, false, to_ms);
+  return nethogsmonitor_loop_devices(cb, filter, 0, NULL, false, to_ms);
 }
 
 int nethogsmonitor_loop_devices(NethogsMonitorCallback cb, char *filter,
-                                int devc, char **devicenames, bool all, int to_ms) {
+                                int devc, char **devicenames, bool all,
+                                int to_ms) {
   if (monitor_run_flag) {
     return NETHOGS_STATUS_FAILURE;
   }

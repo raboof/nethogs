@@ -30,12 +30,12 @@
 #endif
 #include <map>
 #include <pwd.h>
+#include <signal.h>
 #include <stdlib.h>
 #include <sys/socket.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
-#include <signal.h>
 
 #include "conninode.h"
 #include "inode2prog.h"
@@ -81,7 +81,6 @@ float tokbps(u_int64_t bytes) { return (((double)bytes) / PERIOD) / KB; }
 float tombps(u_int64_t bytes) { return (((double)bytes) / PERIOD) / MB; }
 float togbps(u_int64_t bytes) { return (((double)bytes) / PERIOD) / GB; }
 
-
 void process_init() {
   unknowntcp = new Process(0, "", "unknown TCP");
   processes = new ProcList(unknowntcp, NULL);
@@ -92,7 +91,6 @@ void process_init() {
     // unknownip = new Process (0, "", "unknown IP");
     // processes = new ProcList (unknownip, processes);
   }
-
 }
 
 int Process::getLastPacket() {
@@ -110,7 +108,8 @@ static void sum_active_connections(Process *process_ptr, u_int64_t &sum_sent,
                                    u_int64_t &sum_recv) {
   /* walk though all process_ptr process's connections, and sum
    * them up */
-  for (auto it = process_ptr->connections.begin(); it != process_ptr->connections.end(); ) {
+  for (auto it = process_ptr->connections.begin();
+       it != process_ptr->connections.end();) {
     if ((*it)->getLastPacket() <= curtime.tv_sec - CONNTIMEOUT) {
       /* capture sent and received totals before deleting */
       process_ptr->sent_by_closed_bytes += (*it)->sumSent;
@@ -158,7 +157,8 @@ void Process::getgbps(float *recvd, float *sent) {
 /** get total values for this process */
 void Process::gettotal(u_int64_t *recvd, u_int64_t *sent) {
   u_int64_t sum_sent = 0, sum_recv = 0;
-  for (auto it = this->connections.begin(); it != this->connections.end(); ++it) {
+  for (auto it = this->connections.begin(); it != this->connections.end();
+       ++it) {
     Connection *conn = (*it);
     sum_sent += conn->sumSent;
     sum_recv += conn->sumRecv;
@@ -253,7 +253,8 @@ Process *getProcess(unsigned long inode, const char *devicename) {
   if (proc != NULL)
     return proc;
 
-  if ( !(pidsToWatch.empty()) && pidsToWatch.find(node->pid) == pidsToWatch.end() ) {
+  if (!(pidsToWatch.empty()) &&
+      pidsToWatch.find(node->pid) == pidsToWatch.end()) {
     return NULL;
   }
 

@@ -74,7 +74,7 @@ public:
   bool matchSource(const Packet *other) const;
   /* returns a copy with destination information stripped (for comparisons) */
   Packet onlySource() const;
-  bool operator< (const Packet& other) const;
+  bool operator<(const Packet &other) const;
   /* returns '1.2.3.4:5-1.2.3.4:6'-style string */
   char *gethashstring();
 
