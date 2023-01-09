@@ -407,7 +407,7 @@ void show_ncurses(Line *lines[], int nproc) {
 	   prettyFloat(sent_global, NUMBER_OF_DECIMALS_SENT, COLUMN_WIDTH_SENT).c_str(), 
 	   prettyFloat(recv_global, NUMBER_OF_DECIMALS_RECEIVED, COLUMN_WIDTH_RECEIVED).c_str()
 	   );
-//	   recv_global);
+
   mvprintw(3 + 1 + i, cols - COLUMN_WIDTH_UNIT, "%s", desc_view_mode[viewMode]);
   attroff(A_REVERSE);
   mvprintw(totalrow + 1, 0, "%s", "");
