@@ -66,6 +66,10 @@ After that, simply
     sudo checkinstall -D make install
     sudo dpkg -i nethogs*.deb
 
+##### On Arch Linux
+
+    sudo pacman -S nethogs
+
 #### Upgrading
 
 When upgrading (or downgrading), you can simply install the new version 'over'
