@@ -15,7 +15,7 @@
 static std::pair<int, int> self_pipe = std::make_pair(-1, -1);
 static time_t last_refresh_time = 0;
 
-std::set<pid_t> pidsToWatch;
+extern std::set<pid_t> pidsToWatch;
 
 // selectable file descriptors for the main loop
 static fd_set pc_loop_fd_set;
