@@ -68,7 +68,7 @@ Process *unknownudp;
 Process *unknownip;
 ProcList *processes;
 
-extern std::set<pid_t> pidsToWatch;
+std::set<pid_t> pidsToWatch;
 
 #define KB (1UL << 10)
 #define MB (1UL << 20)
