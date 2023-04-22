@@ -239,7 +239,7 @@ int get_devlen(Line *lines[], int nproc, int rows) {
     if (i + 3 < rows) {
       curlen = strlen(lines[i]->devicename);
       if (curlen > devlen)
-        curlen = devlen;
+        devlen = curlen;
     }
   }
 
