@@ -9,7 +9,7 @@
 namespace py = pybind11;
 
 //--- for some reason this is a global defined in main.cpp
-std::set<pid_t> pidsToWatch;
+extern std::set<pid_t> pidsToWatch;
 
 //--- hacky way to get callbacks working and handle signals
 std::function<void(int, NethogsMonitorRecord const *)> empty_callback;
