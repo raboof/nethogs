@@ -200,8 +200,8 @@ void Process::getlast(u_int64_t *recvd, u_int64_t *sent) {
   *sent = sum_sent - this->sent_last_reported;
   *recvd = sum_recv - this->rcvd_last_reported;
 
-  this->sent_last_reported = *sent;
-  this->rcvd_last_reported = *recvd;
+  this->sent_last_reported = sum_sent;
+  this->rcvd_last_reported = sum_recv;
 }
 
 
