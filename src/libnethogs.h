@@ -26,6 +26,8 @@ typedef struct NethogsMonitorRecord {
   const char *device_name;
   uint64_t sent_bytes;
   uint64_t recv_bytes;
+  uint64_t sent_bytes_last;
+  uint64_t recv_bytes_last;
   float sent_kbs;
   float recv_kbs;
 } NethogsMonitorRecord;

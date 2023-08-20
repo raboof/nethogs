@@ -207,10 +207,14 @@ static void nethogsmonitor_handle_update(NethogsMonitorCallback cb) {
       const u_int32_t uid = curproc->getVal()->getUid();
       u_int64_t sent_bytes;
       u_int64_t recv_bytes;
+      u_int64_t sent_bytes_last;
+      u_int64_t recv_bytes_last;
+
       float sent_kbs;
       float recv_kbs;
       curproc->getVal()->getkbps(&recv_kbs, &sent_kbs);
       curproc->getVal()->gettotal(&recv_bytes, &sent_bytes);
+      curproc->getVal()->getlast(&recv_bytes_last, &sent_bytes_last);
 
       // notify update
       bool const new_data =
@@ -239,8 +243,11 @@ static void nethogsmonitor_handle_update(NethogsMonitorCallback cb) {
       NHM_UPDATE_ONE_FIELD(data.uid, uid)
       NHM_UPDATE_ONE_FIELD(data.sent_bytes, sent_bytes)
       NHM_UPDATE_ONE_FIELD(data.recv_bytes, recv_bytes)
+      NHM_UPDATE_ONE_FIELD(data.sent_bytes_last, sent_bytes_last)
+      NHM_UPDATE_ONE_FIELD(data.recv_bytes_last, recv_bytes_last)
       NHM_UPDATE_ONE_FIELD(data.sent_kbs, sent_kbs)
       NHM_UPDATE_ONE_FIELD(data.recv_kbs, recv_kbs)
+
 
 #undef NHM_UPDATE_ONE_FIELD
 
