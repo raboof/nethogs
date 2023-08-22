@@ -192,6 +192,20 @@ void Process::gettotalb(float *recvd, float *sent) {
   *recvd = sum_recv;
 }
 
+/** get only bytes since last request */
+void Process::getlast(u_int64_t *recvd, u_int64_t *sent) {
+  u_int64_t sum_sent = 0, sum_recv = 0;
+  gettotal(&sum_recv, &sum_sent);
+  
+  *sent = sum_sent - this->sent_last_reported;
+  *recvd = sum_recv - this->rcvd_last_reported;
+
+  this->sent_last_reported = sum_sent;
+  this->rcvd_last_reported = sum_recv;
+}
+
+
+
 Process *findProcess(struct prg_node *node) {
   ProcList *current = processes;
   while (current != NULL) {

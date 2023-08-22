@@ -76,6 +76,8 @@ PYBIND11_MODULE(nethogs, m) {
         .def_readwrite("device_name", &NethogsMonitorRecord::device_name)
         .def_readwrite("sent_bytes", &NethogsMonitorRecord::sent_bytes)
         .def_readwrite("recv_bytes", &NethogsMonitorRecord::recv_bytes)
+        .def_readwrite("sent_bytes_last", &NethogsMonitorRecord::sent_bytes_last)
+        .def_readwrite("recv_bytes_last", &NethogsMonitorRecord::sent_bytes_last)
         .def_readwrite("sent_kbs", &NethogsMonitorRecord::sent_kbs)
         .def_readwrite("recv_kbs", &NethogsMonitorRecord::recv_kbs);
 
