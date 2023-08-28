@@ -37,8 +37,8 @@ static void help(bool iserror) {
   output << "		-x : bughunt mode - implies tracemode.\n";
   output << "		-d : delay for update refresh rate in seconds. default "
             "is 1.\n";
-  output << "		-v : view mode (0 = KB/s, 1 = total KB, 2 = total B, 3 "
-            "= total MB, 4 = MB/s, 5 = GB/s). default is 0.\n";
+  output << "		-v : view mode (0 = kB/s, 1 = total kB, 2 = "
+            "total bytes, 3 = total MB, 4 = MB/s, 5 = GB/s). default is 0.\n";
   output << "		-c : number of updates. default is 0 (unlimited).\n";
   output << "		-t : tracemode.\n";
   // output << "		-f : format of packets on interface, default is
@@ -66,8 +66,8 @@ static void help(bool iserror) {
   output << " r: sort by RECEIVED traffic\n";
   output << " l: display command line\n";
   output << " b: display the program basename instead of the fullpath\n";
-  output << " m: switch between total (KB, B, MB) and throughput (KB/s, MB/s, "
-            "GB/s) mode\n";
+  output << " m: switch between total (kB, bytes, MB) and throughput (kB/s, "
+            " MB/s, GB/s) mode\n";
 }
 
 void quit_cb(int /* i */) {

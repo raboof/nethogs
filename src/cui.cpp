@@ -68,7 +68,7 @@ const char *COLUMN_FORMAT_RECEIVED = "%11.3f";
 
 // All descriptions are padded to 6 characters in length with spaces
 const char *const desc_view_mode[VIEWMODE_COUNT] = {
-    "KB/s  ", "KB    ", "B     ", "MB    ", "MB/s  ", "GB/s  "};
+    "kB/s  ", "kB    ", "bytes ", "MB    ", "MB/s  ", "GB/s  "};
 
 constexpr char FILE_SEPARATOR = '/';
 
