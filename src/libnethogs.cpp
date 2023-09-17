@@ -339,3 +339,20 @@ void nethogsmonitor_breakloop() {
   monitor_run_flag = false;
   write(self_pipe.second, "x", 1);
 }
+
+void nethogs_packet_stats(NethogsPackageStats **stats, int *stats_size)
+{
+  
+  *stats = static_cast<NethogsPackageStats *>(malloc(handles.size() * sizeof(NethogsPackageStats)));
+  int i = 0;
+
+  for(auto current_handle = handles.begin(); current_handle != handles.end(); current_handle ++){
+    dp_stat stat = dp_stats(current_handle->content);
+    stats[i]->ps_recv = stat.ps_recv;
+    stats[i]->ps_drop = stat.ps_drop;
+    stats[i]->ps_ifdrop = stat.ps_ifdrop;
+    stats[i]->devicename = current_handle->devicename;
+    i++;
+  }
+  *stats_size = handles.size();
+}

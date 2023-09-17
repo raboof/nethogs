@@ -7,6 +7,7 @@ extern "C" {
 
 #include <stdbool.h>
 #include <stdint.h>
+#include <sys/types.h>
 
 #define NETHOGS_DSO_VISIBLE __attribute__((visibility("default")))
 #define NETHOGS_DSO_HIDDEN __attribute__((visibility("hidden")))
@@ -31,6 +32,14 @@ typedef struct NethogsMonitorRecord {
   float sent_kbs;
   float recv_kbs;
 } NethogsMonitorRecord;
+
+typedef struct NethogsPackageStats
+{
+  u_int ps_recv;           /** number of packets received */
+  u_int ps_drop;           /** number of packets dropped because there was no room in the operating system's buffer when they arrived, because packets weren't being read fast enough */
+  u_int ps_ifdrop;         /** number of packets dropped by the network interface or its driver.  */
+  const char *devicename; /** name of the network interface */
+} NethogsPackageStats;
 
 /**
  * @brief Defines a callback to handle updates about applications
@@ -94,6 +103,14 @@ NETHOGS_DSO_VISIBLE int nethogsmonitor_loop_devices(NethogsMonitorCallback cb,
  * @brief Makes the call to nethogsmonitor_loop return.
  */
 NETHOGS_DSO_VISIBLE void nethogsmonitor_breakloop();
+
+/**
+ * @brief returns the pcap packet stats per device
+ * 
+ * @param stats C-Style array the will hold the stats
+ * @param stats_size elements and therefore devices in stats
+ */
+NETHOGS_DSO_VISIBLE void nethogs_packet_stats(NethogsPackageStats **stats, int *stats_size);
 
 #undef NETHOGS_DSO_VISIBLE
 #undef NETHOGS_DSO_HIDDEN

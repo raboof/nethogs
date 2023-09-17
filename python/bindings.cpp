@@ -66,6 +66,21 @@ int nethogsmonitor_loop_devices_py(
     return retval;
 }
 
+std::vector<NethogsPackageStats> nethogs_packet_stats_py()
+{
+  NethogsPackageStats* stats; 
+  int stat_count;
+
+  nethogs_packet_stats(&stats, &stat_count);
+
+  std::vector<NethogsPackageStats> stats_vector(stat_count);
+  std::copy_n(stats,stat_count, stats_vector.begin());
+
+  free(stats);
+
+  return stats_vector;
+}
+
 //--- python module binding
 PYBIND11_MODULE(nethogs, m) {
     py::class_<NethogsMonitorRecord>(m, "NethogsMonitorRecord")
@@ -81,6 +96,12 @@ PYBIND11_MODULE(nethogs, m) {
         .def_readwrite("sent_kbs", &NethogsMonitorRecord::sent_kbs)
         .def_readwrite("recv_kbs", &NethogsMonitorRecord::recv_kbs);
 
+    py::class_<NethogsPackageStats>(m, "NethogsPackageStats")
+        .def_readonly("ps_recv", &NethogsPackageStats::ps_recv)
+        .def_readonly("ps_drop", &NethogsPackageStats::ps_drop)
+        .def_readonly("ps_ifdrop", &NethogsPackageStats::ps_ifdrop)
+        .def_readonly("devicename", &NethogsPackageStats::devicename);
+
     m.def("nethogsmonitor_loop", &nethogsmonitor_loop_py, R"pbdoc(
         Nethogs monitor loop
     )pbdoc");
@@ -90,6 +111,10 @@ PYBIND11_MODULE(nethogs, m) {
     m.def("nethogsmonitor_breakloop", &nethogsmonitor_breakloop, R"pbdoc(
         Nethogs monitor loop break
     )pbdoc");
+    m.def("nethogs_packet_stats", &nethogs_packet_stats_py, R"pbdoc(
+        Nethogs pcap packet stats
+    )pbdoc");
+
 
 #ifdef VERSION
     m.attr("__version__") = VERSION;
