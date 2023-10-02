@@ -2,6 +2,7 @@
 #include <fcntl.h>
 #include <set>
 #include <vector>
+#include <list>
 
 #ifdef __linux__
 #include <linux/capability.h>
@@ -236,7 +237,7 @@ int main(int argc, char **argv) {
   int nb_devices = 0;
   int nb_failed_devices = 0;
 
-  handle *handles = NULL;
+  std::list<handle> handles;
   device *current_dev = devices;
   while (current_dev != NULL) {
     ++nb_devices;
@@ -262,7 +263,7 @@ int main(int argc, char **argv) {
       if (dp_setnonblock(newhandle, 1, errbuf) == -1) {
         fprintf(stderr, "Error putting libpcap in nonblocking mode\n");
       }
-      handles = new handle(newhandle, current_dev->name, handles);
+      handles.push_front(handle(newhandle, current_dev->name));
 
       if (pc_loop_use_select) {
         // some devices may not support pcap_get_selectable_fd
@@ -308,8 +309,7 @@ int main(int argc, char **argv) {
   while (1) {
     bool packets_read = false;
 
-    for (handle *current_handle = handles; current_handle != NULL;
-         current_handle = current_handle->next) {
+    for (auto current_handle = handles.begin(); current_handle != handles.end(); current_handle ++) {
       userdata->device = current_handle->devicename;
       userdata->sa_family = AF_UNSPEC;
       int retval = dp_dispatch(current_handle->content, -1, (u_char *)userdata,

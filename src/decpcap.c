@@ -110,6 +110,23 @@ struct dp_handle *dp_open_live(const char *device, int snaplen, int promisc,
   return dp_fillhandle(temp);
 }
 
+/* function to get packet statistics, e.g. dropped packets */
+
+dp_stat dp_stats(struct dp_handle* handle)
+{
+  struct pcap_stat ps;
+  if(pcap_stats(handle->pcap_handle, &ps) == PCAP_ERROR)
+  {
+      fprintf(stderr, "Error getting pcap_stats: %s\n", 
+              pcap_geterr(handle->pcap_handle));
+      ps.ps_recv   = 0;
+      ps.ps_drop   = 0;
+      ps.ps_ifdrop = 0;
+      return ps;
+  }
+  return ps;
+}
+
 /* functions to add callbacks */
 
 void dp_addcb(struct dp_handle *handle, enum dp_packet_type type,

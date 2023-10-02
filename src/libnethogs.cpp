@@ -10,6 +10,7 @@ extern "C" {
 #include <map>
 #include <memory>
 #include <vector>
+#include <list>
 
 //////////////////////////////
 extern ProcList *processes;
@@ -33,7 +34,7 @@ static fd_set pc_loop_fd_set;
 static std::vector<int> pc_loop_fd_list;
 static bool pc_loop_use_select = true;
 
-static handle *handles = NULL;
+static std::list<handle> handles;
 
 static std::pair<int, int> create_self_pipe() {
   int pfd[2];
@@ -117,7 +118,7 @@ static int nethogsmonitor_init(int devc, char **devicenames, bool all,
       if (dp_setnonblock(newhandle, 1, errbuf) == -1) {
         fprintf(stderr, "Error putting libpcap in nonblocking mode\n");
       }
-      handles = new handle(newhandle, current_dev->name, handles);
+      handles.push_front(handle(newhandle, current_dev->name));
 
       if (pc_loop_use_select) {
         // some devices may not support pcap_get_selectable_fd
@@ -264,15 +265,10 @@ static void nethogsmonitor_handle_update(NethogsMonitorCallback cb) {
 
 static void nethogsmonitor_clean_up() {
   // clean up
-  handle *current_handle = handles;
-  handle *rem;
-  while (current_handle != NULL) {
+  for(auto current_handle = handles.begin(); current_handle != handles.end(); current_handle++){
     pcap_close(current_handle->content->pcap_handle);
-    rem = current_handle;
-    current_handle = current_handle->next;
-    free(rem);
   }
-  handles = NULL;
+  handles.clear();
 
   // close file descriptors
   for (std::vector<int>::const_iterator it = pc_loop_fd_list.begin();
@@ -307,8 +303,7 @@ int nethogsmonitor_loop_devices(NethogsMonitorCallback cb, char *filter,
   while (monitor_run_flag) {
     bool packets_read = false;
 
-    handle *current_handle = handles;
-    while (current_handle != NULL) {
+    for(auto current_handle = handles.begin(); current_handle != handles.end(); current_handle++) {
       userdata->device = current_handle->devicename;
       userdata->sa_family = AF_UNSPEC;
       int retval = dp_dispatch(current_handle->content, -1, (u_char *)userdata,
@@ -320,7 +315,6 @@ int nethogsmonitor_loop_devices(NethogsMonitorCallback cb, char *filter,
       } else {
         gettimeofday(&curtime, NULL);
       }
-      current_handle = current_handle->next;
     }
 
     time_t const now = ::time(NULL);
@@ -344,4 +338,21 @@ int nethogsmonitor_loop_devices(NethogsMonitorCallback cb, char *filter,
 void nethogsmonitor_breakloop() {
   monitor_run_flag = false;
   write(self_pipe.second, "x", 1);
+}
+
+void nethogs_packet_stats(NethogsPackageStats **stats, int *stats_size)
+{
+  
+  *stats = static_cast<NethogsPackageStats *>(malloc(handles.size() * sizeof(NethogsPackageStats)));
+  int i = 0;
+
+  for(auto current_handle = handles.begin(); current_handle != handles.end(); current_handle ++){
+    dp_stat stat = dp_stats(current_handle->content);
+    stats[i]->ps_recv = stat.ps_recv;
+    stats[i]->ps_drop = stat.ps_drop;
+    stats[i]->ps_ifdrop = stat.ps_ifdrop;
+    stats[i]->devicename = current_handle->devicename;
+    i++;
+  }
+  *stats_size = handles.size();
 }

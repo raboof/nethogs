@@ -237,13 +237,10 @@ int process_ip6(u_char *userdata, const dp_header * /* header */,
 
 class handle {
 public:
-  handle(dp_handle *m_handle, const char *m_devicename = NULL,
-         handle *m_next = NULL) {
+  handle(dp_handle *m_handle, const char *m_devicename = NULL) {
     content = m_handle;
-    next = m_next;
     devicename = m_devicename;
   }
   dp_handle *content;
   const char *devicename;
-  handle *next;
 };

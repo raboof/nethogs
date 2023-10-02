@@ -52,6 +52,7 @@ enum dp_packet_type {
  * pcap
 };*/
 typedef struct pcap_pkthdr dp_header;
+typedef struct pcap_stat dp_stat;
 
 typedef int (*dp_callback)(u_char *, const dp_header *, const u_char *);
 
@@ -68,6 +69,10 @@ struct dp_handle {
 struct dp_handle *dp_open_live(const char *device, int snaplen, int promisc,
                                int to_ms, char *filter, char *errbuf);
 struct dp_handle *dp_open_offline(char *fname, char *ebuf);
+
+/* function to get packet statistics, e.g. dropped packets */
+
+dp_stat dp_stats(struct dp_handle* handle);
 
 /* functions to add callbacks */
 
