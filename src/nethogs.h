@@ -63,7 +63,8 @@
 #define PROGNAME_WIDTH 512
 
 // viewMode: how to represent numbers
-enum {
+enum
+{
   VIEWMODE_KBPS,
   VIEWMODE_TOTAL_KB,
   VIEWMODE_TOTAL_B,
@@ -77,13 +78,14 @@ enum {
 
 // 'extern' declarations for jsontrace variable
 extern bool jsontrace;
-
 void forceExit(bool success, const char *msg, ...) NORETURN;
 
-class local_addr {
+class local_addr
+{
 public:
   /* ipv4 constructor takes an in_addr_t */
-  local_addr(in_addr_t m_addr, local_addr *m_next = NULL) {
+  local_addr(in_addr_t m_addr, local_addr *m_next = NULL)
+  {
     addr = m_addr;
     next = m_next;
     sa_family = AF_INET;
@@ -91,7 +93,8 @@ public:
     inet_ntop(AF_INET, &m_addr, string, 15);
   }
   /* this constructor takes an char address[33] */
-  local_addr(struct in6_addr *m_addr, local_addr *m_next = NULL) {
+  local_addr(struct in6_addr *m_addr, local_addr *m_next = NULL)
+  {
     addr6 = *m_addr;
     next = m_next;
     sa_family = AF_INET6;

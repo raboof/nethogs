@@ -40,7 +40,8 @@
 
 #include "cui.h"
 
-extern "C" {
+extern "C"
+{
 #include "decpcap.h"
 }
 
@@ -67,7 +68,8 @@ int viewMode = VIEWMODE_KBPS;
 const char version[] = " version " VERSION;
 timeval curtime;
 
-bool local_addr::contains(const in_addr_t &n_addr) {
+bool local_addr::contains(const in_addr_t &n_addr)
+{
   if ((sa_family == AF_INET) && (n_addr == addr))
     return true;
   if (next == NULL)
@@ -75,8 +77,10 @@ bool local_addr::contains(const in_addr_t &n_addr) {
   return next->contains(n_addr);
 }
 
-bool local_addr::contains(const struct in6_addr &n_addr) {
-  if (sa_family == AF_INET6) {
+bool local_addr::contains(const struct in6_addr &n_addr)
+{
+  if (sa_family == AF_INET6)
+  {
     /*
     if (DEBUG) {
             char addy [50];
@@ -88,7 +92,8 @@ bool local_addr::contains(const struct in6_addr &n_addr) {
     }
     */
     // if (addr6.s6_addr == n_addr.s6_addr)
-    if (memcmp(&addr6, &n_addr, sizeof(struct in6_addr)) == 0) {
+    if (memcmp(&addr6, &n_addr, sizeof(struct in6_addr)) == 0)
+    {
       if (DEBUG)
         std::cerr << "Match!" << std::endl;
       return true;
@@ -99,7 +104,8 @@ bool local_addr::contains(const struct in6_addr &n_addr) {
   return next->contains(n_addr);
 }
 
-struct dpargs {
+struct dpargs
+{
   const char *device;
   int sa_family;
   in_addr ip_src;
@@ -111,7 +117,8 @@ struct dpargs {
 const char *getVersion() { return version; }
 
 int process_tcp(u_char *userdata, const dp_header *header,
-                const u_char *m_packet) {
+                const u_char *m_packet)
+{
   struct dpargs *args = (struct dpargs *)userdata;
   struct tcphdr *tcp = (struct tcphdr *)m_packet;
 
@@ -119,7 +126,8 @@ int process_tcp(u_char *userdata, const dp_header *header,
 
   /* get info from userdata, then call getPacket */
   Packet *packet;
-  switch (args->sa_family) {
+  switch (args->sa_family)
+  {
   case AF_INET:
 #if defined(__APPLE__) || defined(__FreeBSD__)
     packet = new Packet(args->ip_src, ntohs(tcp->th_sport), args->ip_dst,
@@ -146,10 +154,13 @@ int process_tcp(u_char *userdata, const dp_header *header,
 
   Connection *connection = findConnection(packet, IPPROTO_TCP);
 
-  if (connection != NULL) {
+  if (connection != NULL)
+  {
     /* add packet to the connection */
     connection->add(packet);
-  } else {
+  }
+  else
+  {
     /* else: unknown connection, create new */
     connection = new Connection(packet);
     getProcess(connection, args->device, IPPROTO_TCP);
@@ -161,14 +172,16 @@ int process_tcp(u_char *userdata, const dp_header *header,
 }
 
 int process_udp(u_char *userdata, const dp_header *header,
-                const u_char *m_packet) {
+                const u_char *m_packet)
+{
   struct dpargs *args = (struct dpargs *)userdata;
   struct udphdr *udp = (struct udphdr *)m_packet;
 
   curtime = header->ts;
 
   Packet *packet;
-  switch (args->sa_family) {
+  switch (args->sa_family)
+  {
   case AF_INET:
 #if defined(__APPLE__) || defined(__FreeBSD__)
     packet = new Packet(args->ip_src, ntohs(udp->uh_sport), args->ip_dst,
@@ -198,10 +211,13 @@ int process_udp(u_char *userdata, const dp_header *header,
 
   Connection *connection = findConnection(packet, IPPROTO_UDP);
 
-  if (connection != NULL) {
+  if (connection != NULL)
+  {
     /* add packet to the connection */
     connection->add(packet);
-  } else {
+  }
+  else
+  {
     /* else: unknown connection, create new */
     connection = new Connection(packet);
     getProcess(connection, args->device, IPPROTO_UDP);
@@ -213,7 +229,8 @@ int process_udp(u_char *userdata, const dp_header *header,
 }
 
 int process_ip(u_char *userdata, const dp_header * /* header */,
-               const u_char *m_packet) {
+               const u_char *m_packet)
+{
   struct dpargs *args = (struct dpargs *)userdata;
   struct ip *ip = (struct ip *)m_packet;
   args->sa_family = AF_INET;
@@ -225,7 +242,8 @@ int process_ip(u_char *userdata, const dp_header * /* header */,
 }
 
 int process_ip6(u_char *userdata, const dp_header * /* header */,
-                const u_char *m_packet) {
+                const u_char *m_packet)
+{
   struct dpargs *args = (struct dpargs *)userdata;
   const struct ip6_hdr *ip6 = (struct ip6_hdr *)m_packet;
   args->sa_family = AF_INET6;
@@ -236,9 +254,11 @@ int process_ip6(u_char *userdata, const dp_header * /* header */,
   return false;
 }
 
-class handle {
+class handle
+{
 public:
-  handle(dp_handle *m_handle, const char *m_devicename = NULL) {
+  handle(dp_handle *m_handle, const char *m_devicename = NULL)
+  {
     content = m_handle;
     devicename = m_devicename;
   }

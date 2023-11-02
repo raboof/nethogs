@@ -25,7 +25,8 @@ static bool pc_loop_use_select = true;
 
 static void versiondisplay(void) { std::cout << version << "\n"; }
 
-static void help(bool iserror) {
+static void help(bool iserror)
+{
   std::ostream &output = (iserror ? std::cerr : std::cout);
 
   // output << "usage: nethogs [-V] [-b] [-d seconds] [-t] [-p] [-f (eth|ppp))]
@@ -72,16 +73,22 @@ static void help(bool iserror) {
             " MB/s, GB/s) mode\n";
 }
 
-void quit_cb(int /* i */) {
-  if (self_pipe.second != -1) {
+void quit_cb(int /* i */)
+{
+  if (self_pipe.second != -1)
+  {
     write(self_pipe.second, "x", 1);
-  } else {
+  }
+  else
+  {
     exit(0);
   }
 }
 
-void forceExit(bool success, const char *msg, ...) {
-  if ((!tracemode) && (!DEBUG)) {
+void forceExit(bool success, const char *msg, ...)
+{
+  if ((!tracemode) && (!DEBUG))
+  {
     exit_ui();
   }
 
@@ -97,7 +104,8 @@ void forceExit(bool success, const char *msg, ...) {
     exit(EXIT_FAILURE);
 }
 
-std::pair<int, int> create_self_pipe() {
+std::pair<int, int> create_self_pipe()
+{
   int pfd[2];
   if (pipe(pfd) == -1)
     return std::make_pair(-1, -1);
@@ -111,33 +119,42 @@ std::pair<int, int> create_self_pipe() {
   return std::make_pair(pfd[0], pfd[1]);
 }
 
-bool wait_for_next_trigger() {
-  if (pc_loop_use_select) {
+bool wait_for_next_trigger()
+{
+  if (pc_loop_use_select)
+  {
     FD_ZERO(&pc_loop_fd_set);
     int nfds = 0;
     for (std::vector<int>::const_iterator it = pc_loop_fd_list.begin();
-         it != pc_loop_fd_list.end(); ++it) {
+         it != pc_loop_fd_list.end(); ++it)
+    {
       int const fd = *it;
       nfds = std::max(nfds, *it + 1);
       FD_SET(fd, &pc_loop_fd_set);
     }
     timeval timeout = {refreshdelay, 0};
-    if (select(nfds, &pc_loop_fd_set, 0, 0, &timeout) != -1) {
-      if (FD_ISSET(self_pipe.first, &pc_loop_fd_set)) {
+    if (select(nfds, &pc_loop_fd_set, 0, 0, &timeout) != -1)
+    {
+      if (FD_ISSET(self_pipe.first, &pc_loop_fd_set))
+      {
         return false;
       }
     }
-  } else {
+  }
+  else
+  {
     // If select() not possible, pause to prevent 100%
     usleep(1000);
   }
   return true;
 }
 
-void clean_up() {
+void clean_up()
+{
   // close file descriptors
   for (std::vector<int>::const_iterator it = pc_loop_fd_list.begin();
-       it != pc_loop_fd_list.end(); ++it) {
+       it != pc_loop_fd_list.end(); ++it)
+  {
     close(*it);
   }
 
@@ -146,7 +163,8 @@ void clean_up() {
     exit_ui();
 }
 
-int main(int argc, char **argv) {
+int main(int argc, char **argv)
+{
 
   int promisc = 0;
   bool all = false;
@@ -154,8 +172,10 @@ int main(int argc, char **argv) {
   int garbage_collection_period = 50;
 
   int opt;
-  while ((opt = getopt(argc, argv, "Vhxtpsd:v:c:laf:Cbg:P:j")) != -1) {
-    switch (opt) {
+  while ((opt = getopt(argc, argv, "Vhxtpsd:v:c:laf:Cbg:P:j")) != -1)
+  {
+    switch (opt)
+    {
     case 'V':
       versiondisplay();
       exit(0);
@@ -230,9 +250,12 @@ int main(int argc, char **argv) {
 
   // use the Self-Pipe trick to interrupt the select() in the main loop
   self_pipe = create_self_pipe();
-  if (self_pipe.first == -1 || self_pipe.second == -1) {
+  if (self_pipe.first == -1 || self_pipe.second == -1)
+  {
     forceExit(false, "Error creating pipe file descriptors\n");
-  } else {
+  }
+  else
+  {
     // add the self-pipe to allow interrupting select()
     pc_loop_fd_list.push_back(self_pipe.first);
   }
@@ -244,16 +267,19 @@ int main(int argc, char **argv) {
 
   std::list<handle> handles;
   device *current_dev = devices;
-  while (current_dev != NULL) {
+  while (current_dev != NULL)
+  {
     ++nb_devices;
 
-    if (!getLocal(current_dev->name, tracemode)) {
+    if (!getLocal(current_dev->name, tracemode))
+    {
       forceExit(false, "getifaddrs failed while establishing local IP.");
     }
 
     dp_handle *newhandle =
         dp_open_live(current_dev->name, BUFSIZ, promisc, 100, filter, errbuf);
-    if (newhandle != NULL) {
+    if (newhandle != NULL)
+    {
       dp_addcb(newhandle, dp_packet_ip, process_ip);
       dp_addcb(newhandle, dp_packet_ip6, process_ip6);
       dp_addcb(newhandle, dp_packet_tcp, process_tcp);
@@ -265,24 +291,31 @@ int main(int argc, char **argv) {
        * update: version 0.7.2, which is in debian stable now, should be ok
        * also.
        */
-      if (dp_setnonblock(newhandle, 1, errbuf) == -1) {
+      if (dp_setnonblock(newhandle, 1, errbuf) == -1)
+      {
         fprintf(stderr, "Error putting libpcap in nonblocking mode\n");
       }
       handles.push_front(handle(newhandle, current_dev->name));
 
-      if (pc_loop_use_select) {
+      if (pc_loop_use_select)
+      {
         // some devices may not support pcap_get_selectable_fd
         int const fd = pcap_get_selectable_fd(newhandle->pcap_handle);
-        if (fd != -1) {
+        if (fd != -1)
+        {
           pc_loop_fd_list.push_back(fd);
-        } else {
+        }
+        else
+        {
           pc_loop_use_select = false;
           pc_loop_fd_list.clear();
           fprintf(stderr, "failed to get selectable_fd for %s\n",
                   current_dev->name);
         }
       }
-    } else {
+    }
+    else
+    {
       fprintf(stderr, "Error opening handler for device %s\n",
               current_dev->name);
       ++nb_failed_devices;
@@ -291,7 +324,8 @@ int main(int argc, char **argv) {
     current_dev = current_dev->next;
   }
 
-  if (nb_devices == nb_failed_devices) {
+  if (nb_devices == nb_failed_devices)
+  {
     if (geteuid() != 0)
       fprintf(stderr,
               "To run nethogs without being root, you need to enable "
@@ -305,16 +339,19 @@ int main(int argc, char **argv) {
 
   struct dpargs *userdata = (dpargs *)malloc(sizeof(struct dpargs));
 
-  if ((!tracemode) && (!DEBUG)) {
+  if ((!tracemode) && (!DEBUG))
+  {
     init_ui();
   }
 
   // Main loop:
   int refresh_count = 0;
-  while (1) {
+  while (1)
+  {
     bool packets_read = false;
 
-    for (auto current_handle = handles.begin(); current_handle != handles.end(); current_handle ++) {
+    for (auto current_handle = handles.begin(); current_handle != handles.end(); current_handle++)
+    {
       userdata->device = current_handle->devicename;
       userdata->sa_family = AF_UNSPEC;
       int retval = dp_dispatch(current_handle->content, -1, (u_char *)userdata,
@@ -331,9 +368,11 @@ int main(int argc, char **argv) {
     }
 
     time_t const now = ::time(NULL);
-    if (last_refresh_time + refreshdelay <= now) {
+    if (last_refresh_time + refreshdelay <= now)
+    {
       last_refresh_time = now;
-      if ((!DEBUG) && (!tracemode)) {
+      if ((!DEBUG) && (!tracemode))
+      {
         // handle user input
         ui_tick();
       }
@@ -341,7 +380,8 @@ int main(int argc, char **argv) {
       ++refresh_count;
 
       if ((garbage_collection_period > 0) &&
-          (refresh_count % garbage_collection_period == 0)) {
+          (refresh_count % garbage_collection_period == 0))
+      {
         garbage_collect_processes();
       }
     }

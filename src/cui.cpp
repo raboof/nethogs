@@ -72,10 +72,12 @@ const char *const desc_view_mode[VIEWMODE_COUNT] = {
 
 constexpr char FILE_SEPARATOR = '/';
 
-class Line {
+class Line
+{
 public:
   Line(const char *name, const char *cmdline, double n_recv_value,
-       double n_sent_value, pid_t pid, uid_t uid, const char *n_devicename) {
+       double n_sent_value, pid_t pid, uid_t uid, const char *n_devicename)
+  {
     assert(pid >= 0);
     assert(pid <= PID_MAX);
     m_name = name;
@@ -105,7 +107,8 @@ private:
 
 #include <sstream>
 
-std::string itoa(int i) {
+std::string itoa(int i)
+{
   std::stringstream out;
   out << i;
   return out.str();
@@ -114,7 +117,8 @@ std::string itoa(int i) {
 /**
  * @returns the username that corresponds to this uid
  */
-std::string uid2username(uid_t uid) {
+std::string uid2username(uid_t uid)
+{
   struct passwd *pwd = NULL;
   errno = 0;
 
@@ -139,10 +143,14 @@ std::string uid2username(uid_t uid) {
  */
 static void mvaddstr_truncate_trailing(int row, int col, const char *str,
                                        std::size_t str_len,
-                                       std::size_t max_len) {
-  if (str_len < max_len) {
+                                       std::size_t max_len)
+{
+  if (str_len < max_len)
+  {
     mvaddstr(row, col, str);
-  } else {
+  }
+  else
+  {
     mvaddnstr(row, col, str, max_len - 2);
     addstr("..");
   }
@@ -157,9 +165,12 @@ static void mvaddstr_truncate_trailing(int row, int col, const char *str,
  */
 static void mvaddstr_truncate_cmdline(int row, int col, const char *progname,
                                       const char *cmdline,
-                                      std::size_t max_len) {
-  if (showBasename) {
-    if (index(progname, FILE_SEPARATOR) != NULL) {
+                                      std::size_t max_len)
+{
+  if (showBasename)
+  {
+    if (index(progname, FILE_SEPARATOR) != NULL)
+    {
       progname = rindex(progname, FILE_SEPARATOR) + 1;
     }
   }
@@ -167,31 +178,40 @@ static void mvaddstr_truncate_cmdline(int row, int col, const char *progname,
   std::size_t proglen = strlen(progname);
   std::size_t max_cmdlen;
 
-  if (proglen > max_len) {
+  if (proglen > max_len)
+  {
     mvaddnstr(row, col, progname, max_len - 2);
     addstr("..");
     max_cmdlen = 0;
-  } else {
+  }
+  else
+  {
     mvaddstr(row, col, progname);
     max_cmdlen = max_len - proglen - 1;
   }
 
-  if (showcommandline && cmdline) {
+  if (showcommandline && cmdline)
+  {
 
     std::size_t cmdlinelen = strlen(cmdline);
 
-    if ((cmdlinelen + 1) > max_cmdlen) {
-      if (max_cmdlen >= 3) {
+    if ((cmdlinelen + 1) > max_cmdlen)
+    {
+      if (max_cmdlen >= 3)
+      {
         mvaddnstr(row, col + proglen + 1, cmdline, max_cmdlen - 3);
         addstr("..");
       }
-    } else {
+    }
+    else
+    {
       mvaddstr(row, col + proglen + 1, cmdline);
     }
   }
 }
 
-void Line::show(int row, unsigned int proglen, unsigned int devlen) {
+void Line::show(int row, unsigned int proglen, unsigned int devlen)
+{
   assert(m_pid >= 0);
   assert(m_pid <= PID_MAX);
 
@@ -224,25 +244,29 @@ void Line::show(int row, unsigned int proglen, unsigned int devlen) {
   mvprintw(row, column_offset_received, COLUMN_FORMAT_RECEIVED, recv_value);
   mvaddstr(row, column_offset_unit, desc_view_mode[viewMode]);
 }
-void Line::log_json()
-{
-  printf("{\"name\":\"%s\",\"PID\":%d,\"UID\":%d,\"TX\":%f,\"RX\":%f }",
-         m_name, m_pid, m_uid, sent_value, recv_value);
-}
 
-void Line::log() {
+void Line::log()
+{
   std::cout << m_name;
   if (showcommandline && m_cmdline)
     std::cout << ' ' << m_cmdline;
   std::cout << '/' << m_pid << '/' << m_uid << "\t" << sent_value << "\t"
             << recv_value << std::endl;
 }
+void Line::log_json()
+{
+  printf("{\"name\":\"%s\",\"PID\":%d,\"UID\":%d,\"RX\":%f,\"TX\":%f }",
+         m_name, m_pid, m_uid, recv_value, sent_value);
+}
 
-int get_devlen(Line *lines[], int nproc, int rows) {
+int get_devlen(Line *lines[], int nproc, int rows)
+{
   int devlen = MIN_COLUMN_WIDTH_DEV;
   int curlen;
-  for (int i = 0; i < nproc; i++) {
-    if (i + 3 < rows) {
+  for (int i = 0; i < nproc; i++)
+  {
+    if (i + 3 < rows)
+    {
       curlen = strlen(lines[i]->devicename);
       if (curlen > devlen)
         devlen = curlen;
@@ -255,35 +279,45 @@ int get_devlen(Line *lines[], int nproc, int rows) {
   return devlen;
 }
 
-int GreatestFirst(const void *ma, const void *mb) {
+int GreatestFirst(const void *ma, const void *mb)
+{
   Line **pa = (Line **)ma;
   Line **pb = (Line **)mb;
   Line *a = *pa;
   Line *b = *pb;
   double aValue;
-  if (sortRecv) {
+  if (sortRecv)
+  {
     aValue = a->recv_value;
-  } else {
+  }
+  else
+  {
     aValue = a->sent_value;
   }
 
   double bValue;
-  if (sortRecv) {
+  if (sortRecv)
+  {
     bValue = b->recv_value;
-  } else {
+  }
+  else
+  {
     bValue = b->sent_value;
   }
 
-  if (aValue > bValue) {
+  if (aValue > bValue)
+  {
     return -1;
   }
-  if (aValue == bValue) {
+  if (aValue == bValue)
+  {
     return 0;
   }
   return 1;
 }
 
-void init_ui() {
+void init_ui()
+{
   WINDOW *screen = initscr();
   cursOrig = curs_set(0);
   raw();
@@ -295,7 +329,8 @@ void init_ui() {
   // caption->append(", running at ");
 }
 
-void exit_ui() {
+void exit_ui()
+{
   clear();
   endwin();
   delete caption;
@@ -303,8 +338,10 @@ void exit_ui() {
     curs_set(cursOrig);
 }
 
-void ui_tick() {
-  switch (getch()) {
+void ui_tick()
+{
+  switch (getch())
+  {
   case 'q':
     /* quit */
     quit_cb(0);
@@ -331,7 +368,8 @@ void ui_tick() {
     break;
   }
 }
-void show_json_trace(Line *lines[], int nproc) {
+void show_json_trace(Line *lines[], int nproc)
+{
   /* print them */
   std::cout << '[';
   for (int i = 0; i < nproc; i++)
@@ -343,24 +381,29 @@ void show_json_trace(Line *lines[], int nproc) {
   }
   std::cout << ']' << std::endl;
 }
-void show_trace(Line *lines[], int nproc) {
+
+void show_trace(Line *lines[], int nproc)
+{
   std::cout << "\nRefreshing:\n";
 
   /* print them */
-  for (int i = 0; i < nproc; i++) {
+  for (int i = 0; i < nproc; i++)
+  {
     lines[i]->log();
     delete lines[i];
   }
 
   /* print the 'unknown' connections, for debugging */
   for (auto it = unknowntcp->connections.begin();
-       it != unknowntcp->connections.end(); ++it) {
+       it != unknowntcp->connections.end(); ++it)
+  {
     std::cout << "Unknown connection: " << (*it)->refpacket->gethashstring()
               << std::endl;
   }
 }
 
-void show_ncurses(Line *lines[], int nproc) {
+void show_ncurses(Line *lines[], int nproc)
+{
   int rows;             // number of terminal rows
   int cols;             // number of terminal columns
   unsigned int proglen; // max length of the "PROGRAM" column
@@ -370,7 +413,8 @@ void show_ncurses(Line *lines[], int nproc) {
 
   getmaxyx(stdscr, rows, cols); /* find the boundaries of the screen */
 
-  if (cols < 62) {
+  if (cols < 62)
+  {
     erase();
     mvprintw(0, 0,
              "The terminal is too narrow! Please make it wider.\nI'll wait...");
@@ -395,7 +439,8 @@ void show_ncurses(Line *lines[], int nproc) {
 
   /* print them */
   int i;
-  for (i = 0; i < nproc; i++) {
+  for (i = 0; i < nproc; i++)
+  {
     if (i + 3 < rows)
       lines[i]->show(i + 3, proglen, devlen);
     recv_global += lines[i]->recv_value;
@@ -413,12 +458,14 @@ void show_ncurses(Line *lines[], int nproc) {
 }
 
 // Display all processes and relevant network traffic using show function
-void do_refresh() {
+void do_refresh()
+{
   refreshconninode();
   refreshcount++;
 
   if (viewMode == VIEWMODE_KBPS || viewMode == VIEWMODE_MBPS ||
-      viewMode == VIEWMODE_GBPS) {
+      viewMode == VIEWMODE_GBPS)
+  {
     remove_timed_out_processes();
   }
 
@@ -432,7 +479,8 @@ void do_refresh() {
 
   int n = 0;
 
-  while (curproc != NULL) {
+  while (curproc != NULL)
+  {
     // walk though its connections, summing up their data, and
     // throwing away connections that haven't received a package
     // in the last CONNTIMEOUT seconds.
@@ -441,19 +489,32 @@ void do_refresh() {
 
     float value_sent = 0, value_recv = 0;
 
-    if (viewMode == VIEWMODE_KBPS) {
+    if (viewMode == VIEWMODE_KBPS)
+    {
       curproc->getVal()->getkbps(&value_recv, &value_sent);
-    } else if (viewMode == VIEWMODE_MBPS) {
+    }
+    else if (viewMode == VIEWMODE_MBPS)
+    {
       curproc->getVal()->getmbps(&value_recv, &value_sent);
-    } else if (viewMode == VIEWMODE_GBPS) {
+    }
+    else if (viewMode == VIEWMODE_GBPS)
+    {
       curproc->getVal()->getgbps(&value_recv, &value_sent);
-    } else if (viewMode == VIEWMODE_TOTAL_KB) {
+    }
+    else if (viewMode == VIEWMODE_TOTAL_KB)
+    {
       curproc->getVal()->gettotalkb(&value_recv, &value_sent);
-    } else if (viewMode == VIEWMODE_TOTAL_MB) {
+    }
+    else if (viewMode == VIEWMODE_TOTAL_MB)
+    {
       curproc->getVal()->gettotalmb(&value_recv, &value_sent);
-    } else if (viewMode == VIEWMODE_TOTAL_B) {
+    }
+    else if (viewMode == VIEWMODE_TOTAL_B)
+    {
       curproc->getVal()->gettotalb(&value_recv, &value_sent);
-    } else {
+    }
+    else
+    {
       forceExit(false, "Invalid viewMode: %d", viewMode);
     }
     uid_t uid = curproc->getVal()->getUid();
@@ -469,9 +530,10 @@ void do_refresh() {
 
   /* sort the accumulated lines */
   qsort(lines, nproc, sizeof(Line *), GreatestFirst);
+
   if (jsontrace)
     show_json_trace(lines, nproc);
-  if (tracemode || DEBUG)
+  else if (tracemode || DEBUG)
     show_trace(lines, nproc);
   else
     show_ncurses(lines, nproc);
