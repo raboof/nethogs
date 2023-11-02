@@ -464,7 +464,7 @@ void do_refresh() {
   /* sort the accumulated lines */
   qsort(lines, nproc, sizeof(Line *), GreatestFirst);
   if (jsontrace)
-    show_json_trace(lines, nproc)
+    show_json_trace(lines, nproc);
   if (tracemode || DEBUG)
     show_trace(lines, nproc);
   else
