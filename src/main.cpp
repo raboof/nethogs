@@ -154,7 +154,7 @@ int main(int argc, char **argv) {
   int garbage_collection_period = 50;
 
   int opt;
-  while ((opt = getopt(argc, argv, "Vhxtpsd:v:c:laf:Cbg:P:")) != -1) {
+  while ((opt = getopt(argc, argv, "Vhxtpsd:v:c:laf:Cbg:P:j")) != -1) {
     switch (opt) {
     case 'V':
       versiondisplay();
