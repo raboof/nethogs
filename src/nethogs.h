@@ -75,6 +75,9 @@ enum {
 
 #define NORETURN __attribute__((__noreturn__))
 
+// 'extern' declarations for jsontrace variable
+extern bool jsontrace;
+
 void forceExit(bool success, const char *msg, ...) NORETURN;
 
 class local_addr {

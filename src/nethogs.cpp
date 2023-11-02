@@ -57,6 +57,7 @@ unsigned refreshcount = 0;
 unsigned processlimit = 0;
 bool tracemode = false;
 bool bughuntmode = false;
+bool jsontrace = false;
 // sort on sent or received?
 bool sortRecv = true;
 bool showcommandline = false;
