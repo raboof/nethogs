@@ -90,6 +90,7 @@ public:
 
   void show(int row, unsigned int proglen, unsigned int devlen);
   void log();
+  void log_json();
 
   double sent_value;
   double recv_value;
@@ -222,6 +223,11 @@ void Line::show(int row, unsigned int proglen, unsigned int devlen) {
 
   mvprintw(row, column_offset_received, COLUMN_FORMAT_RECEIVED, recv_value);
   mvaddstr(row, column_offset_unit, desc_view_mode[viewMode]);
+}
+void Line::log_json()
+{
+  printf("{\"name\":\"%s\",\"PID\":%d,\"UID\":%d,\"TX\":%f,\"RX\":%f }",
+         m_name, m_pid, m_uid, sent_value, recv_value);
 }
 
 void Line::log() {
