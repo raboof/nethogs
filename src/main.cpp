@@ -31,7 +31,7 @@ static void help(bool iserror) {
   // output << "usage: nethogs [-V] [-b] [-d seconds] [-t] [-p] [-f (eth|ppp))]
   // [device [device [device ...]]]\n";
   output << "usage: nethogs [-V] [-h] [-x] [-d seconds] [-v mode] [-c count] "
-            "[-t] [-p] [-s] [-a] [-l] [-f filter] [-C] [-b] [-P pid] "
+            "[-t] [-j] [-p] [-s] [-a] [-l] [-f filter] [-C] [-b] [-P pid] "
             "[device [device [device ...]]]\n";
   output << "		-V : prints version.\n";
   output << "		-h : prints this help.\n";
@@ -42,6 +42,7 @@ static void help(bool iserror) {
             "total bytes, 3 = total MB, 4 = MB/s, 5 = GB/s). default is 0.\n";
   output << "		-c : number of updates. default is 0 (unlimited).\n";
   output << "		-t : tracemode.\n";
+  output << "		-j : tracemode with data as newline-delimited json.\n";
   // output << "		-f : format of packets on interface, default is
   // eth.\n";
   output << "		-p : sniff in promiscious mode (not recommended).\n";
@@ -166,6 +167,10 @@ int main(int argc, char **argv) {
       tracemode = true;
       break;
     case 't':
+      tracemode = true;
+      break;
+    case 'j':
+      jsontrace = true;
       tracemode = true;
       break;
     case 'p':
