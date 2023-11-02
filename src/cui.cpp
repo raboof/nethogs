@@ -325,7 +325,18 @@ void ui_tick() {
     break;
   }
 }
-
+void show_json_trace(Line *lines[], int nproc) {
+  /* print them */
+  std::cout << '[';
+  for (int i = 0; i < nproc; i++)
+  {
+    lines[i]->log_json();
+    delete lines[i];
+    if (i != nproc - 1)
+      std::cout << ',';
+  }
+  std::cout << ']' << std::endl;
+}
 void show_trace(Line *lines[], int nproc) {
   std::cout << "\nRefreshing:\n";
 
@@ -452,7 +463,8 @@ void do_refresh() {
 
   /* sort the accumulated lines */
   qsort(lines, nproc, sizeof(Line *), GreatestFirst);
-
+  if (jsontrace)
+    show_json_trace(lines, nproc)
   if (tracemode || DEBUG)
     show_trace(lines, nproc);
   else
