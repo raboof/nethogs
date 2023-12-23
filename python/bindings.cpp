@@ -52,7 +52,10 @@ int nethogsmonitor_loop_devices_py(
 {
     // this is ok because we only use the vector here
     std::vector<char*> _devicenames;
-    for (auto _dn : __devicenames) _devicenames.push_back(const_cast<char*>(_dn.c_str()));
+    for (auto& _dn : __devicenames)
+    {
+      _devicenames.push_back(const_cast<char*>(_dn.c_str()));
+    } 
     int devc = _devicenames.size();
     char **devicenames = (_devicenames.empty()) ? NULL : _devicenames.data();
 
