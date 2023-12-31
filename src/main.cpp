@@ -1,8 +1,8 @@
 #include "nethogs.cpp"
 #include <fcntl.h>
+#include <list>
 #include <set>
 #include <vector>
-#include <list>
 
 #ifdef __linux__
 #include <linux/capability.h>
@@ -309,7 +309,8 @@ int main(int argc, char **argv) {
   while (1) {
     bool packets_read = false;
 
-    for (auto current_handle = handles.begin(); current_handle != handles.end(); current_handle ++) {
+    for (auto current_handle = handles.begin(); current_handle != handles.end();
+         current_handle++) {
       userdata->device = current_handle->devicename;
       userdata->sa_family = AF_UNSPEC;
       int retval = dp_dispatch(current_handle->content, -1, (u_char *)userdata,

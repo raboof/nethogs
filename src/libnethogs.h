@@ -33,11 +33,13 @@ typedef struct NethogsMonitorRecord {
   float recv_kbs;
 } NethogsMonitorRecord;
 
-typedef struct NethogsPackageStats
-{
-  u_int ps_recv;           /** number of packets received */
-  u_int ps_drop;           /** number of packets dropped because there was no room in the operating system's buffer when they arrived, because packets weren't being read fast enough */
-  u_int ps_ifdrop;         /** number of packets dropped by the network interface or its driver.  */
+typedef struct NethogsPackageStats {
+  u_int ps_recv; /** number of packets received */
+  u_int ps_drop; /** number of packets dropped because there was no room in the
+                    operating system's buffer when they arrived, because packets
+                    weren't being read fast enough */
+  u_int ps_ifdrop; /** number of packets dropped by the network interface or its
+                      driver.  */
   const char *devicename; /** name of the network interface */
 } NethogsPackageStats;
 
@@ -106,11 +108,12 @@ NETHOGS_DSO_VISIBLE void nethogsmonitor_breakloop();
 
 /**
  * @brief returns the pcap packet stats per device
- * 
+ *
  * @param stats C-Style array the will hold the stats
  * @param stats_size elements and therefore devices in stats
  */
-NETHOGS_DSO_VISIBLE void nethogs_packet_stats(NethogsPackageStats **stats, int *stats_size);
+NETHOGS_DSO_VISIBLE void nethogs_packet_stats(NethogsPackageStats **stats,
+                                              int *stats_size);
 
 #undef NETHOGS_DSO_VISIBLE
 #undef NETHOGS_DSO_HIDDEN
