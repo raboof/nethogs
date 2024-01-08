@@ -356,3 +356,8 @@ void nethogs_packet_stats(NethogsPackageStats **stats, int *stats_size)
   }
   *stats_size = handles.size();
 }
+
+void nethogs_enable_udp(bool state)
+{
+  catchall = state;
+}

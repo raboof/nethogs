@@ -112,6 +112,13 @@ NETHOGS_DSO_VISIBLE void nethogsmonitor_breakloop();
  */
 NETHOGS_DSO_VISIBLE void nethogs_packet_stats(NethogsPackageStats **stats, int *stats_size);
 
+/**
+ * @brief Enables or disables the UDP recording. Default is False.
+ * 
+ * @param state state to set
+*/
+NETHOGS_DSO_VISIBLE void nethogs_enable_udp(bool state);
+
 #undef NETHOGS_DSO_VISIBLE
 #undef NETHOGS_DSO_HIDDEN
 
