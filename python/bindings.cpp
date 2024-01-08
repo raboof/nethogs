@@ -84,6 +84,12 @@ std::vector<NethogsPackageStats> nethogs_packet_stats_py()
   return stats_vector;
 }
 
+void nethogs_enable_udp_py(bool state)
+{
+  nethogs_enable_udp(state);
+}
+
+
 //--- python module binding
 PYBIND11_MODULE(nethogs, m) {
     py::class_<NethogsMonitorRecord>(m, "NethogsMonitorRecord")
@@ -116,6 +122,9 @@ PYBIND11_MODULE(nethogs, m) {
     )pbdoc");
     m.def("nethogs_packet_stats", &nethogs_packet_stats_py, R"pbdoc(
         Nethogs pcap packet stats
+    )pbdoc");
+    m.def("nethogs_enable_udp", &nethogs_enable_udp_py, R"pbdoc(
+        Enables or disables the recording of UDP, default is False.
     )pbdoc");
 
 
