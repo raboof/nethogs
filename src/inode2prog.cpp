@@ -226,10 +226,10 @@ void get_info_for_pid(const char *pid) {
   closedir(dir);
 }
 
-static quad_t get_ms() {
+static int64_t get_ms() {
   struct timespec ts;
   clock_gettime(CLOCK_MONOTONIC, &ts);
-  return static_cast<quad_t>(ts.tv_sec) * 1000 + ts.tv_nsec / 1000000;
+  return static_cast<int64_t>(ts.tv_sec) * 1000 + ts.tv_nsec / 1000000;
 }
 
 static void get_pids(std::set<pid_t> *pids) {
@@ -253,8 +253,8 @@ static void get_pids(std::set<pid_t> *pids) {
 }
 
 void garbage_collect_inodeproc() {
-  static quad_t last_ms = 0;
-  quad_t start_ms = 0;
+  static int64_t last_ms = 0;
+  int64_t start_ms = 0;
   if (bughuntmode) {
     start_ms = get_ms();
     if (last_ms) {
