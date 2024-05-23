@@ -1,0 +1,2 @@
+option('enable-libnethogs', type: 'feature', value: 'enabled', description: 'Enable libnethogs library')
+option('enable-nethogs-app', type: 'feature', value: 'enabled', description: 'Enable nethogs application')
