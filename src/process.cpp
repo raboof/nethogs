@@ -341,6 +341,12 @@ Process *getProcess(Connection *connection, const char *devicename,
 #endif
     refreshconninode();
     inode = conninode[connection->refpacket->gethashstring()];
+
+    if(inode == 0 && packettype == IPPROTO_UDP){
+      Packet p = connection->refpacket->onlySource();
+      inode = conninode[p.gethashstring()];
+    }
+
     if (bughuntmode) {
       if (inode == 0) {
         std::cout << ":( inode for connection not found after refresh.\n";

@@ -172,17 +172,7 @@ Connection *findConnectionWithMatchingRefpacketOrSource(Packet *packet,
                                                         short int packettype) {
 
   ConnList *connList = NULL;
-  switch (packettype) {
-  case IPPROTO_TCP: {
-    connList = &connections;
-    break;
-  }
-
-  case IPPROTO_UDP: {
-    connList = &unknownudp->connections;
-    break;
-  }
-  }
+  connList = &connections;
 
   auto it = connList->lower_bound(packet);
   /* the reference packet is always *outgoing* */

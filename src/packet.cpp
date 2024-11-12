@@ -309,6 +309,10 @@ Packet Packet::onlySource() const {
   std::fill(std::begin(p.dip6.s6_addr), std::end(p.dip6.s6_addr), 0);
   p.dip.s_addr = 0;
   p.dport = 0;
+  if (p.hashstring != NULL) {
+    free(p.hashstring);
+    p.hashstring = NULL;
+  }
   return p;
 }
 
