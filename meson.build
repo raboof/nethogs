@@ -38,9 +38,11 @@ subdir('src')
 #############################
 ## Pkgconfig definition    ##
 #############################
-pkgconfig = import('pkgconfig')
-pkgconfig_install_dir = join_paths(get_option('libdir'), 'pkgconfig')
-pkgconfig.generate(libnethogs,
-                   requires: ['libpcap'],
-                   version: meson.project_version()
-                   )
+if get_option('enable-libnethogs').enabled()
+  pkgconfig = import('pkgconfig')
+  pkgconfig_install_dir = join_paths(get_option('libdir'), 'pkgconfig')
+  pkgconfig.generate(libnethogs,
+                     requires: ['libpcap'],
+                     version: meson.project_version()
+                     )
+endif
