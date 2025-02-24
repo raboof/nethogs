@@ -39,7 +39,7 @@ if get_option('enable-libnethogs').enabled()
     lib_sources = [files('libnethogs.cpp')]
 
     libnethogs = shared_library(
-        'libnethogs' ,
+        'nethogs' ,
         sources + lib_sources,
         cpp_args: c_args,
         c_args: c_args,
