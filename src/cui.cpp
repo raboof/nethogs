@@ -29,6 +29,11 @@
 #include <strings.h>
 #include <sys/types.h>
 
+#include <iomanip>
+#include <iostream>
+#include <locale>
+#include <sstream>
+
 #include "nethogs.h"
 #include "process.h"
 #include <ncurses.h>
@@ -61,16 +66,21 @@ const int MIN_COLUMN_WIDTH_DEV = 5;
 const int COLUMN_WIDTH_SENT = 11;
 const int COLUMN_WIDTH_RECEIVED = 11;
 const int COLUMN_WIDTH_UNIT = 6;
+const int NUMBER_OF_DECIMALS_SENT = 1;
+const int NUMBER_OF_DECIMALS_RECEIVED = 1;
 
 const char *COLUMN_FORMAT_PID = "%7d";
-const char *COLUMN_FORMAT_SENT = "%11.3f";
-const char *COLUMN_FORMAT_RECEIVED = "%11.3f";
+
+const char *COLUMN_FORMAT_SENT = "%s";
+const char *COLUMN_FORMAT_RECEIVED = "%s";
 
 // All descriptions are padded to 6 characters in length with spaces
 const char *const desc_view_mode[VIEWMODE_COUNT] = {
     "kB/s  ", "kB    ", "bytes ", "MB    ", "MB/s  ", "GB/s  "};
 
 constexpr char FILE_SEPARATOR = '/';
+
+std::string prettyFloat(double val, int decimals, int maxWidth);
 
 class Line {
 public:
@@ -218,9 +228,15 @@ void Line::show(int row, unsigned int proglen, unsigned int devlen) {
 
   mvaddstr(row, column_offset_dev, devicename);
 
-  mvprintw(row, column_offset_sent, COLUMN_FORMAT_SENT, sent_value);
+  mvprintw(row, column_offset_sent, COLUMN_FORMAT_SENT,
+           prettyFloat(sent_value, NUMBER_OF_DECIMALS_SENT, COLUMN_WIDTH_SENT)
+               .c_str());
 
-  mvprintw(row, column_offset_received, COLUMN_FORMAT_RECEIVED, recv_value);
+  mvprintw(row, column_offset_received, COLUMN_FORMAT_RECEIVED,
+           prettyFloat(recv_value, NUMBER_OF_DECIMALS_RECEIVED,
+                       COLUMN_WIDTH_RECEIVED)
+               .c_str());
+
   mvaddstr(row, column_offset_unit, desc_view_mode[viewMode]);
 }
 
@@ -387,8 +403,14 @@ void show_ncurses(Line *lines[], int nproc) {
   }
   attron(A_REVERSE);
   int totalrow = std::min(rows - 1, 3 + 1 + i);
-  mvprintw(totalrow, 0, "  TOTAL        %-*.*s %-*.*s    %11.3f %11.3f ",
-           proglen, proglen, "", devlen, devlen, "", sent_global, recv_global);
+  mvprintw(totalrow, 0, "  TOTAL        %-*.*s %-*.*s    %s %s ", proglen,
+           proglen, "", devlen, devlen, "",
+           prettyFloat(sent_global, NUMBER_OF_DECIMALS_SENT, COLUMN_WIDTH_SENT)
+               .c_str(),
+           prettyFloat(recv_global, NUMBER_OF_DECIMALS_RECEIVED,
+                       COLUMN_WIDTH_RECEIVED)
+               .c_str());
+
   mvprintw(3 + 1 + i, cols - COLUMN_WIDTH_UNIT, "%s", desc_view_mode[viewMode]);
   attroff(A_REVERSE);
   mvprintw(totalrow + 1, 0, "%s", "");
@@ -461,3 +483,43 @@ void do_refresh() {
   if (refreshlimit != 0 && refreshcount >= refreshlimit)
     quit_cb(0);
 }
+
+// . Returns a String with a nice representation of the floating point value
+// 'val' . There will be 'decimals' number of digits after the decimal point .
+// There will be thousand separators as "'", independent of the user locale .
+// String will have width 'maxWidth', the value is aligned to the right, the
+// padding
+//   values at the left are white spaces.
+// . If the the resulting number-string is bigger in than 'maxWidth' a
+//   default string "ERR:tooBig" is returned, padded to maxWidth.
+// . test with something like:
+//   std::cout << "Test di prettyFloat: " << prettyFloat(123456.123456, 1, 15)
+//   << "\n";
+// . Adapted from here: https://stackoverflow.com/a/43482688/2129178
+std::string prettyFloat(double val, int decimals, int maxWidth) {
+
+  struct separate_thousands : std::numpunct<char> {
+    char_type do_thousands_sep() const override {
+      return ',';
+    } // separate with commas
+    string_type do_grouping() const override {
+      return "\3";
+    } // groups of 3 digit
+  };
+
+  std::stringstream ss1;
+  auto thousands = std::make_unique<separate_thousands>();
+  ss1.imbue(std::locale(std::cout.getloc(), thousands.release()));
+  ss1.setf(std::ios_base::fixed, std::ios_base::floatfield);
+  ss1.precision(decimals);
+  ss1 << std::setw(maxWidth);
+  ss1 << val;
+  std::string out = ss1.str();
+  if (out.length() > (long unsigned)maxWidth) {
+    ss1.str("");
+    ss1 << std::setw(maxWidth);
+    ss1 << "ERR:tooBig";
+    out = ss1.str();
+  }
+  return out;
+};
