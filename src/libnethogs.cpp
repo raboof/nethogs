@@ -7,10 +7,10 @@ extern "C" {
 #include <errno.h>
 #include <fcntl.h>
 #include <iostream>
+#include <list>
 #include <map>
 #include <memory>
 #include <vector>
-#include <list>
 
 //////////////////////////////
 extern ProcList *processes;
@@ -249,7 +249,6 @@ static void nethogsmonitor_handle_update(NethogsMonitorCallback cb) {
       NHM_UPDATE_ONE_FIELD(data.sent_kbs, sent_kbs)
       NHM_UPDATE_ONE_FIELD(data.recv_kbs, recv_kbs)
 
-
 #undef NHM_UPDATE_ONE_FIELD
 
       if (data_change) {
@@ -265,7 +264,8 @@ static void nethogsmonitor_handle_update(NethogsMonitorCallback cb) {
 
 static void nethogsmonitor_clean_up() {
   // clean up
-  for(auto current_handle = handles.begin(); current_handle != handles.end(); current_handle++){
+  for (auto current_handle = handles.begin(); current_handle != handles.end();
+       current_handle++) {
     pcap_close(current_handle->content->pcap_handle);
   }
   handles.clear();
@@ -303,7 +303,8 @@ int nethogsmonitor_loop_devices(NethogsMonitorCallback cb, char *filter,
   while (monitor_run_flag) {
     bool packets_read = false;
 
-    for(auto current_handle = handles.begin(); current_handle != handles.end(); current_handle++) {
+    for (auto current_handle = handles.begin(); current_handle != handles.end();
+         current_handle++) {
       userdata->device = current_handle->devicename;
       userdata->sa_family = AF_UNSPEC;
       int retval = dp_dispatch(current_handle->content, -1, (u_char *)userdata,
@@ -340,13 +341,14 @@ void nethogsmonitor_breakloop() {
   write(self_pipe.second, "x", 1);
 }
 
-void nethogs_packet_stats(NethogsPackageStats **stats, int *stats_size)
-{
-  
-  *stats = static_cast<NethogsPackageStats *>(malloc(handles.size() * sizeof(NethogsPackageStats)));
+void nethogs_packet_stats(NethogsPackageStats **stats, int *stats_size) {
+
+  *stats = static_cast<NethogsPackageStats *>(
+      malloc(handles.size() * sizeof(NethogsPackageStats)));
   int i = 0;
 
-  for(auto current_handle = handles.begin(); current_handle != handles.end(); current_handle ++){
+  for (auto current_handle = handles.begin(); current_handle != handles.end();
+       current_handle++) {
     dp_stat stat = dp_stats(current_handle->content);
     stats[i]->ps_recv = stat.ps_recv;
     stats[i]->ps_drop = stat.ps_drop;
