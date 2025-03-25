@@ -97,11 +97,11 @@ $(ODIR)/conninode.o: conninode.cpp nethogs.h conninode.h
 
 $(ODIR)/devices.o: devices.cpp devices.h
 	@mkdir -p $(ODIR)
-	$(CXX) $(CXXFLAGS) -o $@ -c devices.cpp
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -o $@ -c devices.cpp
 
 $(ODIR)/libnethogs.o: libnethogs.cpp libnethogs.h
 	@mkdir -p $(ODIR)
-	$(CXX) $(CXXFLAGS) -o $@ -c libnethogs.cpp -DVERSION=\"$(LIBVERSION)\"
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -o $@ -c libnethogs.cpp -DVERSION=\"$(LIBVERSION)\"
 
 .PHONY: clean
 clean:
