@@ -1,4 +1,4 @@
-export VERSION := $(shell ./determineVersion.sh)
+export VERSION ?= $(shell ./determineVersion.sh)
 
 #export PREFIX := /usr
 export PREFIX ?= /usr/local
