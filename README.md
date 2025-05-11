@@ -81,7 +81,17 @@ If you want to remove Nethogs from your system, you can:
 
     sudo make uninstall
 
-### Running without root
+### Running
+
+See the manpage for the options.
+
+You will see a line called 'unknown TCP' - this bucket is used for traffic
+that cannot be associated with any process, for example because the process
+has terminated before its traffic could be counted. As long as there's not
+a significant amount of traffic in this bucket it can likely be safely
+ignored.
+
+#### Running without root
 
 In order to be run by a non-root user, nethogs needs the `cap_net_admin` and `cap_net_raw` capabilities; additionally, to read and display process names, `cap_dac_read_search` and `cap_sys_ptrace` capabilities are required. These can be set on the executable by using the `setcap` command, as follows:
 
