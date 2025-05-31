@@ -72,7 +72,7 @@ struct dp_handle *dp_open_offline(char *fname, char *ebuf);
 
 /* function to get packet statistics, e.g. dropped packets */
 
-dp_stat dp_stats(struct dp_handle* handle);
+dp_stat dp_stats(struct dp_handle *handle);
 
 /* functions to add callbacks */
 
