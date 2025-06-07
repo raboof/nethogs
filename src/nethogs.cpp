@@ -59,6 +59,8 @@ bool tracemode = false;
 bool bughuntmode = false;
 // sort on sent or received?
 bool sortRecv = true;
+// keep current order of process list?
+bool freezeSort = false;
 bool showcommandline = false;
 bool showBasename = false;
 // viewMode: kb/s or total
