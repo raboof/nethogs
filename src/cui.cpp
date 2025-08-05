@@ -70,7 +70,7 @@ const char *COLUMN_FORMAT_RECEIVED = "%11.3f";
 
 // All descriptions are padded to 6 characters in length with spaces
 const char *const desc_view_mode[VIEWMODE_COUNT] = {
-    "kB/s  ", "kB    ", "bytes ", "MB    ", "MB/s  ", "GB/s  "};
+    "kB/s  ", "kB    ", "bytes ", "MB    ", "MB/s  ", "GB/s  ", "B/s  "};
 
 constexpr char FILE_SEPARATOR = '/';
 
@@ -503,6 +503,8 @@ void do_refresh() {
       curproc->getVal()->gettotalmb(&value_recv, &value_sent);
     } else if (viewMode == VIEWMODE_TOTAL_B) {
       curproc->getVal()->gettotalb(&value_recv, &value_sent);
+    } else if (viewMode == VIEWMODE_BPS) {
+      curproc->getVal()->getbps(&value_recv, &value_sent);
     } else {
       forceExit(false, "Invalid viewMode: %d", viewMode);
     }

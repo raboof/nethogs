@@ -91,6 +91,7 @@ public:
   int getLastPacket();
 
   void gettotal(u_int64_t *recvd, u_int64_t *sent);
+  void getbps(float *recvd, float *sent);
   void getkbps(float *recvd, float *sent);
   void getmbps(float *recvd, float *sent);
   void getgbps(float *recvd, float *sent);

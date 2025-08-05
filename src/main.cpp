@@ -39,7 +39,7 @@ static void help(bool iserror) {
   output << "		-d : delay for update refresh rate in seconds. default "
             "is 1.\n";
   output << "		-v : view mode (0 = kB/s, 1 = total kB, 2 = "
-            "total bytes, 3 = total MB, 4 = MB/s, 5 = GB/s). default is 0.\n";
+            "total bytes, 3 = total MB, 4 = MB/s, 5 = GB/s, 6 = B/s). default is 0.\n";
   output << "		-c : number of updates. default is 0 (unlimited).\n";
   output << "		-t : tracemode.\n";
   // output << "		-f : format of packets on interface, default is

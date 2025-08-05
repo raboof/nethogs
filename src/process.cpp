@@ -127,6 +127,16 @@ static void sum_active_connections(Process *process_ptr, u_int64_t &sum_sent,
   }
 }
 
+/** Get the b/s values for this process */
+void Process::getbps(float *recvd, float *sent) {
+  u_int64_t sum_sent = 0, sum_recv = 0;
+
+  sum_active_connections(this, sum_sent, sum_recv);
+  *recvd = sum_recv;
+  *sent = sum_sent;
+}
+
+
 /** Get the kb/s values for this process */
 void Process::getkbps(float *recvd, float *sent) {
   u_int64_t sum_sent = 0, sum_recv = 0;
