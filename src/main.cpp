@@ -254,8 +254,9 @@ int main(int argc, char **argv) {
       forceExit(false, "getifaddrs failed while establishing local IP.");
     }
 
+    bool quiet = output_json;
     dp_handle *newhandle =
-        dp_open_live(current_dev->name, BUFSIZ, promisc, 100, filter, errbuf);
+        dp_open_live(current_dev->name, BUFSIZ, promisc, 100, filter, errbuf, quiet);
     if (newhandle != NULL) {
       dp_addcb(newhandle, dp_packet_ip, process_ip);
       dp_addcb(newhandle, dp_packet_ip6, process_ip6);
