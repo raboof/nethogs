@@ -44,6 +44,7 @@ extern Process *unknownudp;
 extern Process *unknownip;
 
 extern bool sortRecv;
+extern bool sortPID;
 
 extern int viewMode;
 extern bool showcommandline;
@@ -97,8 +98,6 @@ public:
   double sent_value;
   double recv_value;
   const char *devicename;
-
-private:
   const char *m_name;
   const char *m_cmdline;
   pid_t m_pid;
@@ -300,14 +299,18 @@ int GreatestFirst(const void *ma, const void *mb) {
   Line *a = *pa;
   Line *b = *pb;
   double aValue;
-  if (sortRecv) {
+  if (sortPID) {
+    aValue = a->m_pid;
+  } else if (sortRecv) {
     aValue = a->recv_value;
   } else {
     aValue = a->sent_value;
   }
 
   double bValue;
-  if (sortRecv) {
+  if (sortPID) {
+    bValue = (double)b->m_pid;
+  } else if (sortRecv) {
     bValue = b->recv_value;
   } else {
     bValue = b->sent_value;

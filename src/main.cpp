@@ -70,6 +70,7 @@ static void help(bool iserror) {
   output << " m: switch between total (kB, bytes, MB) and throughput (kB/s, "
             " MB/s, GB/s) mode\n";
   output << " j: json output\n";
+  output << " z: sort by PIDn";
 }
 
 void quit_cb(int /* i */) {
@@ -154,7 +155,7 @@ int main(int argc, char **argv) {
   int garbage_collection_period = 50;
 
   int opt;
-  while ((opt = getopt(argc, argv, "Vhxtpsd:v:c:laf:Cbg:P:j")) != -1) {
+  while ((opt = getopt(argc, argv, "Vhxtpsd:v:c:laf:Cbg:P:jz")) != -1) {
     switch (opt) {
     case 'V':
       versiondisplay();
@@ -207,6 +208,9 @@ int main(int argc, char **argv) {
       break;
     case 'j':
       output_json = true;
+      break;
+    case 'z':
+      sortPID = true;
       break;
     default:
       help(true);
