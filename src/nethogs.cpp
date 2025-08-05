@@ -63,6 +63,7 @@ bool showcommandline = false;
 bool showBasename = false;
 // viewMode: kb/s or total
 int viewMode = VIEWMODE_KBPS;
+bool output_json = false;
 const char version[] = " version " VERSION;
 timeval curtime;
 

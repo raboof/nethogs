@@ -69,6 +69,7 @@ static void help(bool iserror) {
   output << " b: display the program basename instead of the fullpath\n";
   output << " m: switch between total (kB, bytes, MB) and throughput (kB/s, "
             " MB/s, GB/s) mode\n";
+  output << " j: json output\n";
 }
 
 void quit_cb(int /* i */) {
@@ -80,7 +81,7 @@ void quit_cb(int /* i */) {
 }
 
 void forceExit(bool success, const char *msg, ...) {
-  if ((!tracemode) && (!DEBUG)) {
+  if ((!tracemode) && (!DEBUG) && (!output_json)) {
     exit_ui();
   }
 
@@ -141,7 +142,7 @@ void clean_up() {
   }
 
   procclean();
-  if ((!tracemode) && (!DEBUG))
+  if ((!tracemode) && (!DEBUG) && (!output_json))
     exit_ui();
 }
 
@@ -153,7 +154,7 @@ int main(int argc, char **argv) {
   int garbage_collection_period = 50;
 
   int opt;
-  while ((opt = getopt(argc, argv, "Vhxtpsd:v:c:laf:Cbg:P:")) != -1) {
+  while ((opt = getopt(argc, argv, "Vhxtpsd:v:c:laf:Cbg:P:j")) != -1) {
     switch (opt) {
     case 'V':
       versiondisplay();
@@ -203,6 +204,9 @@ int main(int argc, char **argv) {
       break;
     case 'P':
       pidsToWatch.insert((pid_t)atoi(optarg));
+      break;
+    case 'j':
+      output_json = true;
       break;
     default:
       help(true);
@@ -300,7 +304,7 @@ int main(int argc, char **argv) {
 
   struct dpargs *userdata = (dpargs *)malloc(sizeof(struct dpargs));
 
-  if ((!tracemode) && (!DEBUG)) {
+  if ((!tracemode) && (!DEBUG) && (!output_json)) {
     init_ui();
   }
 
@@ -328,7 +332,7 @@ int main(int argc, char **argv) {
     time_t const now = ::time(NULL);
     if (last_refresh_time + refreshdelay <= now) {
       last_refresh_time = now;
-      if ((!DEBUG) && (!tracemode)) {
+      if ((!DEBUG) && (!tracemode) && (!output_json)) {
         // handle user input
         ui_tick();
       }

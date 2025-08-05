@@ -49,6 +49,8 @@ extern int viewMode;
 extern bool showcommandline;
 extern bool showBasename;
 
+extern bool output_json;
+
 extern unsigned refreshlimit;
 extern unsigned refreshcount;
 
@@ -90,6 +92,7 @@ public:
 
   void show(int row, unsigned int proglen, unsigned int devlen);
   void log();
+  void json();
 
   double sent_value;
   double recv_value;
@@ -232,6 +235,48 @@ void Line::log() {
             << recv_value << std::endl;
 }
 
+#include <iomanip>
+
+std::string escape_json(const std::string &s) {
+    std::ostringstream o;
+    for (auto c = s.cbegin(); c != s.cend(); c++) {
+        switch (*c) {
+        case '"': o << "\\\""; break;
+        case '\\': o << "\\\\"; break;
+        case '\b': o << "\\b"; break;
+        case '\f': o << "\\f"; break;
+        case '\n': o << "\\n"; break;
+        case '\r': o << "\\r"; break;
+        case '\t': o << "\\t"; break;
+        default:
+            if ('\x00' <= *c && *c <= '\x1f') {
+                o << "\\u"
+                  << std::hex << std::setw(4) << std::setfill('0') << static_cast<int>(*c);
+            } else {
+                o << *c;
+            }
+        }
+    }
+    return o.str();
+}
+
+void Line::json() {
+  std::cout << "{";
+  std::cout << "\"name\": \"" << escape_json(m_name) << "\"";
+  std::cout << ", ";
+  std::cout << "\"pid\": \"" << m_pid << "\"";
+  std::cout << ", ";
+  std::cout << "\"uid\": \"" << m_uid << "\"";
+  std::cout << ", ";
+  std::cout << "\"devicename\": \"" << devicename << "\"";
+  std::cout << ", ";
+  std::cout << "\"sent\": " << sent_value;
+  std::cout << ", ";
+  std::cout << "\"recv\": " << recv_value;
+  std::cout << "}";
+}
+
+
 int get_devlen(Line *lines[], int nproc, int rows) {
   int devlen = MIN_COLUMN_WIDTH_DEV;
   int curlen;
@@ -341,6 +386,28 @@ void show_trace(Line *lines[], int nproc) {
     std::cout << "Unknown connection: " << (*it)->refpacket->gethashstring()
               << std::endl;
   }
+}
+
+
+char* get_iso8601_timestamp() {
+    static char buffer[32];
+    time_t now = time(NULL);
+    struct tm *utc = gmtime(&now);
+    strftime(buffer, sizeof(buffer), "%Y-%m-%dT%H:%M:%SZ", utc);
+    return buffer;
+}
+
+void show_json(Line *lines[], int nproc) {
+  /* print them */
+  std::cout << "{\"timestamp\": \""<< get_iso8601_timestamp() << "\", \"processes\": [";
+  for (int i = 0; i < nproc; i++) {
+    if(i>0){
+      std::cout << ",";
+    }
+    lines[i]->json();
+    delete lines[i];
+  }
+  std::cout << "]}"<< std::endl;
 }
 
 void show_ncurses(Line *lines[], int nproc) {
@@ -453,7 +520,9 @@ void do_refresh() {
   /* sort the accumulated lines */
   qsort(lines, nproc, sizeof(Line *), GreatestFirst);
 
-  if (tracemode || DEBUG)
+  if (output_json)
+    show_json(lines, nproc);
+  else if (tracemode || DEBUG)
     show_trace(lines, nproc);
   else
     show_ncurses(lines, nproc);
