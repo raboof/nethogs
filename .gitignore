@@ -10,3 +10,7 @@ libnethogs.a
 results/
 build/
 nethogs.egg-info
+
+# IDE configurations
+.vscode
+.idea
