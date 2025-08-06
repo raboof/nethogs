@@ -83,10 +83,12 @@ float togbps(u_int64_t bytes) { return (((double)bytes) / PERIOD) / GB; }
 
 void process_init() {
   unknowntcp = new Process(0, "", "unknown TCP");
+  unknowntcp->keep = true;
   processes = new ProcList(unknowntcp, NULL);
 
   if (catchall) {
     unknownudp = new Process(0, "", "unknown UDP");
+    unknownudp->keep = true;
     processes = new ProcList(unknownudp, processes);
     // unknownip = new Process (0, "", "unknown IP");
     // processes = new ProcList (unknownip, processes);
@@ -449,4 +451,29 @@ void remove_timed_out_processes() {
   }
 }
 
-void garbage_collect_processes() { garbage_collect_inodeproc(); }
+void garbage_collect_processes()
+{
+  garbage_collect_inodeproc();
+
+  ProcList *previousproc = NULL;
+  ProcList *curProc = processes;
+  while (curProc != NULL) {
+    Process *curProcVal = curProc->getVal();
+    if (curProcVal->connections.empty() && curProcVal->keep == false) {
+      ProcList *toDelete = curProc;
+      if (previousproc == NULL) {
+        processes = curProc->next;
+      }else
+      {
+        previousproc->next = curProc->next;
+      }
+      curProc = curProc->next;
+      delete curProcVal;
+      delete toDelete;
+    } else {
+      previousproc = curProc;
+      curProc = curProc->next;
+    }
+  }
+
+}
