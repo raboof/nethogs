@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nethogs Network Monitor</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .header h1 {
+            color: #4a5568;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .generation-info {
+            text-align: center;
+            color: #718096;
+            margin-top: 10px;
+            font-size: 0.9rem;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            color: #718096;
+            font-size: 0.9rem;
+        }
+
+        .controls {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .controls-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            align-items: center;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .control-group label {
+            font-weight: 600;
+            color: #4a5568;
+        }
+
+        .control-group select {
+            padding: 10px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s ease;
+        }
+
+        .control-group select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .refresh-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: transform 0.3s ease;
+            align-self: end;
+        }
+
+        .refresh-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(600px, 1fr));
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .chart-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .chart-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #4a5568;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .table-container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .table-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+            max-height: 500px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        th {
+            background: #f7fafc;
+            font-weight: 600;
+            color: #4a5568;
+            position: sticky;
+            top: 0;
+        }
+
+        tr:hover {
+            background: rgba(102, 126, 234, 0.05);
+        }
+
+        .error {
+            background: #fed7d7;
+            color: #c53030;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+
+        @media (max-width: 768px) {
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .controls-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>🌐 Network Monitor Dashboard</h1>
+        <p style="text-align: center; color: #718096;">
+            System network traffic monitoring
+        </p>
+        <div class="generation-info" id="generationInfo">
+            Generated on: <span id="generationTime">GENERATION_TIME_PLACEHOLDER</span>
+            | Data from last HOURS_BACK_PLACEHOLDER hours
+            | <span id="dataCount">0</span> records
+        </div>
+    </div>
+
+    <div class="stats-grid" id="statsGrid">
+        <div class="stat-card">
+            <div class="stat-value" id="totalConnections">-</div>
+            <div class="stat-label">Registered Connections</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value" id="totalDownload">-</div>
+            <div class="stat-label">Total Download</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value" id="totalUpload">-</div>
+            <div class="stat-label">Total Upload</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value" id="activeProcesses">-</div>
+            <div class="stat-label">Unique Processes</div>
+        </div>
+    </div>
+
+    <div class="controls">
+        <div class="controls-grid">
+            <div class="control-group">
+                <label for="processFilter">Filter by process:</label>
+                <select id="processFilter">
+                    <option value="">All processes</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <label for="interfaceFilter">Filter by interface:</label>
+                <select id="interfaceFilter">
+                    <option value="">All interfaces</option>
+                </select>
+            </div>
+
+            <button class="refresh-btn" onclick="window.location.reload()">🔄 Reload Page</button>
+        </div>
+    </div>
+
+    <div class="charts-grid">
+        <div class="chart-card">
+            <div class="chart-title">Traffic by Application</div>
+            <canvas id="appTrafficChart"></canvas>
+        </div>
+
+        <div class="chart-card">
+            <div class="chart-title">Traffic by Interface</div>
+            <canvas id="interfaceTrafficChart"></canvas>
+        </div>
+
+        <div class="chart-card" style="grid-column: 1 / -1;">
+            <div class="chart-title">Traffic Evolution Over Time</div>
+            <canvas id="timeSeriesChart"></canvas>
+        </div>
+    </div>
+
+    <div class="table-container">
+        <div class="table-header">
+            <span>📊 Connection Details</span>
+            <span id="tableCount">0 records</span>
+        </div>
+        <div class="table-wrapper">
+            <table id="connectionsTable">
+                <thead>
+                <tr>
+                    <th>Timestamp</th>
+                    <th>Process</th>
+                    <th>PID</th>
+                    <th>UID</th>
+                    <th>Interface</th>
+                    <th>Download</th>
+                    <th>Upload</th>
+                    <th>Total</th>
+                </tr>
+                </thead>
+                <tbody id="connectionsTableBody">
+                <tr>
+                    <td colspan="8" style="text-align: center; color: #718096;">Processing data...</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Embedded data
+    const EMBEDDED_DATA =
+JSON_DATA_PLACEHOLDER
+;
+
+    // Global application status
+    let rawData = [];
+    let charts = {};
+
+    function formatBytes(bytes, decimals = 2) {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const dm = decimals < 0 ? 0 : decimals;
+        const sizes = ['Bytes', 'KiB', 'MiB', 'GiB', 'TiB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+    }
+
+    function formatDate(timestamp) {
+        return new Date(timestamp * 1000).toLocaleString('es-ES');
+    }
+
+    function generateColor(index) {
+        const colors = [
+            '#667eea', '#764ba2', '#f093fb', '#f5576c',
+            '#4facfe', '#00f2fe', '#43e97b', '#38f9d7',
+            '#ffecd2', '#fcb69f', '#a8edea', '#fed6e3'
+        ];
+        return colors[index % colors.length];
+    }
+
+    // Process embedded JSON data
+    function processEmbeddedData() {
+        const flatData = [];
+
+        EMBEDDED_DATA.forEach(entry => {
+            try {
+                const timestamp = Math.floor(new Date(entry.timestamp).getTime() / 1000);
+
+                entry.processes.forEach(process => {
+                    const sent = parseFloat(process.sent) || 0;
+                    const recv = parseFloat(process.recv) || 0;
+
+                    // Only include processes with traffic
+                    if (sent > 0 || recv > 0) {
+                        // Extract process name
+                        let processName = process.name;
+                        if (processName.startsWith('/')) {
+                            const parts = processName.split('/');
+                            processName = parts[parts.length - 1].split(' ')[0];
+                        }
+
+                        flatData.push({
+                            timestamp: timestamp,
+                            process_name: processName,
+                            process_full_name: process.name,
+                            pid: parseInt(process.pid),
+                            uid: parseInt(process.uid),
+                            interface: process.devicename || 'unknown',
+                            bytes_sent: sent,
+                            bytes_received: recv
+                        });
+                    }
+                });
+            } catch (e) {
+                console.warn('Error processing entry:', entry, e);
+            }
+        });
+
+        return flatData.sort((a, b) => b.timestamp - a.timestamp);
+    }
+
+    function updateStats() {
+        const filteredData = getFilteredData();
+        const totalConnections = filteredData.length;
+        const totalDownload = filteredData.reduce((sum, item) => sum + item.bytes_received, 0);
+        const totalUpload = filteredData.reduce((sum, item) => sum + item.bytes_sent, 0);
+        const activeProcesses = new Set(filteredData.map(item => item.process_name)).size;
+
+        document.getElementById('totalConnections').textContent = totalConnections.toLocaleString();
+        document.getElementById('totalDownload').textContent = formatBytes(totalDownload);
+        document.getElementById('totalUpload').textContent = formatBytes(totalUpload);
+        document.getElementById('activeProcesses').textContent = activeProcesses;
+        document.getElementById('dataCount').textContent = rawData.length.toLocaleString();
+    }
+
+    function updateFilters() {
+        const processFilter = document.getElementById('processFilter');
+        const interfaceFilter = document.getElementById('interfaceFilter');
+
+        // Get unique processes
+        const processes = [...new Set(rawData.map(item => item.process_name))].sort();
+        processFilter.innerHTML = '<option value="">All processes</option>';
+        processes.forEach(process => {
+            const option = document.createElement('option');
+            option.value = process;
+            option.textContent = process;
+            processFilter.appendChild(option);
+        });
+
+        // Get unique interfaces
+        const interfaces = [...new Set(rawData.map(item => item.interface))].sort();
+        interfaceFilter.innerHTML = '<option value="">All interfaces</option>';
+        interfaces.forEach(iface => {
+            const option = document.createElement('option');
+            option.value = iface;
+            option.textContent = iface;
+            interfaceFilter.appendChild(option);
+        });
+    }
+
+    function updateCharts() {
+        updateAppTrafficChart();
+        updateInterfaceTrafficChart();
+        updateTimeSeriesChart();
+    }
+
+    function updateAppTrafficChart() {
+        const ctx = document.getElementById('appTrafficChart').getContext('2d');
+        const filteredData = getFilteredData();
+
+        // Group by process
+        const processData = {};
+        filteredData.forEach(item => {
+            if (!processData[item.process_name]) {
+                processData[item.process_name] = {
+                    download: 0,
+                    upload: 0
+                };
+            }
+            processData[item.process_name].download += item.bytes_received;
+            processData[item.process_name].upload += item.bytes_sent;
+        });
+
+        const labels = Object.keys(processData).slice(0, 15); // Top 15
+        const downloadData = labels.map(label => processData[label].download);
+        const uploadData = labels.map(label => processData[label].upload);
+
+        if (charts.appTraffic) charts.appTraffic.destroy();
+
+        charts.appTraffic = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Descarga',
+                    data: downloadData,
+                    backgroundColor: 'rgba(102, 126, 234, 0.8)',
+                    borderColor: 'rgba(102, 126, 234, 1)',
+                    borderWidth: 1
+                }, {
+                    label: 'Subida',
+                    data: uploadData,
+                    backgroundColor: 'rgba(118, 75, 162, 0.8)',
+                    borderColor: 'rgba(118, 75, 162, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return context.dataset.label + ': ' + formatBytes(context.parsed.y);
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return formatBytes(value);
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    function updateInterfaceTrafficChart() {
+        const ctx = document.getElementById('interfaceTrafficChart').getContext('2d');
+        const filteredData = getFilteredData();
+
+        // Group by interface
+        const interfaceData = {};
+        filteredData.forEach(item => {
+            if (!interfaceData[item.interface]) {
+                interfaceData[item.interface] = 0;
+            }
+            interfaceData[item.interface] += item.bytes_received + item.bytes_sent;
+        });
+
+        const labels = Object.keys(interfaceData);
+        const data = labels.map(label => interfaceData[label]);
+        const colors = labels.map((_, index) => generateColor(index));
+
+        if (charts.interface) charts.interface.destroy();
+
+        charts.interface = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: data,
+                    backgroundColor: colors,
+                    borderWidth: 2,
+                    borderColor: '#fff'
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return context.label + ': ' + formatBytes(context.parsed);
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    function updateTimeSeriesChart() {
+        const ctx = document.getElementById('timeSeriesChart').getContext('2d');
+        const filteredData = getFilteredData();
+
+        // Calculate time range
+        const timestamps = filteredData.map(item => item.timestamp);
+        const startHour = Math.floor(Math.min(...timestamps) / 3600) * 3600;
+        const endHour = Math.floor(Math.max(...timestamps) / 3600) * 3600;
+
+        // Initialize data
+        const hourlyData = {};
+        for (let hour = startHour; hour <= endHour; hour += 3600) {
+            hourlyData[hour] = {download: 0, upload: 0};
+        }
+
+        // Add actual data
+        filteredData.forEach(item => {
+            const hour = Math.floor(item.timestamp / 3600) * 3600;
+            hourlyData[hour].download += item.bytes_received;
+            hourlyData[hour].upload += item.bytes_sent;
+        });
+
+        const sortedHours = Object.keys(hourlyData).sort((a, b) => a - b);
+        const labels = sortedHours.map(hour => new Date(hour * 1000).toLocaleString('es-ES'));
+        const downloadData = sortedHours.map(hour => hourlyData[hour].download);
+        const uploadData = sortedHours.map(hour => hourlyData[hour].upload);
+
+        if (charts.timeSeries) charts.timeSeries.destroy();
+
+        charts.timeSeries = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Descarga',
+                    data: downloadData,
+                    borderColor: 'rgba(102, 126, 234, 1)',
+                    backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                    fill: true,
+                    tension: 0.4
+                }, {
+                    label: 'Subida',
+                    data: uploadData,
+                    borderColor: 'rgba(118, 75, 162, 1)',
+                    backgroundColor: 'rgba(118, 75, 162, 0.1)',
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return context.dataset.label + ': ' + formatBytes(context.parsed.y);
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return formatBytes(value);
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    function updateTable() {
+        const tbody = document.getElementById('connectionsTableBody');
+        const filteredData = getFilteredData();
+        const tableCount = document.getElementById('tableCount');
+
+        if (filteredData.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; color: #718096;">No hay datos que mostrar</td></tr>';
+            tableCount.textContent = '0 records';
+            return;
+        }
+
+        const displayData = filteredData.slice(0, 200); // Limit to 200 for performance
+
+        tbody.innerHTML = displayData.map(item => `
+                <tr>
+                    <td>${formatDate(item.timestamp)}</td>
+                    <td title="${item.process_full_name}">${item.process_name}</td>
+                    <td>${item.pid}</td>
+                    <td>${item.uid}</td>
+                    <td>${item.interface}</td>
+                    <td>${formatBytes(item.bytes_received)}</td>
+                    <td>${formatBytes(item.bytes_sent)}</td>
+                    <td>${formatBytes(item.bytes_received + item.bytes_sent)}</td>
+                </tr>
+            `).join('');
+
+        tableCount.textContent = `${filteredData.length.toLocaleString()} records${displayData.length < filteredData.length ? ` (showing ${displayData.length})` : ''}`;
+    }
+
+    function getFilteredData() {
+        const processFilter = document.getElementById('processFilter').value;
+        const interfaceFilter = document.getElementById('interfaceFilter').value;
+
+        let filtered = [...rawData];
+
+        // Filter by process
+        if (processFilter) {
+            filtered = filtered.filter(item => item.process_name === processFilter);
+        }
+
+        // Filter by interface
+        if (interfaceFilter) {
+            filtered = filtered.filter(item => item.interface === interfaceFilter);
+        }
+
+        return filtered;
+    }
+
+    // Event listeners
+    document.getElementById('processFilter').addEventListener('change', () => {
+        updateStats();
+        updateCharts();
+        updateTable();
+    });
+
+    document.getElementById('interfaceFilter').addEventListener('change', () => {
+        updateStats();
+        updateCharts();
+        updateTable();
+    });
+
+    // Initialization
+    document.addEventListener('DOMContentLoaded', function() {
+        // Process embedded data
+        rawData = processEmbeddedData();
+
+        // Update dashboard
+        updateStats();
+        updateFilters();
+        updateCharts();
+        updateTable();
+
+        console.log(`Dashboard loaded with ${rawData.length} records`);
+    });
+</script>
+</body>
+</html>
