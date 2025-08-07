@@ -41,7 +41,7 @@ bughunt mode - implies tracemode.
 delay for update refresh rate in seconds. default is 1.
 .TP
 \fB-v\fP
-view mode (0 = kB/s, 1 = total kB, 2 = total bytes, 3 = total MB, 4 = MB/s, 5 = GB/s). default is 0.
+view mode (0 = kB/s, 1 = total kB, 2 = total bytes, 3 = total MB, 4 = MB/s, 5 = GB/s, 6 = B/s). default is 0.
 
 kB: 2e10 bytes, MB: 2e20 bytes, GB: 2e30 bytes
 .TP
@@ -74,6 +74,12 @@ garbage collection period in number of refresh. default is 50.
 .TP
 \fB-P\fP
 Show only processes with the specified pid(s).
+.TP
+\fB-j\fP
+Output in JSON format.
+.TP
+\fB-z\fP
+Sort by PID.
 .TP
 \fB-f\fP
 EXPERIMENTAL: specify string pcap filter (like tcpdump). This may be removed or changed in a future version.

@@ -30,6 +30,7 @@ public:
   PackListNode(Packet *m_val, PackListNode *m_next = NULL) {
     val = m_val;
     next = m_next;
+    is_sum = false;
   }
   ~PackListNode() {
     delete val;
@@ -38,6 +39,7 @@ public:
   }
   PackListNode *next;
   Packet *val;
+  bool is_sum;
 };
 
 class PackList {

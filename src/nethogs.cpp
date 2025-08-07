@@ -59,10 +59,12 @@ bool tracemode = false;
 bool bughuntmode = false;
 // sort on sent or received?
 bool sortRecv = true;
+bool sortPID = false;
 bool showcommandline = false;
 bool showBasename = false;
 // viewMode: kb/s or total
 int viewMode = VIEWMODE_KBPS;
+bool output_json = false;
 const char version[] = " version " VERSION;
 timeval curtime;
 

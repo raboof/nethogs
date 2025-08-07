@@ -35,7 +35,7 @@
 bool catchall = false;
 /* functions to set up a handle (which is basically just a pcap handle) */
 
-struct dp_handle *dp_fillhandle(pcap_t *phandle) {
+struct dp_handle *dp_fillhandle(pcap_t *phandle, bool quiet) {
   struct dp_handle *retval =
       (struct dp_handle *)malloc(sizeof(struct dp_handle));
   int i;
@@ -47,37 +47,39 @@ struct dp_handle *dp_fillhandle(pcap_t *phandle) {
 
   retval->linktype = pcap_datalink(retval->pcap_handle);
 
-  switch (retval->linktype) {
-  case (DLT_EN10MB):
-    fprintf(stdout, "Ethernet link detected\n");
-    break;
-  case (DLT_PPP):
-    fprintf(stdout, "PPP link detected\n");
-    break;
-  case (DLT_LINUX_SLL):
-    fprintf(stdout, "Linux Cooked Socket link detected\n");
-    break;
-  default:
-    fprintf(stdout, "No PPP or Ethernet link: %d\n", retval->linktype);
-    // TODO maybe error? or 'other' callback?
-    break;
+  if((!quiet)){
+    switch (retval->linktype) {
+    case (DLT_EN10MB):
+      fprintf(stdout, "Ethernet link detected\n");
+      break;
+    case (DLT_PPP):
+      fprintf(stdout, "PPP link detected\n");
+      break;
+    case (DLT_LINUX_SLL):
+      fprintf(stdout, "Linux Cooked Socket link detected\n");
+      break;
+    default:
+      fprintf(stdout, "No PPP or Ethernet link: %d\n", retval->linktype);
+      // TODO maybe error? or 'other' callback?
+      break;
+    }
   }
 
   return retval;
 }
 
-struct dp_handle *dp_open_offline(char *fname, char *ebuf) {
+struct dp_handle *dp_open_offline(char *fname, char *ebuf, bool quiet) {
   pcap_t *temp = pcap_open_offline(fname, ebuf);
 
   if (temp == NULL) {
     return NULL;
   }
 
-  return dp_fillhandle(temp);
+  return dp_fillhandle(temp, quiet);
 }
 
 struct dp_handle *dp_open_live(const char *device, int snaplen, int promisc,
-                               int to_ms, char *filter, char *errbuf) {
+                               int to_ms, char *filter, char *errbuf, bool quiet) {
   struct bpf_program fp; // compiled filter program
   bpf_u_int32 maskp;     // subnet mask
   bpf_u_int32 netp;      // interface IP
@@ -107,7 +109,7 @@ struct dp_handle *dp_open_live(const char *device, int snaplen, int promisc,
     }
   }
 
-  return dp_fillhandle(temp);
+  return dp_fillhandle(temp, quiet);
 }
 
 /* function to get packet statistics, e.g. dropped packets */
