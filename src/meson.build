@@ -19,7 +19,6 @@ sources = [
 if get_option('enable-nethogs-app').enabled()
     app_sources = [files('cui.cpp', 'main.cpp')]
 
-    cursespp_dep = dependency('ncurses++', required: true)
     curses_dep = dependency('ncurses', required: true)
 
     executable(
@@ -29,7 +28,7 @@ if get_option('enable-nethogs-app').enabled()
         cpp_args: c_args,
         c_args: c_args,
         install: true,
-        dependencies: [project_deps, cursespp_dep, curses_dep],
+        dependencies: [project_deps, curses_dep],
     )
 endif
 
