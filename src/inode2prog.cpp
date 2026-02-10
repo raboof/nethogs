@@ -36,6 +36,7 @@
 #include <string>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <time.h>
 #include <unistd.h>
 
 #include "inode2prog.h"
