@@ -61,6 +61,7 @@ static void help(bool iserror) {
   output << "		device : device(s) to monitor. default is all "
             "interfaces up and running excluding loopback\n";
   output << "		-P : Show only processes.\n";
+  output << "		-q : suppress banner\n";
   output << std::endl;
   output << "When nethogs is running, press:\n";
   output << " q: quit\n";
@@ -154,7 +155,7 @@ int main(int argc, char **argv) {
   int garbage_collection_period = 50;
 
   int opt;
-  while ((opt = getopt(argc, argv, "Vhxtpsd:v:c:laf:Cbg:P:")) != -1) {
+  while ((opt = getopt(argc, argv, "Vhxtpsd:v:c:laf:Cbg:P:q")) != -1) {
     switch (opt) {
     case 'V':
       versiondisplay();
@@ -204,6 +205,9 @@ int main(int argc, char **argv) {
       break;
     case 'P':
       pidsToWatch.insert((pid_t)atoi(optarg));
+      break;
+    case 'q':
+      suppressBanner = true;
       break;
     default:
       help(true);

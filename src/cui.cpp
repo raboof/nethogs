@@ -48,6 +48,7 @@ extern bool sortRecv;
 extern int viewMode;
 extern bool showcommandline;
 extern bool showBasename;
+extern bool suppressBanner;
 
 extern unsigned refreshlimit;
 extern unsigned refreshcount;
@@ -347,6 +348,7 @@ void show_ncurses(Line *lines[], int nproc) {
   int rows;             // number of terminal rows
   int cols;             // number of terminal columns
   unsigned int proglen; // max length of the "PROGRAM" column
+  int bannerheight = 0;	// used to place table below banner, if present
 
   double sent_global = 0;
   double recv_global = 0;
@@ -369,9 +371,12 @@ void show_ncurses(Line *lines[], int nproc) {
   proglen = cols - 50 - devlen;
 
   erase();
-  mvprintw(0, 0, "%s", caption->c_str());
+  if (!suppressBanner) {
+    mvprintw(0, 0, "%s", caption->c_str());
+    bannerheight = 2;
+  }
   attron(A_REVERSE);
-  mvprintw(2, 0,
+  mvprintw(bannerheight, 0,
            "    PID USER     %-*.*s  %-*.*s       SENT      RECEIVED       ",
            proglen, proglen, "PROGRAM", devlen, devlen, "DEV");
   attroff(A_REVERSE);
@@ -380,16 +385,16 @@ void show_ncurses(Line *lines[], int nproc) {
   int i;
   for (i = 0; i < nproc; i++) {
     if (i + 3 < rows)
-      lines[i]->show(i + 3, proglen, devlen);
+      lines[i]->show(i + bannerheight + 1, proglen, devlen);
     recv_global += lines[i]->recv_value;
     sent_global += lines[i]->sent_value;
     delete lines[i];
   }
   attron(A_REVERSE);
-  int totalrow = std::min(rows - 1, 3 + 1 + i);
+  int totalrow = std::min(rows - 3, 2 + i) + bannerheight;
   mvprintw(totalrow, 0, "  TOTAL        %-*.*s %-*.*s    %11.3f %11.3f ",
            proglen, proglen, "", devlen, devlen, "", sent_global, recv_global);
-  mvprintw(3 + 1 + i, cols - COLUMN_WIDTH_UNIT, "%s", desc_view_mode[viewMode]);
+  mvprintw(2 + i + bannerheight, cols - COLUMN_WIDTH_UNIT, "%s", desc_view_mode[viewMode]);
   attroff(A_REVERSE);
   mvprintw(totalrow + 1, 0, "%s", "");
   refresh();
