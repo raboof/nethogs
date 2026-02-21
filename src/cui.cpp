@@ -26,6 +26,7 @@
 #include <cstdlib>
 #include <pwd.h>
 #include <string>
+#include <vector>
 #include <strings.h>
 #include <sys/types.h>
 
@@ -44,6 +45,7 @@ extern Process *unknownudp;
 extern Process *unknownip;
 
 extern bool sortRecv;
+extern bool freezeSort;
 
 extern int viewMode;
 extern bool showcommandline;
@@ -51,6 +53,8 @@ extern bool showBasename;
 
 extern unsigned refreshlimit;
 extern unsigned refreshcount;
+
+static std::vector<pid_t> freeze_order;
 
 #define PID_MAX 4194303
 
@@ -72,6 +76,8 @@ const char *const desc_view_mode[VIEWMODE_COUNT] = {
 
 constexpr char FILE_SEPARATOR = '/';
 
+static std::vector<Line *> lines;
+
 class Line {
 public:
   Line(const char *name, const char *cmdline, double n_recv_value,
@@ -90,6 +96,8 @@ public:
 
   void show(int row, unsigned int proglen, unsigned int devlen);
   void log();
+
+  pid_t getPid() const { return m_pid; }
 
   double sent_value;
   double recv_value;
@@ -277,6 +285,26 @@ int GreatestFirst(const void *ma, const void *mb) {
   return 1;
 }
 
+static int get_order_index(pid_t pid) {
+  for (size_t i = 0; i < freeze_order.size(); ++i) {
+    if (freeze_order[i] == pid)
+      return i;
+  }
+  return freeze_order.size() + pid;
+}
+
+int FrozenOrder(const void *ma, const void *mb) {
+  Line *a = *(Line **)ma;
+  Line *b = *(Line **)mb;
+  int idxA = get_order_index(a->getPid());
+  int idxB = get_order_index(b->getPid());
+  if (idxA < idxB)
+    return -1;
+  if (idxA == idxB)
+    return 0;
+  return 1;
+}
+
 void init_ui() {
   WINDOW *screen = initscr();
   cursOrig = curs_set(0);
@@ -323,6 +351,15 @@ void ui_tick() {
     /* show only the process basename */
     showBasename = !showBasename;
     break;
+  case 'o':
+    /* toggle sorting order */
+    freezeSort = !freezeSort;
+    freeze_order.clear();
+    if (freezeSort) {
+      for (Line *ln : lines)
+        freeze_order.push_back(ln->getPid());
+    }
+    break;
   }
 }
 
@@ -332,7 +369,6 @@ void show_trace(Line *lines[], int nproc) {
   /* print them */
   for (int i = 0; i < nproc; i++) {
     lines[i]->log();
-    delete lines[i];
   }
 
   /* print the 'unknown' connections, for debugging */
@@ -383,7 +419,6 @@ void show_ncurses(Line *lines[], int nproc) {
       lines[i]->show(i + 3, proglen, devlen);
     recv_global += lines[i]->recv_value;
     sent_global += lines[i]->sent_value;
-    delete lines[i];
   }
   attron(A_REVERSE);
   int totalrow = std::min(rows - 1, 3 + 1 + i);
@@ -408,10 +443,10 @@ void do_refresh() {
   ProcList *curproc = processes;
   int nproc = processes->size();
 
-  /* initialize to null pointers */
-  Line *lines[nproc];
-  for (int i = 0; i < nproc; i++)
-    lines[i] = NULL;
+  for (Line *ln : lines)
+    delete ln;
+  lines.clear();
+  lines.resize(nproc, nullptr);
 
   int n = 0;
 
@@ -451,12 +486,23 @@ void do_refresh() {
   }
 
   /* sort the accumulated lines */
-  qsort(lines, nproc, sizeof(Line *), GreatestFirst);
+  if (!freezeSort) {
+    qsort(lines.data(), nproc, sizeof(Line *), GreatestFirst);
+  } else {
+    for (int i = 0; i < nproc; i++) {
+      pid_t pid = lines[i]->getPid();
+      if (std::find(freeze_order.begin(), freeze_order.end(), pid) ==
+          freeze_order.end()) {
+        freeze_order.push_back(pid);
+      }
+    }
+    qsort(lines.data(), nproc, sizeof(Line *), FrozenOrder);
+  }
 
   if (tracemode || DEBUG)
-    show_trace(lines, nproc);
+    show_trace(lines.data(), nproc);
   else
-    show_ncurses(lines, nproc);
+    show_ncurses(lines.data(), nproc);
 
   if (refreshlimit != 0 && refreshcount >= refreshlimit)
     quit_cb(0);

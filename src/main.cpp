@@ -67,6 +67,7 @@ static void help(bool iserror) {
   output << " s: sort by SENT traffic\n";
   output << " r: sort by RECEIVED traffic\n";
   output << " l: display command line\n";
+  output << " o: toggle stable process order\n";
   output << " b: display the program basename instead of the fullpath\n";
   output << " m: switch between total (kB, bytes, MB) and throughput (kB/s, "
             " MB/s, GB/s) mode\n";
