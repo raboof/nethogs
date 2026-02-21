@@ -44,10 +44,13 @@ extern Process *unknownudp;
 extern Process *unknownip;
 
 extern bool sortRecv;
+extern bool sortPID;
 
 extern int viewMode;
 extern bool showcommandline;
 extern bool showBasename;
+
+extern bool output_json;
 
 extern unsigned refreshlimit;
 extern unsigned refreshcount;
@@ -68,7 +71,7 @@ const char *COLUMN_FORMAT_RECEIVED = "%11.3f";
 
 // All descriptions are padded to 6 characters in length with spaces
 const char *const desc_view_mode[VIEWMODE_COUNT] = {
-    "kB/s  ", "kB    ", "bytes ", "MB    ", "MB/s  ", "GB/s  "};
+    "kB/s  ", "kB    ", "bytes ", "MB    ", "MB/s  ", "GB/s  ", "B/s  "};
 
 constexpr char FILE_SEPARATOR = '/';
 
@@ -90,12 +93,11 @@ public:
 
   void show(int row, unsigned int proglen, unsigned int devlen);
   void log();
+  void json();
 
   double sent_value;
   double recv_value;
   const char *devicename;
-
-private:
   const char *m_name;
   const char *m_cmdline;
   pid_t m_pid;
@@ -232,6 +234,48 @@ void Line::log() {
             << recv_value << std::endl;
 }
 
+#include <iomanip>
+
+std::string escape_json(const std::string &s) {
+    std::ostringstream o;
+    for (auto c = s.cbegin(); c != s.cend(); c++) {
+        switch (*c) {
+        case '"': o << "\\\""; break;
+        case '\\': o << "\\\\"; break;
+        case '\b': o << "\\b"; break;
+        case '\f': o << "\\f"; break;
+        case '\n': o << "\\n"; break;
+        case '\r': o << "\\r"; break;
+        case '\t': o << "\\t"; break;
+        default:
+            if ('\x00' <= *c && *c <= '\x1f') {
+                o << "\\u"
+                  << std::hex << std::setw(4) << std::setfill('0') << static_cast<int>(*c);
+            } else {
+                o << *c;
+            }
+        }
+    }
+    return o.str();
+}
+
+void Line::json() {
+  std::cout << "{";
+  std::cout << "\"name\": \"" << escape_json(m_name) << "\"";
+  std::cout << ", ";
+  std::cout << "\"pid\": \"" << m_pid << "\"";
+  std::cout << ", ";
+  std::cout << "\"uid\": \"" << m_uid << "\"";
+  std::cout << ", ";
+  std::cout << "\"devicename\": \"" << devicename << "\"";
+  std::cout << ", ";
+  std::cout << "\"sent\": " << sent_value;
+  std::cout << ", ";
+  std::cout << "\"recv\": " << recv_value;
+  std::cout << "}";
+}
+
+
 int get_devlen(Line *lines[], int nproc, int rows) {
   int devlen = MIN_COLUMN_WIDTH_DEV;
   int curlen;
@@ -255,14 +299,18 @@ int GreatestFirst(const void *ma, const void *mb) {
   Line *a = *pa;
   Line *b = *pb;
   double aValue;
-  if (sortRecv) {
+  if (sortPID) {
+    aValue = a->m_pid;
+  } else if (sortRecv) {
     aValue = a->recv_value;
   } else {
     aValue = a->sent_value;
   }
 
   double bValue;
-  if (sortRecv) {
+  if (sortPID) {
+    bValue = (double)b->m_pid;
+  } else if (sortRecv) {
     bValue = b->recv_value;
   } else {
     bValue = b->sent_value;
@@ -341,6 +389,28 @@ void show_trace(Line *lines[], int nproc) {
     std::cout << "Unknown connection: " << (*it)->refpacket->gethashstring()
               << std::endl;
   }
+}
+
+
+char* get_iso8601_timestamp() {
+    static char buffer[32];
+    time_t now = time(NULL);
+    struct tm *utc = gmtime(&now);
+    strftime(buffer, sizeof(buffer), "%Y-%m-%dT%H:%M:%SZ", utc);
+    return buffer;
+}
+
+void show_json(Line *lines[], int nproc) {
+  /* print them */
+  std::cout << "{\"timestamp\": \""<< get_iso8601_timestamp() << "\", \"processes\": [";
+  for (int i = 0; i < nproc; i++) {
+    if(i>0){
+      std::cout << ",";
+    }
+    lines[i]->json();
+    delete lines[i];
+  }
+  std::cout << "]}"<< std::endl;
 }
 
 void show_ncurses(Line *lines[], int nproc) {
@@ -436,6 +506,8 @@ void do_refresh() {
       curproc->getVal()->gettotalmb(&value_recv, &value_sent);
     } else if (viewMode == VIEWMODE_TOTAL_B) {
       curproc->getVal()->gettotalb(&value_recv, &value_sent);
+    } else if (viewMode == VIEWMODE_BPS) {
+      curproc->getVal()->getbps(&value_recv, &value_sent);
     } else {
       forceExit(false, "Invalid viewMode: %d", viewMode);
     }
@@ -453,7 +525,9 @@ void do_refresh() {
   /* sort the accumulated lines */
   qsort(lines, nproc, sizeof(Line *), GreatestFirst);
 
-  if (tracemode || DEBUG)
+  if (output_json)
+    show_json(lines, nproc);
+  else if (tracemode || DEBUG)
     show_trace(lines, nproc);
   else
     show_ncurses(lines, nproc);

@@ -79,6 +79,7 @@ public:
     rcvd_by_closed_bytes = 0;
     sent_last_reported = 0;
     rcvd_last_reported = 0;
+    keep = false;
   }
   void check() { assert(pid >= 0); }
 
@@ -91,6 +92,7 @@ public:
   int getLastPacket();
 
   void gettotal(u_int64_t *recvd, u_int64_t *sent);
+  void getbps(float *recvd, float *sent);
   void getkbps(float *recvd, float *sent);
   void getmbps(float *recvd, float *sent);
   void getgbps(float *recvd, float *sent);
@@ -115,6 +117,8 @@ public:
   void setUid(uid_t m_uid) { uid = m_uid; }
 
   unsigned long getInode() { return inode; }
+
+  bool keep;
 
 private:
   const unsigned long inode;

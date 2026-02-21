@@ -39,7 +39,7 @@ int main(int argc, char **argv) {
 
   char *errbuf = new char[DP_ERRBUF_SIZE];
 
-  dp_handle *newhandle = dp_open_offline(argv[1], errbuf);
+  dp_handle *newhandle = dp_open_offline(argv[1], errbuf, false);
   dp_addcb(newhandle, dp_packet_tcp, process_tcp);
   int ret = dp_dispatch(newhandle, -1, NULL, 0);
   if (ret == -1) {

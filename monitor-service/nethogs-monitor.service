@@ -1,0 +1,31 @@
+[Unit]
+Description=Nethogs Network Monitor Service
+Documentation=man:nethogs(8)
+After=network.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=root
+Group=root
+ExecStart=/opt/nethogs-monitor/nethogs-monitor.sh
+ExecStop=/bin/kill -TERM $MAINPID
+PIDFile=/run/nethogs-monitor.pid
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+
+# Configuración de seguridad
+NoNewPrivileges=true
+ProtectSystem=strict
+ReadWritePaths=/var/log/nethogs /run
+ProtectHome=true
+PrivateTmp=true
+
+# Límites de recursos
+LimitNOFILE=65536
+MemoryMax=512M
+
+[Install]
+WantedBy=multi-user.target
