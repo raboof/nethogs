@@ -22,6 +22,19 @@
 #ifndef __DECPCAP_H
 #define __DECPCAP_H
 
+/* Compatibility typedefs — u_char/u_short/u_int were removed
+   from <sys/types.h> in C23 (GCC 15 default -std=gnu23).
+   Must come before <pcap.h> because libpcap uses these types. */
+#ifndef u_char
+typedef unsigned char u_char;
+#endif
+#ifndef u_short
+typedef unsigned short u_short;
+#endif
+#ifndef u_int
+typedef unsigned int u_int;
+#endif
+
 #include <pcap.h>
 #include <stdbool.h>
 #include <stdio.h>
