@@ -24,7 +24,8 @@
 
 /* Compatibility typedefs — u_char/u_short/u_int were removed
    from <sys/types.h> in C23 (GCC 15 default -std=gnu23).
-   Must come before <pcap.h> because libpcap uses these types. */
+   Must come before <pcap.h> because libpcap uses these types.
+   Upstream libpcap C23 compat: https://github.com/the-tcpdump-group/libpcap/issues/1679 */
 #ifndef u_char
 typedef unsigned char u_char;
 #endif
