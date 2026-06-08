@@ -336,7 +336,7 @@ Process *getProcess(Connection *connection, const char *devicename,
 // We take the fact for granted that we might already know the inode->pid
 // (unlikely anyway if we
 // haven't seen the connection->inode yet though).
-#ifndef __APPLE__
+#ifdef NETHOGS_HAVE_PROC
     reread_mapping();
 #endif
     refreshconninode();
