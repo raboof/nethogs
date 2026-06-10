@@ -278,7 +278,17 @@ int GreatestFirst(const void *ma, const void *mb) {
 }
 
 void init_ui() {
-  WINDOW *screen = initscr();
+  SCREEN *term = newterm(NULL, stdout, stdin);
+  if (!term) {
+    term = newterm("xterm-256color", stdout, stdin);
+    if (!term) {
+        term = newterm("xterm", stdout, stdin);
+    }
+    if (!term) {
+        initscr();
+    }
+  }
+  WINDOW *screen = stdscr;
   cursOrig = curs_set(0);
   raw();
   noecho();
