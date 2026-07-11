@@ -310,6 +310,7 @@ void exit_ui() {
 void ui_tick() {
   switch (getch()) {
   case 'q':
+  case 3:
     /* quit */
     quit_cb(0);
     break;
