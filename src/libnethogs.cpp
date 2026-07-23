@@ -102,7 +102,7 @@ static int nethogsmonitor_init(int devc, char **devicenames, bool all,
 
     char errbuf[PCAP_ERRBUF_SIZE];
     dp_handle *newhandle = dp_open_live(current_dev->name, BUFSIZ, promiscuous,
-                                        to_ms, filter, errbuf);
+                                        to_ms, filter, errbuf, false);
     if (newhandle != NULL) {
       dp_addcb(newhandle, dp_packet_ip, process_ip);
       dp_addcb(newhandle, dp_packet_ip6, process_ip6);

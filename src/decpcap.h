@@ -67,8 +67,8 @@ struct dp_handle {
 /* functions to set up a handle (which is basically just a pcap handle) */
 
 struct dp_handle *dp_open_live(const char *device, int snaplen, int promisc,
-                               int to_ms, char *filter, char *errbuf);
-struct dp_handle *dp_open_offline(char *fname, char *ebuf);
+                               int to_ms, char *filter, char *errbuf, bool quiet);
+struct dp_handle *dp_open_offline(char *fname, char *ebuf, bool quiet);
 
 /* function to get packet statistics, e.g. dropped packets */
 

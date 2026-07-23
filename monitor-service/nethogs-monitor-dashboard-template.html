@@ -1,0 +1,1000 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nethogs Network Monitor</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Consolas', 'Monaco', 'Lucida Console', 'Liberation Mono', 'DejaVu Sans Mono', 'Bitstream Vera Sans Mono', 'Courier New', monospace;
+            background: radial-gradient(ellipse at center, #0d1421 0%, #0a0f1a 100%);
+            min-height: 100vh;
+            color: #00ff41;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* Matrix-like background effect */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image:
+                    linear-gradient(90deg, rgba(0, 255, 65, 0.03) 50%, transparent 50%),
+                    linear-gradient(rgba(0, 255, 65, 0.03) 50%, transparent 50%);
+            background-size: 20px 20px;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .header {
+            background: linear-gradient(145deg, rgba(13, 20, 33, 0.95), rgba(10, 15, 26, 0.95));
+            backdrop-filter: blur(20px);
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            box-shadow:
+                    0 0 30px rgba(0, 255, 65, 0.2),
+                    inset 0 1px 0 rgba(0, 255, 65, 0.1),
+                    0 8px 32px rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(0, 255, 65, 0.2);
+            position: relative;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg, #00ff41, #00cc33, #009926, #00ff41);
+            border-radius: 17px;
+            z-index: -1;
+            opacity: 0.1;
+        }
+
+        .header h1 {
+            color: #00ff41;
+            font-size: 2.8rem;
+            margin-bottom: 10px;
+            text-align: center;
+            text-shadow: 0 0 20px rgba(0, 255, 65, 0.5);
+            font-weight: 700;
+        }
+
+        .generation-info {
+            text-align: center;
+            color: #66ff82;
+            margin-top: 15px;
+            font-size: 1rem;
+            text-shadow: 0 0 10px rgba(102, 255, 130, 0.3);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: linear-gradient(145deg, rgba(13, 20, 33, 0.9), rgba(10, 15, 26, 0.9));
+            backdrop-filter: blur(20px);
+            padding: 25px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow:
+                    0 0 25px rgba(0, 255, 65, 0.15),
+                    inset 0 1px 0 rgba(0, 255, 65, 0.1),
+                    0 8px 32px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(0, 255, 65, 0.15);
+            transition: all 0.4s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(0, 255, 65, 0.1), transparent);
+            transition: left 0.6s ease;
+        }
+
+        .stat-card:hover::before {
+            left: 100%;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow:
+                    0 0 40px rgba(0, 255, 65, 0.3),
+                    inset 0 1px 0 rgba(0, 255, 65, 0.2),
+                    0 15px 45px rgba(0, 0, 0, 0.4);
+            border-color: rgba(0, 255, 65, 0.4);
+        }
+
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #00ff41;
+            margin-bottom: 8px;
+            text-shadow: 0 0 15px rgba(0, 255, 65, 0.4);
+        }
+
+        .stat-label {
+            color: #66ff82;
+            font-size: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            opacity: 0.9;
+        }
+
+        .controls {
+            background: linear-gradient(145deg, rgba(13, 20, 33, 0.9), rgba(10, 15, 26, 0.9));
+            backdrop-filter: blur(20px);
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            box-shadow:
+                    0 0 25px rgba(0, 255, 65, 0.15),
+                    inset 0 1px 0 rgba(0, 255, 65, 0.1),
+                    0 8px 32px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(0, 255, 65, 0.15);
+        }
+
+        .controls-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+            align-items: end;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .control-group label {
+            font-weight: 600;
+            color: #00ff41;
+            text-transform: uppercase;
+            font-size: 0.9rem;
+            letter-spacing: 0.5px;
+            text-shadow: 0 0 10px rgba(0, 255, 65, 0.3);
+        }
+
+        .control-group select {
+            padding: 12px 15px;
+            border: 2px solid rgba(0, 255, 65, 0.3);
+            border-radius: 8px;
+            font-size: 14px;
+            background: rgba(13, 20, 33, 0.8);
+            color: #00ff41;
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+
+        .control-group select:focus {
+            outline: none;
+            border-color: #00ff41;
+            box-shadow: 0 0 15px rgba(0, 255, 65, 0.3);
+            background: rgba(13, 20, 33, 1);
+        }
+
+        .control-group select option {
+            background: rgba(13, 20, 33, 0.95);
+            color: #00ff41;
+            padding: 8px;
+        }
+
+        .refresh-btn {
+            background: linear-gradient(145deg, rgba(0, 255, 65, 0.2), rgba(0, 204, 51, 0.2));
+            color: #00ff41;
+            border: 2px solid rgba(0, 255, 65, 0.4);
+            padding: 12px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-family: inherit;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .refresh-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(0, 255, 65, 0.2), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .refresh-btn:hover::before {
+            left: 100%;
+        }
+
+        .refresh-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(0, 255, 65, 0.4);
+            background: linear-gradient(145deg, rgba(0, 255, 65, 0.3), rgba(0, 204, 51, 0.3));
+            border-color: #00ff41;
+        }
+
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(650px, 1fr));
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .chart-card {
+            background: linear-gradient(145deg, rgba(13, 20, 33, 0.9), rgba(10, 15, 26, 0.9));
+            backdrop-filter: blur(20px);
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow:
+                    0 0 25px rgba(0, 255, 65, 0.15),
+                    inset 0 1px 0 rgba(0, 255, 65, 0.1),
+                    0 8px 32px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(0, 255, 65, 0.15);
+        }
+
+        .chart-title {
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: #00ff41;
+            margin-bottom: 25px;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            text-shadow: 0 0 15px rgba(0, 255, 65, 0.3);
+        }
+
+        .table-container {
+            background: linear-gradient(145deg, rgba(13, 20, 33, 0.9), rgba(10, 15, 26, 0.9));
+            backdrop-filter: blur(20px);
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow:
+                    0 0 30px rgba(0, 255, 65, 0.2),
+                    inset 0 1px 0 rgba(0, 255, 65, 0.1),
+                    0 8px 32px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(0, 255, 65, 0.2);
+        }
+
+        .table-header {
+            background: linear-gradient(135deg, rgba(0, 255, 65, 0.2) 0%, rgba(0, 204, 51, 0.2) 100%);
+            color: #00ff41;
+            padding: 25px;
+            font-size: 1.3rem;
+            font-weight: 600;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            text-shadow: 0 0 10px rgba(0, 255, 65, 0.3);
+            border-bottom: 1px solid rgba(0, 255, 65, 0.3);
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+            max-height: 500px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 15px 18px;
+            text-align: left;
+            border-bottom: 1px solid rgba(0, 255, 65, 0.1);
+        }
+
+        th {
+            background: rgba(13, 20, 33, 0.8);
+            font-weight: 600;
+            color: #00ff41;
+            position: sticky;
+            top: 0;
+            text-transform: uppercase;
+            font-size: 0.9rem;
+            letter-spacing: 0.5px;
+            text-shadow: 0 0 8px rgba(0, 255, 65, 0.3);
+            border-bottom: 2px solid rgba(0, 255, 65, 0.3);
+        }
+
+        td {
+            color: #66ff82;
+            font-size: 0.95rem;
+        }
+
+        tr:hover {
+            background: rgba(0, 255, 65, 0.05);
+            transform: scale(1.001);
+            transition: all 0.2s ease;
+        }
+
+        tr:hover td {
+            color: #00ff41;
+            text-shadow: 0 0 5px rgba(0, 255, 65, 0.2);
+        }
+
+        .error {
+            background: linear-gradient(145deg, rgba(255, 0, 0, 0.1), rgba(200, 0, 0, 0.1));
+            color: #ff4444;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border: 1px solid rgba(255, 68, 68, 0.3);
+            text-shadow: 0 0 10px rgba(255, 68, 68, 0.3);
+        }
+
+        /* Scrollbar styling */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(13, 20, 33, 0.8);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(145deg, rgba(0, 255, 65, 0.3), rgba(0, 204, 51, 0.3));
+            border-radius: 4px;
+            border: 1px solid rgba(0, 255, 65, 0.2);
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(145deg, rgba(0, 255, 65, 0.5), rgba(0, 204, 51, 0.5));
+        }
+
+        @media (max-width: 768px) {
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .controls-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .header h1 {
+                font-size: 2.2rem;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            }
+        }
+
+        /* Animation for loading */
+        @keyframes pulse {
+            0% { opacity: 0.6; }
+            50% { opacity: 1; }
+            100% { opacity: 0.6; }
+        }
+
+        .loading {
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        /* Glitch effect for title */
+        @keyframes glitch {
+            0% { transform: translate(0); }
+            20% { transform: translate(-1px, 1px); }
+            40% { transform: translate(-1px, -1px); }
+            60% { transform: translate(1px, 1px); }
+            80% { transform: translate(1px, -1px); }
+            100% { transform: translate(0); }
+        }
+
+        .header h1:hover {
+            animation: glitch 0.5s ease-in-out;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>🌐 Network Monitor Dashboard</h1>
+        <p style="text-align: center; color: #66ff82; font-size: 1.1rem;">
+            >>> SYSTEM NETWORK TRAFFIC MONITORING <<<
+        </p>
+        <div class="generation-info" id="generationInfo">
+            Generated on: <span id="generationTime">GENERATION_TIME_PLACEHOLDER</span>
+            | Data from last HOURS_BACK_PLACEHOLDER hours
+            | <span id="dataCount">0</span> records
+        </div>
+    </div>
+
+    <div class="stats-grid" id="statsGrid">
+        <div class="stat-card">
+            <div class="stat-value" id="totalConnections">-</div>
+            <div class="stat-label">Registered Connections</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value" id="totalDownload">-</div>
+            <div class="stat-label">Total Download</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value" id="totalUpload">-</div>
+            <div class="stat-label">Total Upload</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value" id="activeProcesses">-</div>
+            <div class="stat-label">Unique Processes</div>
+        </div>
+    </div>
+
+    <div class="controls">
+        <div class="controls-grid">
+            <div class="control-group">
+                <label for="processFilter">Filter by process:</label>
+                <select id="processFilter">
+                    <option value="">All processes</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <label for="interfaceFilter">Filter by interface:</label>
+                <select id="interfaceFilter">
+                    <option value="">All interfaces</option>
+                </select>
+            </div>
+
+            <button class="refresh-btn" onclick="window.location.reload()">🔄 Reload Page</button>
+        </div>
+    </div>
+
+    <div class="charts-grid">
+        <div class="chart-card">
+            <div class="chart-title">Traffic by Application</div>
+            <canvas id="appTrafficChart"></canvas>
+        </div>
+
+        <div class="chart-card">
+            <div class="chart-title">Traffic by Interface</div>
+            <canvas id="interfaceTrafficChart"></canvas>
+        </div>
+
+        <div class="chart-card" style="grid-column: 1 / -1;">
+            <div class="chart-title">Traffic Evolution Over Time</div>
+            <canvas id="timeSeriesChart"></canvas>
+        </div>
+    </div>
+
+    <div class="table-container">
+        <div class="table-header">
+            <span>📊 Connection Details</span>
+            <span id="tableCount">0 records</span>
+        </div>
+        <div class="table-wrapper">
+            <table id="connectionsTable">
+                <thead>
+                <tr>
+                    <th>Timestamp</th>
+                    <th>Process</th>
+                    <th>PID</th>
+                    <th>UID</th>
+                    <th>Interface</th>
+                    <th>Download</th>
+                    <th>Upload</th>
+                    <th>Total</th>
+                </tr>
+                </thead>
+                <tbody id="connectionsTableBody">
+                <tr>
+                    <td colspan="8" style="text-align: center; color: #66ff82;">Processing data...</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Embedded data
+    const EMBEDDED_DATA =
+JSON_DATA_PLACEHOLDER
+;
+
+    // Global application status
+    let rawData = [];
+    let charts = {};
+
+    // Terminal green color palette
+    const terminalColors = {
+        primary: '#00ff41',      // Matrix green
+        secondary: '#00cc33',    // Darker green
+        tertiary: '#66ff82',     // Lighter green
+        accent: '#009926',       // Medium green
+        background: '#0d1421',   // Dark blue-black
+        surface: 'rgba(13, 20, 33, 0.9)'
+    };
+
+    function formatBytes(bytes, decimals = 2) {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const dm = decimals < 0 ? 0 : decimals;
+        const sizes = ['Bytes', 'KiB', 'MiB', 'GiB', 'TiB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+    }
+
+    function formatDate(timestamp) {
+        return new Date(timestamp * 1000).toLocaleString('es-ES');
+    }
+
+    function generateTerminalColor(index) {
+        const colors = [
+            '#00ff41', '#00cc33', '#66ff82', '#009926',
+            '#00ff66', '#33ff66', '#00e639', '#00b32d',
+            '#80ff80', '#40ff40', '#00d932', '#00a028'
+        ];
+        return colors[index % colors.length];
+    }
+
+    // Process embedded JSON data
+    function processEmbeddedData() {
+        const flatData = [];
+
+        EMBEDDED_DATA.forEach(entry => {
+            try {
+                const timestamp = Math.floor(new Date(entry.timestamp).getTime() / 1000);
+
+                entry.processes.forEach(process => {
+                    const sent = parseFloat(process.sent) || 0;
+                    const recv = parseFloat(process.recv) || 0;
+
+                    // Only include processes with traffic
+                    if (sent > 0 || recv > 0) {
+                        // Extract process name
+                        let processName = process.name;
+                        if (processName.startsWith('/')) {
+                            const parts = processName.split('/');
+                            processName = parts[parts.length - 1].split(' ')[0];
+                        }
+
+                        flatData.push({
+                            timestamp: timestamp,
+                            process_name: processName,
+                            process_full_name: process.name,
+                            pid: parseInt(process.pid),
+                            uid: parseInt(process.uid),
+                            interface: process.devicename || 'unknown',
+                            bytes_sent: sent,
+                            bytes_received: recv
+                        });
+                    }
+                });
+            } catch (e) {
+                console.warn('Error processing entry:', entry, e);
+            }
+        });
+
+        return flatData.sort((a, b) => b.timestamp - a.timestamp);
+    }
+
+    function updateStats() {
+        const filteredData = getFilteredData();
+        const totalConnections = filteredData.length;
+        const totalDownload = filteredData.reduce((sum, item) => sum + item.bytes_received, 0);
+        const totalUpload = filteredData.reduce((sum, item) => sum + item.bytes_sent, 0);
+        const activeProcesses = new Set(filteredData.map(item => item.process_name)).size;
+
+        document.getElementById('totalConnections').textContent = totalConnections.toLocaleString();
+        document.getElementById('totalDownload').textContent = formatBytes(totalDownload);
+        document.getElementById('totalUpload').textContent = formatBytes(totalUpload);
+        document.getElementById('activeProcesses').textContent = activeProcesses;
+        document.getElementById('dataCount').textContent = rawData.length.toLocaleString();
+    }
+
+    function updateFilters() {
+        const processFilter = document.getElementById('processFilter');
+        const interfaceFilter = document.getElementById('interfaceFilter');
+
+        // Get unique processes
+        const processes = [...new Set(rawData.map(item => item.process_name))].sort();
+        processFilter.innerHTML = '<option value="">All processes</option>';
+        processes.forEach(process => {
+            const option = document.createElement('option');
+            option.value = process;
+            option.textContent = process;
+            processFilter.appendChild(option);
+        });
+
+        // Get unique interfaces
+        const interfaces = [...new Set(rawData.map(item => item.interface))].sort();
+        interfaceFilter.innerHTML = '<option value="">All interfaces</option>';
+        interfaces.forEach(iface => {
+            const option = document.createElement('option');
+            option.value = iface;
+            option.textContent = iface;
+            interfaceFilter.appendChild(option);
+        });
+    }
+
+    function updateCharts() {
+        updateAppTrafficChart();
+        updateInterfaceTrafficChart();
+        updateTimeSeriesChart();
+    }
+
+    function updateAppTrafficChart() {
+        const ctx = document.getElementById('appTrafficChart').getContext('2d');
+        const filteredData = getFilteredData();
+
+        // Group by process
+        const processData = {};
+        filteredData.forEach(item => {
+            if (!processData[item.process_name]) {
+                processData[item.process_name] = {
+                    download: 0,
+                    upload: 0
+                };
+            }
+            processData[item.process_name].download += item.bytes_received;
+            processData[item.process_name].upload += item.bytes_sent;
+        });
+
+        const labels = Object.keys(processData).slice(0, 15); // Top 15
+        const downloadData = labels.map(label => processData[label].download);
+        const uploadData = labels.map(label => processData[label].upload);
+
+        if (charts.appTraffic) charts.appTraffic.destroy();
+
+        charts.appTraffic = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Descarga',
+                    data: downloadData,
+                    backgroundColor: 'rgba(0, 255, 65, 0.7)',
+                    borderColor: '#00ff41',
+                    borderWidth: 2
+                }, {
+                    label: 'Subida',
+                    data: uploadData,
+                    backgroundColor: 'rgba(0, 204, 51, 0.7)',
+                    borderColor: '#00cc33',
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        labels: {
+                            color: '#00ff41',
+                            font: {
+                                family: 'Consolas, monospace'
+                            }
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(13, 20, 33, 0.95)',
+                        titleColor: '#00ff41',
+                        bodyColor: '#66ff82',
+                        borderColor: '#00ff41',
+                        borderWidth: 1,
+                        callbacks: {
+                            label: function(context) {
+                                return context.dataset.label + ': ' + formatBytes(context.parsed.y);
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        ticks: {
+                            color: '#66ff82',
+                            font: {
+                                family: 'Consolas, monospace'
+                            }
+                        },
+                        grid: {
+                            color: 'rgba(0, 255, 65, 0.1)'
+                        }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            color: '#66ff82',
+                            font: {
+                                family: 'Consolas, monospace'
+                            },
+                            callback: function(value) {
+                                return formatBytes(value);
+                            }
+                        },
+                        grid: {
+                            color: 'rgba(0, 255, 65, 0.1)'
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    function updateInterfaceTrafficChart() {
+        const ctx = document.getElementById('interfaceTrafficChart').getContext('2d');
+        const filteredData = getFilteredData();
+
+        // Group by interface
+        const interfaceData = {};
+        filteredData.forEach(item => {
+            if (!interfaceData[item.interface]) {
+                interfaceData[item.interface] = 0;
+            }
+            interfaceData[item.interface] += item.bytes_received + item.bytes_sent;
+        });
+
+        const labels = Object.keys(interfaceData);
+        const data = labels.map(label => interfaceData[label]);
+        const colors = labels.map((_, index) => generateTerminalColor(index));
+
+        if (charts.interface) charts.interface.destroy();
+
+        charts.interface = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: data,
+                    backgroundColor: colors,
+                    borderWidth: 3,
+                    borderColor: '#0d1421'
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        labels: {
+                            color: '#00ff41',
+                            font: {
+                                family: 'Consolas, monospace'
+                            }
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(13, 20, 33, 0.95)',
+                        titleColor: '#00ff41',
+                        bodyColor: '#66ff82',
+                        borderColor: '#00ff41',
+                        borderWidth: 1,
+                        callbacks: {
+                            label: function(context) {
+                                return context.label + ': ' + formatBytes(context.parsed);
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    function updateTimeSeriesChart() {
+        const ctx = document.getElementById('timeSeriesChart').getContext('2d');
+        const filteredData = getFilteredData();
+
+        // Calculate time range
+        const timestamps = filteredData.map(item => item.timestamp);
+        const startHour = Math.floor(Math.min(...timestamps) / 3600) * 3600;
+        const endHour = Math.floor(Math.max(...timestamps) / 3600) * 3600;
+
+        // Initialize data
+        const hourlyData = {};
+        for (let hour = startHour; hour <= endHour; hour += 3600) {
+            hourlyData[hour] = {download: 0, upload: 0};
+        }
+
+        // Add actual data
+        filteredData.forEach(item => {
+            const hour = Math.floor(item.timestamp / 3600) * 3600;
+            hourlyData[hour].download += item.bytes_received;
+            hourlyData[hour].upload += item.bytes_sent;
+        });
+
+        const sortedHours = Object.keys(hourlyData).sort((a, b) => a - b);
+        const labels = sortedHours.map(hour => new Date(hour * 1000).toLocaleString('es-ES'));
+        const downloadData = sortedHours.map(hour => hourlyData[hour].download);
+        const uploadData = sortedHours.map(hour => hourlyData[hour].upload);
+
+        if (charts.timeSeries) charts.timeSeries.destroy();
+
+        charts.timeSeries = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Descarga',
+                    data: downloadData,
+                    borderColor: '#00ff41',
+                    backgroundColor: 'rgba(0, 255, 65, 0.1)',
+                    fill: true,
+                    tension: 0.4,
+                    pointBackgroundColor: '#00ff41',
+                    pointBorderColor: '#00cc33',
+                    pointRadius: 4,
+                    pointHoverRadius: 6
+                }, {
+                    label: 'Subida',
+                    data: uploadData,
+                    borderColor: '#00cc33',
+                    backgroundColor: 'rgba(0, 204, 51, 0.1)',
+                    fill: true,
+                    tension: 0.4,
+                    pointBackgroundColor: '#00cc33',
+                    pointBorderColor: '#009926',
+                    pointRadius: 4,
+                    pointHoverRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        labels: {
+                            color: '#00ff41',
+                            font: {
+                                family: 'Consolas, monospace'
+                            }
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(13, 20, 33, 0.95)',
+                        titleColor: '#00ff41',
+                        bodyColor: '#66ff82',
+                        borderColor: '#00ff41',
+                        borderWidth: 1,
+                        callbacks: {
+                            label: function(context) {
+                                return context.dataset.label + ': ' + formatBytes(context.parsed.y);
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        ticks: {
+                            color: '#66ff82',
+                            font: {
+                                family: 'Consolas, monospace'
+                            }
+                        },
+                        grid: {
+                            color: 'rgba(0, 255, 65, 0.1)'
+                        }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            color: '#66ff82',
+                            font: {
+                                family: 'Consolas, monospace'
+                            },
+                            callback: function(value) {
+                                return formatBytes(value);
+                            }
+                        },
+                        grid: {
+                            color: 'rgba(0, 255, 65, 0.1)'
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    function updateTable() {
+        const tbody = document.getElementById('connectionsTableBody');
+        const filteredData = getFilteredData();
+        const tableCount = document.getElementById('tableCount');
+
+        if (filteredData.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; color: #66ff82;">No hay datos que mostrar</td></tr>';
+            tableCount.textContent = '0 records';
+            return;
+        }
+
+        const displayData = filteredData.slice(0, 200); // Limit to 200 for performance
+
+        tbody.innerHTML = displayData.map(item => `
+                <tr>
+                    <td>${formatDate(item.timestamp)}</td>
+                    <td title="${item.process_full_name}">${item.process_name}</td>
+                    <td>${item.pid}</td>
+                    <td>${item.uid}</td>
+                    <td>${item.interface}</td>
+                    <td>${formatBytes(item.bytes_received)}</td>
+                    <td>${formatBytes(item.bytes_sent)}</td>
+                    <td>${formatBytes(item.bytes_received + item.bytes_sent)}</td>
+                </tr>
+            `).join('');
+
+        tableCount.textContent = `${filteredData.length.toLocaleString()} records${displayData.length < filteredData.length ? ` (showing ${displayData.length})` : ''}`;
+    }
+
+    function getFilteredData() {
+        const processFilter = document.getElementById('processFilter').value;
+        const interfaceFilter = document.getElementById('interfaceFilter').value;
+
+        let filtered = [...rawData];
+
+        // Filter by process
+        if (processFilter) {
+            filtered = filtered.filter(item => item.process_name === processFilter);
+        }
+
+        // Filter by interface
+        if (interfaceFilter) {
+            filtered = filtered.filter(item => item.interface === interfaceFilter);
+        }
+
+        return filtered;
+    }
+
+    // Event listeners
+    document.getElementById('processFilter').addEventListener('change', () => {
+        updateStats();
+        updateCharts();
+        updateTable();
+    });
+
+    document.getElementById('interfaceFilter').addEventListener('change', () => {
+        updateStats();
+        updateCharts();
+        updateTable();
+    });
+
+    // Initialization
+    document.addEventListener('DOMContentLoaded', function() {
+        // Process embedded data
+        rawData = processEmbeddedData();
+
+        // Update dashboard
+        updateStats();
+        updateFilters();
+        updateCharts();
+        updateTable();
+
+        console.log(`Dashboard loaded with ${rawData.length} records`);
+    });
+</script>
+</body>
+</html>

@@ -40,7 +40,7 @@ static void help(bool iserror) {
   output << "		-d : delay for update refresh rate in seconds. default "
             "is 1.\n";
   output << "		-v : view mode (0 = kB/s, 1 = total kB, 2 = "
-            "total bytes, 3 = total MB, 4 = MB/s, 5 = GB/s). default is 0.\n";
+            "total bytes, 3 = total MB, 4 = MB/s, 5 = GB/s, 6 = B/s). default is 0.\n";
   output << "		-c : number of updates. default is 0 (unlimited).\n";
   output << "		-t : tracemode.\n";
   // output << "		-f : format of packets on interface, default is
@@ -70,6 +70,8 @@ static void help(bool iserror) {
   output << " b: display the program basename instead of the fullpath\n";
   output << " m: switch between total (kB, bytes, MB) and throughput (kB/s, "
             " MB/s, GB/s) mode\n";
+  output << " j: json output\n";
+  output << " z: sort by PIDn";
 }
 
 void quit_cb(int /* i */) {
@@ -81,7 +83,7 @@ void quit_cb(int /* i */) {
 }
 
 void forceExit(bool success, const char *msg, ...) {
-  if ((!tracemode) && (!DEBUG)) {
+  if ((!tracemode) && (!DEBUG) && (!output_json)) {
     exit_ui();
   }
 
@@ -142,7 +144,7 @@ void clean_up() {
   }
 
   procclean();
-  if ((!tracemode) && (!DEBUG))
+  if ((!tracemode) && (!DEBUG) && (!output_json))
     exit_ui();
 }
 
@@ -154,7 +156,7 @@ int main(int argc, char **argv) {
   int garbage_collection_period = 50;
 
   int opt;
-  while ((opt = getopt(argc, argv, "Vhxtpsd:v:c:laf:Cbg:P:")) != -1) {
+  while ((opt = getopt(argc, argv, "Vhxtpsd:v:c:laf:Cbg:P:jz")) != -1) {
     switch (opt) {
     case 'V':
       versiondisplay();
@@ -205,6 +207,12 @@ int main(int argc, char **argv) {
     case 'P':
       pidsToWatch.insert((pid_t)atoi(optarg));
       break;
+    case 'j':
+      output_json = true;
+      break;
+    case 'z':
+      sortPID = true;
+      break;
     default:
       help(true);
       exit(EXIT_FAILURE);
@@ -247,8 +255,9 @@ int main(int argc, char **argv) {
       forceExit(false, "getifaddrs failed while establishing local IP.");
     }
 
+    bool quiet = output_json;
     dp_handle *newhandle =
-        dp_open_live(current_dev->name, BUFSIZ, promisc, 100, filter, errbuf);
+        dp_open_live(current_dev->name, BUFSIZ, promisc, 100, filter, errbuf, quiet);
     if (newhandle != NULL) {
       dp_addcb(newhandle, dp_packet_ip, process_ip);
       dp_addcb(newhandle, dp_packet_ip6, process_ip6);
@@ -301,7 +310,7 @@ int main(int argc, char **argv) {
 
   struct dpargs *userdata = (dpargs *)malloc(sizeof(struct dpargs));
 
-  if ((!tracemode) && (!DEBUG)) {
+  if ((!tracemode) && (!DEBUG) && (!output_json)) {
     init_ui();
   }
 
@@ -329,7 +338,7 @@ int main(int argc, char **argv) {
     time_t const now = ::time(NULL);
     if (last_refresh_time + refreshdelay <= now) {
       last_refresh_time = now;
-      if ((!DEBUG) && (!tracemode)) {
+      if ((!DEBUG) && (!tracemode) && (!output_json)) {
         // handle user input
         ui_tick();
       }

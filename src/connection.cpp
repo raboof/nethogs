@@ -58,6 +58,10 @@ u_int64_t PackList::sumanddel(timeval t) {
   PackListNode *previous = NULL;
 
   while (current != NULL) {
+    if(current->is_sum == false){
+      retval += current->val->len;
+      current->is_sum = true;
+    }
     // std::cout << "Comparing " << current->val->time.tv_sec << " <= " <<
     // t.tv_sec - PERIOD << endl;
     if (current->val->time.tv_sec <= t.tv_sec - PERIOD) {
@@ -68,7 +72,6 @@ u_int64_t PackList::sumanddel(timeval t) {
       delete current;
       return retval;
     }
-    retval += current->val->len;
     previous = current;
     current = current->next;
   }
