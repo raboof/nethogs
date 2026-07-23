@@ -61,6 +61,7 @@ bool bughuntmode = false;
 bool sortRecv = true;
 bool showcommandline = false;
 bool showBasename = false;
+bool suppressBanner = false;
 // viewMode: kb/s or total
 int viewMode = VIEWMODE_KBPS;
 const char version[] = " version " VERSION;
