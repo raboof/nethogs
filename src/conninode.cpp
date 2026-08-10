@@ -188,25 +188,25 @@ void refreshconninode() {
   // delete conninode;
   // conninode = new HashTable (256);
 
-#if defined(__APPLE__) || defined(__FreeBSD__)
-  addprocinfo("net.inet.tcp.pcblist", conninode_tcp);
-#else
+#ifdef NETHOGS_HAVE_PROC
   if (!addprocinfo("/proc/net/tcp", conninode_tcp)) {
     std::cout << "Error: couldn't open /proc/net/tcp\n";
     exit(0);
   }
   addprocinfo("/proc/net/tcp6", conninode_tcp);
+#else
+  addprocinfo("net.inet.tcp.pcblist", conninode_tcp);
 #endif
 
   if (catchall) {
-#if defined(__APPLE__) || defined(__FreeBSD__)
-    addprocinfo("net.inet.udp.pcblist", conninode_udp);
-#else
+#ifdef NETHOGS_HAVE_PROC
     if (!addprocinfo("/proc/net/udp", conninode_udp)) {
       std::cout << "Error: couldn't open /proc/net/udp\n";
       exit(0);
     }
     addprocinfo("/proc/net/udp6", conninode_udp);
+#else
+    addprocinfo("net.inet.udp.pcblist", conninode_udp);
 #endif
   }
 

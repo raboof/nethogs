@@ -227,6 +227,7 @@ void get_info_for_pid(const char *pid) {
   closedir(dir);
 }
 
+#ifdef NETHOGS_HAVE_PROC
 static quad_t get_ms() {
   struct timespec ts;
   clock_gettime(CLOCK_MONOTONIC, &ts);
@@ -252,8 +253,14 @@ static void get_pids(std::set<pid_t> *pids) {
   }
   closedir(proc);
 }
+#endif /* NETHOGS_HAVE_PROC */
 
 void garbage_collect_inodeproc() {
+#ifndef NETHOGS_HAVE_PROC
+  /* No /proc to enumerate live pids against; the inode->pid table is never
+   * populated on these platforms, so there is nothing to collect. */
+  return;
+#else
   static quad_t last_ms = 0;
   quad_t start_ms = 0;
   if (bughuntmode) {
@@ -292,6 +299,7 @@ void garbage_collect_inodeproc() {
     std::cout << "PERF: GC proctime: " << last_ms - start_ms << "[ms]"
               << std::endl;
   }
+#endif
 }
 
 /* updates the `inodeproc' inode-to-prg_node mapping
@@ -329,7 +337,7 @@ struct prg_node *findPID(unsigned long inode) {
     return node;
   }
 
-#ifndef __APPLE__
+#ifdef NETHOGS_HAVE_PROC
   reread_mapping();
 #endif
 

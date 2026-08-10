@@ -40,6 +40,15 @@
 
 #define _BSD_SOURCE 1
 
+/* Linux exposes the connection->inode and inode->pid mappings through the
+ * /proc filesystem; macOS and the BSDs do not (and their native procfs, when
+ * present, has a different layout). Gate every /proc-based lookup on this
+ * single feature macro so the BSD-family builds stay connections-only (as the
+ * README advertises) instead of aborting on a missing /proc. */
+#if !defined(__APPLE__) && !defined(__FreeBSD__)
+#define NETHOGS_HAVE_PROC 1
+#endif
+
 /* take the average speed over the last 5 seconds */
 #define PERIOD 5
 

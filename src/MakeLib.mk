@@ -108,5 +108,4 @@ clean:
 	rm -f $(OBJS)
 	rm -f $(LIBNAME)
 	rm -f libnethogs.a
-	mkdir -p $(ODIR)
-	rmdir -p --ignore-fail-on-non-empty $(ODIR)
+	rmdir -p $(ODIR) 2>/dev/null || true
